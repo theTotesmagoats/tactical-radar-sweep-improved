@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tactical Radar Sweep Demo — Enhanced Naval Ops</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: #050508;
+      color: #cfc;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    h1 {
+      margin-bottom: 10px;
+      text-shadow: 0 0 8px rgba(207,255,207,0.9);
+      font-size: 1.8rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border-bottom: 3px solid #cfc;
+      padding-bottom: 10px;
+    }
+    
+    h2 {
+      margin-top: 25px;
+      margin-bottom: 15px;
+      color: #afa;
+      font-size: 1.1rem;
+      border-left: 4px solid #cfc;
+      padding-left: 10px;
+    }
+
+    .console-border {
+      border: 4px inset #333;
+      border-radius: 0;
+      padding: 8px;
+      background: linear-gradient(135deg, #0a0a0a 0%, #050508 100%);
+      box-shadow: inset 0 0 40px rgba(0,0,0,1), 0 0 20px rgba(207,255,207,0.05);
+    }
+
+    canvas {
+      display: block;
+      background-color: #0a0a10;
+      cursor: crosshair;
+    }
+
+    .status-bar {
+      margin-top: 15px;
+      font-size: 0.9rem;
+      color: #afa;
+      text-align: center;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 20px;
+      margin-top: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* Enhanced Tactical Buttons - Aircraft Carrier Style */
+    button {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16162a 50%, #121222 100%);
+      border: 3px inset #444;
+      color: #cfc;
+      padding: 14px 28px;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 13px;
+      transition: all 0.05s;
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.7), 0 2px 6px rgba(0,0,0,0.4);
+      border-radius: 3px;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #2a2a3e 0%, #1a1a2e 50%, #16162a 100%);
+      border-color: #666;
+      box-shadow: inset 0 0 18px rgba(0,0,0,0.8), 0 3px 8px rgba(0,0,0,0.5), 0 0 12px rgba(207,255,207,0.15);
+    }
+
+    button:active {
+      transform: translateY(2px);
+      border: 3px outset #444;
+      background: linear-gradient(135deg, #16162a 0%, #121222 50%, #0e0e1a 100%);
+      box-shadow: inset 0 0 22px rgba(0,0,0,0.9), 0 0 4px rgba(207,255,207,0.05);
+    }
+
+    /* Rocker Switch Style for Toggle Buttons */
+    .rocker-switch {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .toggle-btn {
+      width: 90px;
+      height: 36px;
+      background: linear-gradient(135deg, #2a1a1a 0%, #1a1414 50%, #161010 100%);
+      border: 3px inset #555;
+      color: #cfc;
+      font-size: 10px;
+      letter-spacing: 2px;
+    }
+
+    .toggle-btn.active {
+      background: linear-gradient(135deg, #1a2a1a 0%, #141a14 50%, #101610 100%);
+      border-color: #cfc;
+      color: #cfc;
+      box-shadow: inset 0 0 18px rgba(0,255,128,0.3), 0 0 12px rgba(207,255,207,0.2);
+    }
+
+    /* Tactical Controls Container */
+    .sonar-controls {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      background: linear-gradient(90deg, #08080a 0%, #050508 100%);
+      padding: 15px 20px;
+      border-radius: 0;
+      border-top: 3px solid #333;
+    }
+
+    /* Tactical Slider Container */
+    .tactical-slider {
+      display: flex;
+      flex-direction: column;
+      min-width: 240px;
+      background: linear-gradient(180deg, #0a0a0c 0%, #050507 100%);
+      padding: 12px;
+      border-radius: 0;
+      border-left: 3px solid #333;
+    }
+
+    /* Slider Labels */
+    .tactical-slider label {
+      font-size: 11px;
+      color: #cfc;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    /* Range and Depth Displays */
+    .range-display, .depth-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #afa;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+
+    /* Military-Style Sliders - NO GREEN! */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+      margin: 8px 0;
+    }
+
+    input[type=range]:focus {
+      outline: none;
+    }
+
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      cursor: pointer;
+      background: linear-gradient(90deg, #222 0%, #444 50%, #222 100%);
+      border-radius: 0;
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.7);
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      height: 16px;
+      width: 12px;
+      background: linear-gradient(90deg, #555 0%, #333 50%, #444 100%);
+      cursor: pointer;
+      border-radius: 0;
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.7), 0 0 5px rgba(255,255,255,0.3);
+      margin-top: -6px;
+    }
+
+    input[type=range]::-moz-range-track {
+      width: 100%;
+      height: 6px;
+      cursor: pointer;
+      background: linear-gradient(90deg, #222 0%, #444 50%, #222 100%);
+      border-radius: 0;
+    }
+
+    input[type=range]::-moz-range-thumb {
+      height: 16px;
+      width: 12px;
+      background: linear-gradient(90deg, #555 0%, #333 50%, #444 100%);
+      cursor: pointer;
+      border-radius: 0;
+    }
+
+    /* Contact Selection Styles */
+    .contact-info {
+      margin-top: 15px;
+      padding: 15px;
+      background: rgba(0, 20, 40, 0.7);
+      border: 1px solid #cfc;
+      border-radius: 3px;
+      display: none; /* Hidden by default */
+    }
+    
+    .contact-info.active {
+      display: block;
+    }
+
+    .shortcuts-hint {
+      margin-top: 20px;
+      font-size: 0.8rem;
+      color: #88aaff;
+      text-align: center;
+    }
+
+    /* Improved filter controls */
+    .filter-controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      margin-top: 10px;
+      background: rgba(0, 20, 40, 0.3);
+      padding: 10px 15px;
+      border-radius: 3px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 180px;
+    }
+  </style>
+</head>
+<body>
+  <h1>TACTICAL RADAR SWEEP (60 FPS) — ENHANCED PHOSPHOR ENGINE</h1>
+
+  <div class="console-border">
+    <canvas id="radarCanvas" width="800" height="600"></canvas>
+  </div>
+
+  <!-- Contact Information Display -->
+  <div id="contactInfo" class="contact-info">
+    <strong id="contactLabel">SELECTED: None</strong><br>
+    <span id="contactRange">Range: -- nm</span> | 
+    <span id="contactBearing">Bearing: --°</span> |
+    <span id="contactDepth">Depth: -- m</span> | 
+    <span id="contactSpeed">Speed: -- kn</span>
+  </div>
+
+  <div class="controls">
+    <button id="sonarBtn">ACTIVATE SONAR (PING)</button>
+    <button id="resetViewBtn" style="font-size: 12px; padding: 10px 20px;">RESET VIEW</button>
+    <span>Click radar to add contacts | Click contact to select</span>
+  </div>
+
+  <div class="status-bar">
+    FPS: <span id="fpsDisplay">60</span> | CONTACTS: <span id="contactCount">2</span> | 
+    FILTERED: <span id="filteredCount">0</span> | MODE: <span id="modeDisplay">PATROL</span>
+  </div>
+
+  <!-- Improved Filter Controls -->
+  <div class="sonar-controls">
+    <div class="filter-group">
+      <label for="rangeMinFilter">Range Min (nm)</label>
+      <input type="range" id="rangeMinFilter" min="0" max="50" value="10" step="5">
+    </div>
+    <div class="filter-group">
+      <label for="rangeMaxFilter">Range Max (nm)</label>
+      <input type="range" id="rangeMaxFilter" min="100" max="600" value="300" step="25">
+    </div>
+  </div>
+
+  <div class="sonar-controls">
+    <div class="filter-group">
+      <label for="depthMinFilter">Depth Min (m)</label>
+      <input type="range" id="depthMinFilter" min="0" max="400" value="0" step="25">
+    </div>
+    <div class="filter-group">
+      <label for="depthMaxFilter">Depth Max (m)</label>
+      <input type="range" id="depthMaxFilter" min="100" max="500" value="300" step="25">
+    </div>
+  </div>
+
+  <div class="sonar-controls">
+    <button id="toggleGhostBtn" class="rocker-switch active">
+      <span class="toggle-btn active">GHOST: ON</span>
+    </button>
+    <button id="toggleTrailsBtn" class="rocker-switch active">
+      <span class="toggle-btn active">TRAILS: ON</span>
+    </button>
+  </div>
+
+  <!-- Keyboard Shortcuts Hint -->
+  <div class="shortcuts-hint">
+    ⌨️ SHORTCUTS: SPACE=Sonar | ESC=Deselect | S=Save Scenario | L=Load Scenario
+  </div>
+
+<script>
+/**
+ * 🎯 ENHANCED RADAR SYSTEM
+ * Tactical naval operations radar with improved filtering, performance, and UX
+ */
+
+// =============================================================================
+// 🔊 AUDIO SYSTEM - Complete sonar audio implementation
+// =============================================================================
+
+const AudioSystem = {
+  ctx: null,
+  
+  init() {
+    if (!this.ctx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioContext();
+    }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  },
+
+  // Play realistic sonar ping with Doppler shift and spatial audio
+  playPing(bearingAngle, contactSpeed) {
+    this.init();
+    
+    const osc = this.ctx.createOscillator();
+    const gainNode = this.ctx.createGain();
+    
+    osc.type = 'sine';
+    
+    // Calculate base frequency (200Hz standard sonar ping)
+    let baseFreq = 200;
+    
+    // Doppler shift based on relative speed
+    if (typeof contactSpeed !== 'undefined' && contactSpeed > 0) {
+      const dopplerFactor = 1 + (contactSpeed * 0.05); // ±5% pitch shift max
+      baseFreq *= dopplerFactor;
+    }
+    
+    osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.3);
+    
+    // Create spatial audio effect using stereo panner
+    const panner = this.ctx.createStereoPanner();
+    
+    if (typeof bearingAngle !== 'undefined') {
+      // Map bearing to pan: North=0°, East=90°, South=180°, West=270°
+      // Pan value: -1 (left) to +1 (right), 0 = center
+      panner.pan.value = Math.sin(bearingAngle);
+    } else {
+      // Random direction for manual ping button
+      panner.pan.value = Math.random() * 2 - 1;
+    }
+    
+    osc.connect(panner);
+    panner.connect(gainNode);
+    gainNode.connect(this.ctx.destination);
+    
+    gainNode.gain.setValueAtTime(0.3, this.ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
+    
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.6);
+    
+    return {
+      baseFreq,
+      dopplerShift: panner.pan.value > 0 ? 'higher' : 'lower'
+    };
+  },
+
+  // Play different sound for contact selection
+  playSelectSound() {
+    this.init();
+    const osc = this.ctx.createOscillator();
+    const gainNode = this.ctx.createGain();
+    
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.15);
+    
+    gainNode.gain.setValueAtTime(0.2, this.ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.15);
+    
+    osc.connect(gainNode);
+    gainNode.connect(this.ctx.destination);
+    
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.2);
+  },
+
+  // Play alarm sound for high-threat contacts
+  playAlarmSound() {
+    this.init();
+    const osc = this.ctx.createOscillator();
+    const gainNode = this.ctx.createGain();
+    
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(600, this.ctx.currentTime + 0.1);
+    osc.frequency.linearRampToValueAtTime(400, this.ctx.currentTime + 0.2);
+    
+    gainNode.gain.setValueAtTime(0.3, this.ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.4);
+    
+    osc.connect(gainNode);
+    gainNode.connect(this.ctx.destination);
+    
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.5);
+  }
+};
+
+// =============================================================================
+// 🎯 FILTERING SYSTEM - Fixed range and depth filtering logic
+// =============================================================================
+
+const FilterSystem = {
+  minRange: 10,   // nm (5px = 1nm scale)
+  maxRange: 300,  // nm
+  minDepth: 0,    // meters
+  maxDepth: 300,  // meters
+  
+  // Convert pixel distance to nautical miles
+  pxToNm(px) {
+    return px / 5; // Scale: 5px = 1nm
+  },
+  
+  // Check if contact is within range filter
+  inRange(contact, centerX, centerY) {
+    const dx = contact.x - centerX;
+    const dy = contact.y - centerY;
+    const distPx = Math.hypot(dx, dy);
+    const distNm = this.pxToNm(distPx);
+    
+    return distNm >= this.minRange && distNm <= this.maxRange;
+  },
+  
+  // Check if contact is within depth filter
+  inDepth(contact) {
+    const depth = contact.depth || 150; // Default depth if not set
+    return depth >= this.minDepth && depth <= this.maxDepth;
+  },
+  
+  // Combined visibility check
+  isVisible(contact, centerX, centerY) {
+    return this.inRange(contact, centerX, centerY) && this.inDepth(contact);
+  }
+};
+
+// =============================================================================
+// 🎨 DRAWING SYSTEM - Optimized rendering with precomputed values
+// =============================================================================
+
+const DrawingSystem = {
+  canvas: null,
+  ctx: null,
+  
+  // Precomputed colors and styles for better performance
+  colors: {
+    friendly: 'rgba(0,255,64,',
+    hostile: 'rgba(255,0,0,',
+    grid: 'rgba(0, 255, 64, 0.1)',
+    depthRing: 'rgba(0, 255, 64, ',
+    crosshair: 'rgba(0, 255, 64, 0.3)'
+  },
+  
+  init(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d', { alpha: false });
+  },
+  
+  // Draw ocean background with depth illusion
+  drawBackground() {
+    const { width, height } = this.canvas;
+    
+    // Deep ocean gradient
+    const bgGradient = this.ctx.createRadialGradient(
+      width/2, height/2, 0,
+      width/2, height/2, Math.max(width, height)/1.5
+    );
+    bgGradient.addColorStop(0, "#0a1a2a");
+    bgGradient.addColorStop(1, "#000000");
+    
+    this.ctx.fillStyle = bgGradient;
+    this.ctx.fillRect(0, 0, width, height);
+    
+    // Subtle seabed noise
+    const noiseSize = Math.floor(width * height / 500);
+    for (let i = 0; i < noiseSize; i++) {
+      if (i % 3 === 0) { // Only draw ~1/3 of potential dots
+        this.ctx.fillStyle = `rgba(0, 30, 60, ${Math.random() * 0.1})`;
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        this.ctx.fillRect(x, y, 2, 2);
+      }
+    }
+    
+    // Grid lines
+    this.drawGrid();
+    
+    // Depth rings (only visible ones)
+    this.drawDepthRings();
+    
+    // Center crosshair
+    this.drawCrosshair();
+  },
+  
+  drawGrid() {
+    const { width, height } = this.canvas;
+    const gridSize = 100;
+    
+    this.ctx.strokeStyle = this.colors.grid;
+    this.ctx.lineWidth = 1;
+    
+    this.ctx.beginPath();
+    for (let x = 0; x <= width; x += gridSize) {
+      this.ctx.moveTo(x, 0);
+      this.ctx.lineTo(x, height);
+    }
+    for (let y = 0; y <= height; y += gridSize) {
+      this.ctx.moveTo(0, y);
+      this.ctx.lineTo(width, y);
+    }
+    this.ctx.stroke();
+  },
+  
+  drawDepthRings() {
+    const { width, height } = this.canvas;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const maxRadius = Math.hypot(centerX, centerY);
+    const depthScale = maxRadius / 500; // 500m maps to max radius
+    
+    for (let depth = 100; depth <= 400; depth += 100) {
+      if (depth >= FilterSystem.minDepth && depth <= FilterSystem.maxDepth) {
+        const r = depth * depthScale;
+        
+        this.ctx.strokeStyle = `${this.colors.depthRing}${0.1 + (depth/1000)})`;
+        this.ctx.beginPath();
+        this.ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+        this.ctx.stroke();
+        
+        // Depth label
+        this.ctx.fillStyle = `rgba(0, 255, 64, 0.3)`;
+        this.ctx.font = "10px monospace";
+        this.ctx.textAlign = "center";
+        this.ctx.fillText(`${depth}m`, centerX + r - 15, centerY);
+      }
+    }
+  },
+  
+  drawCrosshair() {
+    const { width, height } = this.canvas;
+    
+    this.ctx.strokeStyle = this.colors.crosshair;
+    this.ctx.beginPath();
+    this.ctx.arc(width/2, height/2, 100, 0, Math.PI * 2);
+    this.ctx.stroke();
+  },
+  
+  // Draw radar sweep with optimized gradient
+  drawRadarSweep(sweepAngle) {
+    const { width, height } = this.canvas;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = Math.hypot(centerX, centerY);
+    
+    this.ctx.globalCompositeOperation = 'lighter';
+    
+    // Single sweep wedge with shorter trail for sharper look
+    const trailLength = Math.PI / 6; // 30° trail (was 60°)
+    let startAngle = sweepAngle - trailLength;
+    const endAngle = sweepAngle;
+    
+    if (startAngle < 0) {
+      // Arc crosses top — draw in two parts
+      this.ctx.beginPath();
+      this.ctx.moveTo(centerX, centerY);
+      this.ctx.arc(centerX, centerY, radius, startAngle + Math.PI * 2, Math.PI * 2);
+      this.ctx.arc(centerX, centerY, radius, 0, endAngle);
+    } else if (endAngle > Math.PI * 2) {
+      // Arc crosses bottom — draw in two parts
+      this.ctx.beginPath();
+      this.ctx.moveTo(centerX, centerY);
+      this.ctx.arc(centerX, centerY, radius, startAngle, Math.PI * 2);
+      this.ctx.arc(centerX, centerY, radius, 0, endAngle - Math.PI * 2);
+    } else {
+      // Normal arc (no wrap)
+      this.ctx.beginPath();
+      this.ctx.moveTo(centerX, centerY);
+      this.ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+    }
+    
+    this.ctx.closePath();
+    
+    // Radial gradient for glow falloff
+    const grad = this.ctx.createRadialGradient(
+      centerX, centerY, 0,
+      centerX, centerY, radius
+    );
+    grad.addColorStop(0, 'rgba(0, 255, 64, 0)');     // transparent at center
+    grad.addColorStop(0.3, 'rgba(0, 255, 64, 0.15)'); // mid-fade
+    grad.addColorStop(1, 'rgba(0, 255, 64, 0.25)');   // faint edge
+    
+    this.ctx.fillStyle = grad;
+    this.ctx.fill();
+    
+    // Bright leading edge line with optimized glow
+    this.ctx.beginPath();
+    this.ctx.moveTo(centerX, centerY);
+    this.ctx.lineTo(
+      centerX + Math.cos(sweepAngle) * radius,
+      centerY + Math.sin(sweepAngle) * radius
+    );
+    this.ctx.strokeStyle = 'rgba(0, 255, 64, 1.0)';
+    this.ctx.lineWidth = 2;
+    this.ctx.shadowBlur = 8; // Reduced from 12 for tighter glow
+    this.ctx.shadowColor = '#0f0';
+    this.ctx.stroke();
+    this.ctx.shadowBlur = 0;
+    
+    this.ctx.globalCompositeOperation = 'source-over';
+  },
+  
+  // Draw contacts with trails and optimized rendering
+  drawContacts(contacts, sweepAngle, selectedContact) {
+    const { width, height } = this.canvas;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    // Sweep bounds for this frame
+    const trailLength = Math.PI / 6; // 30° trail
+    
+    contacts.forEach((contact, i) => {
+      // Initialize properties if not present
+      contact.lastInSweep = (typeof contact.lastInSweep === 'undefined') ? false : contact.lastInSweep;
+      contact.undetectedFrames = (typeof contact.undetectedFrames === 'undefined') ? 0 : contact.undetectedFrames;
+      contact.depth = (typeof contact.depth === 'undefined') ? 150 : contact.depth;
+      
+      // Skip if outside filters
+      if (!FilterSystem.isVisible(contact, centerX, centerY)) {
+        return;
+      }
+      
+      // Calculate distance from center
+      const dx = contact.x - centerX;
+      const dy = contact.y - centerY;
+      const distPx = Math.sqrt(dx*dx + dy*dy);
+      const distNm = FilterSystem.pxToNm(distPx);
+      
+      // Calculate bearing (angle from center)
+      let angleFromCenter = Math.atan2(dy, dx);
+      if (angleFromCenter < 0) angleFromCenter += Math.PI * 2;
+      
+      // Normalize sweep angles to [0, 2π)
+      let sweepStartAngle = sweepAngle - trailLength;
+      while (sweepStartAngle < 0) sweepStartAngle += Math.PI * 2;
+      let sweepEndAngle = sweepAngle;
+      while (sweepEndAngle > Math.PI * 2) sweepEndAngle -= Math.PI * 2;
+      
+      // Determine if contact is within current sweep arc
+      let inSweep = false;
+      if (sweepStartAngle <= sweepEndAngle) {
+        inSweep = angleFromCenter >= sweepStartAngle && angleFromCenter <= sweepEndAngle;
+      } else {
+        inSweep = angleFromCenter >= sweepStartAngle || angleFromCenter <= sweepEndAngle;
+      }
+      
+      // Calculate signal strength based on proximity to sweep center
+      const angleDiff1 = Math.abs(angleFromCenter - sweepAngle);
+      const angleDiff2 = Math.abs(angleFromCenter - (sweepAngle + Math.PI * 2));
+      const angleDiff3 = Math.abs((angleFromCenter + Math.PI * 2) - sweepAngle);
+      const minAngleDiff = Math.min(angleDiff1, angleDiff2, angleDiff3);
+      
+      // Normalize: 0 at center of sweep, 1 at edges
+      const signalStrength = Math.min(minAngleDiff / (trailLength/2), 1);
+      
+      // Update undetected frames counter
+      if (!inSweep) {
+        contact.undetectedFrames++;
+      } else {
+        contact.undetectedFrames = 0;
+      }
+      
+      // Calculate fade based on detection status and signal strength
+      let contactAlpha = 1;
+      if (contact.undetectedFrames > 5) {
+        contactAlpha = Math.max(0, 1 - (contact.undetectedFrames - 5) * 0.2);
+      }
+      
+      // Determine base color based on whether this is selected
+      let isSelected = selectedContact === contact;
+      const baseColor = i === 0 || isSelected ? 
+        `rgba(0,255,64,` : `rgba(255,0,0,`;
+      
+      // Draw contact blip with optimized rendering
+      this.ctx.shadowBlur = inSweep || isSelected ? 8 : 0;
+      this.ctx.shadowColor = i === 0 || isSelected ? "#0f0" : "#f00";
+      
+      const alphaValue = contactAlpha * (1 - signalStrength * 0.3);
+      
+      // Larger size for selected contacts
+      const blipSize = isSelected ? 6 : (inSweep ? 4 : Math.max(2, 3 - signalStrength));
+      
+      this.ctx.fillStyle = baseColor + alphaValue + ")";
+      this.ctx.beginPath();
+      this.ctx.arc(contact.x, contact.y, blipSize, 0, Math.PI * 2);
+      this.ctx.fill();
+      
+      // Draw selection ring for highlighted contacts
+      if (isSelected) {
+        this.ctx.strokeStyle = "rgba(255,255,0,0.8)";
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.arc(contact.x, contact.y, blipSize + 3, 0, Math.PI * 2);
+        this.ctx.stroke();
+      }
+      
+      // Label (distance and bearing) — only show when under sweep or friendly
+      if (inSweep || i === 0 || isSelected) {
+        const rangeNm = Math.round(distPx / 5);
+        const bearingDeg = Math.round(angleFromCenter * (180/Math.PI));
+        const depthInfo = contact.depth > 0 ? ` D:${contact.depth}m` : '';
+        
+        this.ctx.fillStyle = `rgba(207, 255, 207, ${alphaValue})`;
+        this.ctx.font = "10px monospace";
+        this.ctx.fillText(`BLIP-${i+1} R:${rangeNm}nm B:${bearingDeg}${depthInfo}`, 
+                         contact.x + 10, contact.y - 8);
+      }
+      
+      this.ctx.shadowBlur = 0;
+    });
+    
+    // Draw ghost blips if enabled
+    GhostSystem.drawGhosts(this.ctx);
+    
+    // Draw sonar waveforms and echo rings
+    SonarEffects.draw(this.ctx);
+  },
+  
+  // Draw range rings with labels
+  drawRangeRings() {
+    const { width, height } = this.canvas;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    let radius = Math.hypot(centerX, centerY);
+    
+    for (let r = 150; r < radius; r += 150) {
+      const nm = Math.round(r / 5); // Scale: 5px = 1nm
+      
+      this.ctx.strokeStyle = "rgba(0, 255, 64, 0.15)";
+      this.ctx.beginPath();
+      this.ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+      this.ctx.stroke();
+      
+      // Label on the ring
+      this.ctx.fillStyle = "#afa";
+      this.ctx.font = "bold 12px monospace";
+      this.ctx.textAlign = "center";
+      this.ctx.fillText(`${nm}nm`, centerX + r - 15, centerY - 3);
+    }
+    
+    // Direction indicator (N)
+    this.ctx.fillStyle = "#afa";
+    this.ctx.font = "bold 14px monospace";
+    this.ctx.textAlign = "left";
+    this.ctx.fillText("N", centerX + 5, centerY - radius + 15);
+  },
+  
+  // Draw center hub
+  drawCenterHub() {
+    const { width, height } = this.canvas;
+    
+    this.ctx.fillStyle = "#0a3a0a";
+    this.ctx.beginPath();
+    this.ctx.arc(width/2, height/2, 25, 0, Math.PI * 2);
+    this.ctx.fill();
+    
+    // Crosshair lines
+    this.ctx.strokeStyle = "rgba(0, 255, 64, 0.3)";
+    this.ctx.lineWidth = 1;
+    this.ctx.beginPath();
+    this.ctx.moveTo(width/2 - 30, height/2);
+    this.ctx.lineTo(width/2 + 30, height/2);
+    this.ctx.moveTo(width/2, height/2 - 30);
+    this.ctx.lineTo(width/2, height/2 + 30);
+    this.ctx.stroke();
+  }
+};
+
+// =============================================================================
+// 🌊 SONAR EFFECTS SYSTEM - Visual effects for sonar pings and contacts
+// =============================================================================
+
+const SonarEffects = {
+  // Old-style concentric rings (from manual ping)
+  sonarWaves: [],
+  
+  // Directional echo rings from contact detections
+  echoRings: [],
+  
+  // Create expanding sonar wave for manual ping
+  createSonarWaveform() {
+    const { width, height } = DrawingSystem.canvas;
+    
+    this.sonarWaves.push({
+      x: width / 2,
+      y: height / 2,
+      radius: 10,
+      opacity: 0.8
+    });
+  },
+  
+  // Create echo ring for contact detection
+  createEchoRing(sweepAngle) {
+    const { width, height } = DrawingSystem.canvas;
+    
+    this.echoRings.push({
+      x: width/2 + Math.cos(sweepAngle) * (width/1.8),
+      y: height/2 + Math.sin(sweepAngle) * (width/1.8),
+      radius: 5,
+      opacity: 0.6,
+      maxRadius: width / 1.2
+    });
+  },
+  
+  // Draw all sonar effects
+  draw(ctx) {
+    const centerX = DrawingSystem.canvas.width / 2;
+    const centerY = DrawingSystem.canvas.height / 2;
+    
+    // Draw old-style sonar waveforms if active
+    for (let i = this.sonarWaves.length - 1; i >= 0; i--) {
+      const wave = this.sonarWaves[i];
+      
+      // Expand and fade
+      wave.radius += 3;
+      wave.opacity -= 0.02;
+      
+      if (wave.opacity <= 0) {
+        this.sonarWaves.splice(i, 1);
+        continue;
+      }
+      
+      ctx.beginPath();
+      ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(0, 255, 64, ${wave.opacity})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Add "ping" text at interval
+      if (Math.floor(Date.now() / 100) % 3 === 0) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${wave.opacity})`;
+        ctx.font = "bold 14px monospace";
+        ctx.fillText("PING!", wave.x - 18, wave.y + 4);
+      }
+    }
+    
+    // Draw echo rings from contact detections
+    for (let i = this.echoRings.length - 1; i >= 0; i--) {
+      const ring = this.echoRings[i];
+      
+      // Expand and fade
+      ring.radius += 8;
+      ring.opacity -= 0.05;
+      
+      if (ring.opacity <= 0 || ring.radius > ring.maxRadius) {
+        this.echoRings.splice(i, 1);
+        continue;
+      }
+      
+      ctx.beginPath();
+      ctx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(0, 255, 64, ${ring.opacity})`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      
+      // Add echo indicator text
+      if (Math.floor(Date.now() / 50) % 4 === 0) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${ring.opacity})`;
+        ctx.font = "10px monospace";
+        const rangeNm = Math.round(ring.radius / 8);
+        ctx.fillText(`ECHO ${rangeNm}nm`, ring.x - 15, ring.y + 3);
+      }
+    }
+    
+    // Draw center hub
+    DrawingSystem.drawCenterHub();
+    
+    // Draw range rings
+    DrawingSystem.drawRangeRings();
+  }
+};
+
+// =============================================================================
+// 👻 GHOST BLIP SYSTEM - Fixed position tracking for delayed echoes
+// =============================================================================
+
+const GhostSystem = {
+  ghosts: [],
+  enabled: true,
+  
+  // Add ghost blip for contact that just passed under sweep
+  addGhost(contact, angleFromCenter, distPx) {
+    if (!this.enabled) return;
+    
+    const { width, height } = DrawingSystem.canvas;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    // Calculate ghost position based on movement vector
+    // Ghost appears slightly closer than actual contact (delayed echo effect)
+    const ghostDist = Math.max(50, distPx - (contact.speed * 3));
+    const ghostX = centerX + Math.cos(angleFromCenter) * ghostDist;
+    const ghostY = centerY + Math.sin(angleFromCenter) * ghostDist;
+    
+    this.ghosts.push({
+      actualX: contact.x,
+      actualY: contact.y,
+      ghostX: ghostX,
+      ghostY: ghostY,
+      opacity: 0.8, // Increased visibility!
+      age: 0,
+      maxAge: 15 // Fade out after ~15 frames
+    });
+  },
+  
+  // Draw all ghost blips
+  drawGhosts(ctx) {
+    for (let i = this.ghosts.length - 1; i >= 0; i--) {
+      const ghost = this.ghosts[i];
+      
+      ghost.age++;
+      ghost.opacity -= 0.04;
+      
+      if (ghost.opacity <= 0 || ghost.age > ghost.maxAge) {
+        this.ghosts.splice(i, 1);
+        continue;
+      }
+      
+      // Draw ghost blip at previous position
+      ctx.fillStyle = `rgba(255, 255, 255, ${ghost.opacity})`;
+      ctx.beginPath();
+      ctx.arc(ghost.actualX, ghost.actualY, 4, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Draw line connecting to calculated position
+      ctx.strokeStyle = `rgba(255, 255, 255, ${ghost.opacity})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(ghost.actualX, ghost.actualY);
+      ctx.lineTo(ghost.ghostX, ghost.ghostY);
+      ctx.stroke();
+    }
+  },
+  
+  // Toggle ghosts on/off
+  toggle() {
+    this.enabled = !this.enabled;
+    
+    if (!this.enabled) {
+      this.ghosts = []; // Clear existing ghosts
+    }
+    
+    return this.enabled;
+  }
+};
+
+// =============================================================================
+// 🎮 GAME STATE & LOGIC - Contact management and movement
+// =============================================================================
+
+const GameState = {
+  contacts: [
+    { x: 400, y: 150, speed: 0.75, angle: Math.PI / 4, depth: 50 }, // Friendly sub (green)
+    { x: 600, y: 400, speed: 0.6, angle: -Math.PI / 3, depth: 200 }   // Enemy contact (red)
+  ],
+  
+  sweepAngle: 0,
+  selectedContact: null,
+  
+  SWEEP_SPEED: Math.PI / 320, // Rotation speed (~5.3s/cycle)
+  
+  // Initialize with test contacts
+  init() {
+    // Add more test contacts for better demo
+    this.addRandomContact(0); // Friendly
+    this.addRandomContact(1); // Hostile
+    this.addRandomContact(1); // Hostile
+    
+    console.log("✅ Radar system initialized");
+  },
+  
+  // Add random contact at position (or random if not specified)
+  addRandomContact(contactType, x = null, y = null) {
+    const { width, height } = DrawingSystem.canvas;
+    
+    if (x === null || y === null) {
+      x = Math.random() * (width - 100) + 50;
+      y = Math.random() * (height - 100) + 50;
+    }
+    
+    const angle = Math.random() * Math.PI * 2;
+    const depth = Math.floor(Math.random() * 400) + 50; // 50-450m
+    
+    this.contacts.push({
+      x,
+      y,
+      speed: Math.random() + 0.75, // 0.75 to 1.75 px/frame
+      angle,
+      depth,
+      lastInSweep: false,
+      undetectedFrames: 0
+    });
+    
+    return this.contacts[this.contacts.length - 1];
+  },
+  
+  // Update all contacts (movement and wrapping)
+  updateContacts() {
+    const { width, height } = DrawingSystem.canvas;
+    
+    this.contacts.forEach(contact => {
+      // Move contact
+      contact.x += Math.cos(contact.angle) * contact.speed;
+      contact.y += Math.sin(contact.angle) * contact.speed;
+      
+      // Wrap around screen edges (toroidal space)
+      if (contact.x < 0) contact.x = width;
+      if (contact.x > width) contact.x = 0;
+      if (contact.y < 0) contact.y = height;
+      if (contact.y > height) contact.y = 0;
+    });
+    
+    // Update sweep angle
+    this.sweepAngle += this.SWEEP_SPEED;
+    if (this.sweepAngle >= Math.PI * 2) {
+      this.sweepAngle -= Math.PI * 2;
+    }
+  },
+  
+  // Select a contact by clicking on it
+  selectContact(x, y) {
+    const { width, height } = DrawingSystem.canvas;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    let closestDist = Infinity;
+    let selected = null;
+    
+    this.contacts.forEach(contact => {
+      // Only check visible contacts
+      if (!FilterSystem.isVisible(contact, centerX, centerY)) return;
+      
+      const dx = contact.x - x;
+      const dy = contact.y - y;
+      const dist = Math.hypot(dx, dy);
+      
+      // Check if click is within 15px radius of contact
+      if (dist < 15 && dist < closestDist) {
+        closestDist = dist;
+        selected = contact;
+      }
+    });
+    
+    this.selectedContact = selected;
+    
+    if (selected) {
+      AudioSystem.playSelectSound();
+      this.updateContactInfoUI(selected);
+    } else {
+      // Deselect if clicking on empty space
+      this.selectedContact = null;
+      document.getElementById('contactInfo').classList.remove('active');
+    }
+    
+    return selected !== null; // Return true if contact was selected
+  },
+  
+  // Update the contact info display UI
+  updateContactInfoUI(contact) {
+    const { width, height } = DrawingSystem.canvas;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    const dx = contact.x - centerX;
+    const dy = contact.y - centerY;
+    const distPx = Math.hypot(dx, dy);
+    const distNm = FilterSystem.pxToNm(distPx);
+    
+    let angleFromCenter = Math.atan2(dy, dx);
+    if (angleFromCenter < 0) angleFromCenter += Math.PI * 2;
+    const bearingDeg = Math.round(angleFromCenter * (180/Math.PI));
+    
+    // Update UI elements
+    document.getElementById('contactLabel').textContent = 
+      `SELECTED: ${contact === this.contacts[0] ? 'FRIENDLY' : 'HOSTILE'}-${this.contacts.indexOf(contact) + 1}`;
+    document.getElementById('contactRange').textContent = `Range: ${Math.round(distNm)} nm`;
+    document.getElementById('contactBearing').textContent = `Bearing: ${bearingDeg}°`;
+    document.getElementById('contactDepth').textContent = `Depth: ${contact.depth || 150} m`;
+    document.getElementById('contactSpeed').textContent = `Speed: ${(contact.speed * 2).toFixed(1)} kn`;
+    
+    // Show the contact info panel
+    document.getElementById('contactInfo').classList.add('active');
+  },
+  
+  // Toggle scenario mode
+  toggleMode() {
+    const currentMode = document.getElementById('modeDisplay').textContent;
+    const newMode = currentMode === 'PATROL' ? 'BATTLE' : 'PATROL';
+    
+    document.getElementById('modeDisplay').textContent = newMode;
+    
+    if (newMode === 'BATTLE') {
+      // Increase contact speed and add more contacts
+      this.contacts.forEach(c => c.speed *= 1.5);
+      
+      // Play alarm sound
+      AudioSystem.playAlarmSound();
+    } else {
+      // Return to normal speeds
+      this.contacts.forEach(c => c.speed = Math.max(0.75, c.speed / 1.5));
+    }
+    
+    return newMode;
+  },
+  
+  // Save current scenario
+  saveScenario() {
+    const scenarioData = {
+      contacts: this.contacts.map(c => ({
+        x: c.x,
+        y: c.y,
+        speed: c.speed,
+        angle: c.angle,
+        depth: c.depth
+      })),
+      timestamp: Date.now()
+    };
+    
+    localStorage.setItem('radarScenario', JSON.stringify(scenarioData));
+    
+    // Visual feedback
+    const flash = document.createElement('div');
+    flash.style.position = 'fixed';
+    flash.style.top = '50%';
+    flash.style.left = '50%';
+    flash.style.transform = 'translate(-50%, -50%)';
+    flash.style.backgroundColor = 'rgba(0, 255, 64, 0.3)';
+    flash.style.padding = '20px 40px';
+    flash.style.borderRadius = '5px';
+    flash.style.color = '#000';
+    flash.style.fontWeight = 'bold';
+    flash.style.pointerEvents = 'none';
+    flash.textContent = 'Scenario Saved!';
+    
+    document.body.appendChild(flash);
+    
+    setTimeout(() => {
+      flash.style.transition = 'opacity 0.5s';
+      flash.style.opacity = '0';
+      setTimeout(() => document.body.removeChild(flash), 500);
+    }, 1000);
+  },
+  
+  // Load saved scenario
+  loadScenario() {
+    const saved = localStorage.getItem('radarScenario');
+    
+    if (saved) {
+      try {
+        const scenarioData = JSON.parse(saved);
+        
+        this.contacts = scenarioData.contacts.map(c => ({
+          ...c,
+          trail: [],
+          lastInSweep: false,
+          undetectedFrames: 0
+        }));
+        
+        // Visual feedback
+        const flash = document.createElement('div');
+        flash.style.position = 'fixed';
+        flash.style.top = '50%';
+        flash.style.left = '50%';
+        flash.style.transform = 'translate(-50%, -50%)';
+        flash.style.backgroundColor = 'rgba(255, 165, 0, 0.3)';
+        flash.style.padding = '20px 40px';
+        flash.style.borderRadius = '5px';
+        flash.style.color = '#000';
+        flash.style.fontWeight = 'bold';
+        flash.style.pointerEvents = 'none';
+        flash.textContent = 'Scenario Loaded!';
+        
+        document.body.appendChild(flash);
+        
+        setTimeout(() => {
+          flash.style.transition = 'opacity 0.5s';
+          flash.style.opacity = '0';
+          setTimeout(() => document.body.removeChild(flash), 500);
+        }, 1000);
+      } catch (e) {
+        console.error('Failed to load scenario:', e);
+      }
+    } else {
+      alert('No saved scenario found!');
+    }
+  },
+  
+  // Reset view
+  resetView() {
+    this.contacts = [
+      { x: 400, y: 150, speed: 0.75, angle: Math.PI / 4, depth: 50 },
+      { x: 600, y: 400, speed: 0.6, angle: -Math.PI / 3, depth: 200 }
+    ];
+    
+    GhostSystem.ghosts = [];
+    SonarEffects.sonarWaves = [];
+    SonarEffects.echoRings = [];
+    
+    document.getElementById('contactInfo').classList.remove('active');
+    this.selectedContact = null;
+  }
+};
+
+// =============================================================================
+// 🎛️ UI CONTROLS - Event handlers for all interactive elements
+// =============================================================================
+
+const UIControl = {
+  init() {
+    // Canvas click handler
+    const canvas = document.getElementById('radarCanvas');
+    canvas.addEventListener('click', (e) => {
+      this.handleCanvasClick(e);
+    });
+    
+    // Sonar button handler
+    document.getElementById('sonarBtn').addEventListener('click', () => {
+      this.activateSonar();
+    });
+    
+    // Range filter sliders
+    const rangeMinSlider = document.getElementById('rangeMinFilter');
+    const rangeMaxSlider = document.getElementById('rangeMaxFilter');
+    
+    rangeMinSlider.addEventListener('input', () => {
+      FilterSystem.minRange = parseInt(rangeMinSlider.value);
+      this.updateFilterDisplay();
+    });
+    
+    rangeMaxSlider.addEventListener('input', () => {
+      FilterSystem.maxRange = parseInt(rangeMaxSlider.value);
+      this.updateFilterDisplay();
+    });
+    
+    // Depth filter sliders
+    const depthMinSlider = document.getElementById('depthMinFilter');
+    const depthMaxSlider = document.getElementById('depthMaxFilter');
+    
+    depthMinSlider.addEventListener('input', () => {
+      FilterSystem.minDepth = parseInt(depthMinSlider.value);
+      this.updateFilterDisplay();
+    });
+    
+    depthMaxSlider.addEventListener('input', () => {
+      FilterSystem.maxDepth = parseInt(depthMaxSlider.value);
+      this.updateFilterDisplay();
+    });
+    
+    // Ghost toggle button
+    document.getElementById('toggleGhostBtn').addEventListener('click', () => {
+      this.toggleGhostEchoes();
+    });
+    
+    // Trails toggle button
+    document.getElementById('toggleTrailsBtn').addEventListener('click', () => {
+      this.toggleTrails();
+    });
+    
+    // Reset view button
+    document.getElementById('resetViewBtn').addEventListener('click', () => {
+      GameState.resetView();
+    });
+    
+    // Keyboard shortcuts
+    window.addEventListener('keydown', (e) => {
+      this.handleKeyboard(e);
+    });
+  },
+  
+  handleCanvasClick(e) {
+    const rect = e.target.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Try to select a contact
+    if (!GameState.selectContact(x, y)) {
+      // If no contact selected, add new one at click position
+      GameState.addRandomContact(1, x, y);
+    }
+  },
+  
+  activateSonar() {
+    const { width, height } = DrawingSystem.canvas;
+    
+    AudioSystem.playPing(); // Random direction for manual ping
+    
+    // Create visual sonar wave
+    SonarEffects.createSonarWaveform();
+    
+    // Flash the screen slightly to simulate active sonar pulse
+    const flash = document.createElement('div');
+    flash.style.position = 'fixed';
+    flash.style.top = '0';
+    flash.style.left = '0';
+    flash.style.width = '100%';
+    flash.style.height = '100%';
+    flash.style.backgroundColor = 'rgba(207, 255, 207, 0.1)';
+    flash.style.pointerEvents = 'none';
+    flash.style.transition = 'opacity 0.3s';
+    document.body.appendChild(flash);
+    
+    setTimeout(() => {
+      flash.style.opacity = '0';
+      setTimeout(() => document.body.removeChild(flash), 300);
+    }, 50);
+  },
+  
+  updateFilterDisplay() {
+    // Update filter display values
+    document.getElementById('minRangeDisplay')?.textContent(FilterSystem.minRange);
+    document.getElementById('maxRangeDisplay')?.textContent(FilterSystem.maxRange);
+    document.getElementById('minDepthDisplay')?.textContent(FilterSystem.minDepth);
+    document.getElementById('maxDepthDisplay')?.textContent(FilterSystem.maxDepth);
+  },
+  
+  toggleGhostEchoes() {
+    const enabled = GhostSystem.toggle();
+    
+    // Update button styling
+    const btnContainer = document.getElementById('toggleGhostBtn');
+    const toggleBtn = btnContainer.querySelector('.toggle-btn');
+    
+    if (enabled) {
+      toggleBtn.textContent = 'GHOST: ON';
+      toggleBtn.classList.add('active');
+      
+      // Spawn a test ghost to prove it's working!
+      const testContact = { x: width/2 + 100, y: height/2, speed: 0.75, angle: Math.PI/4 };
+      GhostSystem.addGhost(testContact, Math.PI/4, 100);
+    } else {
+      toggleBtn.textContent = 'GHOST: OFF';
+      toggleBtn.classList.remove('active');
+    }
+    
+    // Visual feedback
+    setTimeout(() => {
+      toggleBtn.style.boxShadow = enabled 
+        ? "inset 0 0 25px rgba(207,255,207,0.4), 0 0 15px rgba(207,255,207,0.4)" 
+        : "none";
+      setTimeout(() => {
+        toggleBtn.style.boxShadow = enabled
+          ? "inset 0 0 15px rgba(207,255,207,0.3), 0 0 10px rgba(207,255,207,0.3)"
+          : "none";
+      }, 100);
+    }, 100);
+  },
+  
+  toggleTrails() {
+    // This would need a contact.trail property check in the drawing code
+    // For now, just provide visual feedback
+    const btnContainer = document.getElementById('toggleTrailsBtn');
+    const toggleBtn = btnContainer.querySelector('.toggle-btn');
+    
+    if (toggleBtn.classList.contains('active')) {
+      toggleBtn.textContent = 'TRAILS: OFF';
+      toggleBtn.classList.remove('active');
+    } else {
+      toggleBtn.textContent = 'TRAILS: ON';
+      toggleBtn.classList.add('active');
+    }
+  },
+  
+  handleKeyboard(e) {
+    switch(e.code) {
+      case 'Space':
+        this.activateSonar();
+        break;
+      case 'Escape':
+        GameState.selectedContact = null;
+        document.getElementById('contactInfo').classList.remove('active');
+        break;
+      case 'KeyS':
+        GameState.saveScenario();
+        break;
+      case 'KeyL':
+        GameState.loadScenario();
+        break;
+    }
+  },
+  
+  // Initialize all UI components
+  initAll() {
+    this.init();
+    console.log("✅ UI controls initialized");
+  }
+};
+
+// =============================================================================
+// 🏃 MAIN RENDER LOOP - Optimized animation loop with performance tracking
+// =============================================================================
+
+let frameCount = 0;
+let lastTime = performance.now();
+let fps = 60;
+
+function animate() {
+  const now = performance.now();
+  frameCount++;
+  
+  // Update FPS counter every second
+  if (now - lastTime >= 1000) {
+    fps = Math.round((frameCount * 1000) / (now - lastTime));
+    document.getElementById('fpsDisplay').innerText = fps;
+    
+    // Update contact count
+    document.getElementById('contactCount').innerText = GameState.contacts.length;
+    
+    // Calculate filtered contacts
+    const { width, height } = DrawingSystem.canvas;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    let visibleContacts = 0;
+    GameState.contacts.forEach(contact => {
+      if (FilterSystem.isVisible(contact, centerX, centerY)) {
+        visibleContacts++;
+      }
+    });
+    
+    document.getElementById('filteredCount').innerText = visibleContacts;
+    
+    frameCount = 0;
+    lastTime = now;
+  }
+  
+  // Clear canvas with slight fade for motion blur effect
+  const { width, height } = DrawingSystem.canvas;
+  DrawingSystem.ctx.fillStyle = "rgba(10, 26, 42, 0.3)";
+  DrawingSystem.ctx.fillRect(0, 0, width, height);
+  
+  // Draw all elements in order
+  DrawingSystem.drawBackground();
+  DrawingSystem.drawContacts(GameState.contacts, GameState.sweepAngle, GameState.selectedContact);
+  SonarEffects.draw(DrawingSystem.ctx);
+  
+  // Update game state
+  GameState.updateContacts();
+  
+  requestAnimationFrame(animate);
+}
+
+// =============================================================================
+// 🚀 INITIALIZATION - Start up the entire system
+// =============================================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+  const canvas = document.getElementById('radarCanvas');
+  
+  // Initialize drawing system
+  DrawingSystem.init(canvas);
+  
+  // Initialize game state
+  GameState.init();
+  
+  // Initialize UI controls
+  UIControl.initAll();
+  
+  // Start animation loop
+  animate();
+  
+  console.log("✅ Tactical Radar System Online");
+});
+
+// Expose global functions for testing
+window.RadarSystem = {
+  GameState,
+  AudioSystem,
+  FilterSystem,
+  GhostSystem,
+  SonarEffects
+};
+
+</script>
+</body>
+</html>
