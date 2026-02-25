@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tactical Radar Sweep Demo — Enhanced Naval Ops</title>
+  <title>Tactical Radar Sweep Demo — Enhanced Naval Ops with Track Management</title>
   <style>
     body {
       margin: 0;
@@ -245,6 +245,122 @@
       flex-direction: column;
       min-width: 180px;
     }
+
+    /* TRACK LIST PANEL - NEW FEATURE */
+    .track-list-container {
+      margin-top: 20px;
+      width: 900px;
+      background: linear-gradient(135deg, #0a0a0a 0%, #050508 100%);
+      border: 4px inset #333;
+      box-shadow: inset 0 0 20px rgba(0,0,0,1), 0 0 10px rgba(207,255,207,0.05);
+      padding: 15px;
+    }
+
+    .track-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #333;
+      padding-bottom: 8px;
+    }
+
+    .track-list-title {
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #cfc;
+      text-shadow: 0 0 5px rgba(207,255,207,0.8);
+    }
+
+    .track-count {
+      font-size: 1rem;
+      color: #afa;
+      background: rgba(0, 255, 64, 0.2);
+      padding: 4px 12px;
+      border-radius: 3px;
+    }
+
+    .track-list-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .track-list-table th {
+      background: linear-gradient(90deg, #0a0a0c 0%, #050507 100%);
+      padding: 8px;
+      text-align: left;
+      border-bottom: 2px solid #333;
+      color: #cfc;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .track-list-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #222;
+    }
+
+    .track-list-table tr:hover {
+      background-color: rgba(0, 255, 64, 0.1);
+    }
+
+    .track-designation {
+      font-weight: bold;
+      color: #cfc;
+    }
+
+    .track-status {
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 0.8rem;
+    }
+
+    .status-unknown { background: rgba(255, 165, 0, 0.3); color: #ffaa00; }
+    .status-lost { background: rgba(255, 69, 0, 0.3); color: #ff4500; }
+    .status-hostile { background: rgba(255, 0, 0, 0.3); color: #ff0000; }
+    .status-friendly { background: rgba(0, 255, 64, 0.3); color: #0f0; }
+
+    .track-lock-toggle {
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    /* Targeting Reticle Styles */
+    .reticle-container {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .targeted-track {
+      background-color: rgba(255, 165, 0, 0.3) !important;
+      border-left: 3px solid #ffaa00 !important;
+    }
+
+    /* Weapons Panel (Foundation for Future) */
+    .weapons-panel {
+      margin-top: 20px;
+      width: 900px;
+      background: linear-gradient(135deg, #1a0a0a 0%, #0f0505 100%);
+      border: 4px inset #444;
+      box-shadow: inset 0 0 20px rgba(0,0,0,1), 0 0 10px rgba(255,69,0,0.1);
+      padding: 15px;
+      display: none; /* Hidden until weapon system implemented */
+    }
+    
+    .weapons-panel.active {
+      display: block;
+    }
+    
+    .weapon-status-bar {
+      margin-top: 10px;
+      background: rgba(255, 0, 0, 0.1);
+      padding: 8px;
+      border-radius: 3px;
+    }
+
   </style>
 </head>
 <body>
@@ -260,13 +376,39 @@
     <span id="contactRange">Range: -- nm</span> | 
     <span id="contactBearing">Bearing: --°</span> |
     <span id="contactDepth">Depth: -- m</span> | 
-    <span id="contactSpeed">Speed: -- kn</span>
+    <span id="contactSpeed">Speed: -- kn</span><br>
+    <small style="color:#88aaff;">STATUS: <span id="contactStatus">UNKNOWN</span></small>
+  </div>
+
+  <!-- TRACK LIST PANEL - NEW FEATURE -->
+  <div class="track-list-container">
+    <div class="track-list-header">
+      <span class="track-list-title">TRACK MANAGEMENT SYSTEM</span>
+      <span class="track-count">ACTIVE: <span id="activeTrackCount">0</span> | LOST: <span id="lostTrackCount">0</span></span>
+    </div>
+    <table class="track-list-table">
+      <thead>
+        <tr>
+          <th width="12%">TRACK #</th>
+          <th width="15%">DESIGNATION</th>
+          <th width="12%">STATUS</th>
+          <th width="10%">RANGE (nm)</th>
+          <th width="10%">BEARING</th>
+          <th width="8%">DEPTH</th>
+          <th width="15%">LAST DETECTED</th>
+          <th width="10%">LOCK</th>
+        </tr>
+      </thead>
+      <tbody id="trackListBody">
+        <!-- Track entries will be populated here -->
+      </tbody>
+    </table>
   </div>
 
   <div class="controls">
     <button id="sonarBtn">ACTIVATE SONAR (PING)</button>
     <button id="resetViewBtn" style="font-size: 12px; padding: 10px 20px;">RESET VIEW</button>
-    <span>Click radar to add contacts | Click contact to select</span>
+    <span>Click radar to add contacts | Click contact to select & lock track</span>
   </div>
 
   <div class="status-bar">
@@ -314,7 +456,7 @@
 <script>
 /**
  * 🎯 ENHANCED RADAR SYSTEM
- * Tactical naval operations radar with improved filtering, performance, and UX
+ * Tactical naval operations radar with track management, NATO designations, and locking mechanisms
  */
 
 // =============================================================================
@@ -426,6 +568,120 @@ const AudioSystem = {
 };
 
 // =============================================================================
+// 🎯 TRACK MANAGER - NATO designations and track tracking system
+// =============================================================================
+
+const TrackManager = {
+  tracks: [],
+  nextTrackNumber: 1,
+  
+  // NATO Designation Conventions
+  DESIGNATIONS: {
+    SUBSURFACE: 'GOBLIN',  // Subsurface contacts (depth > 50m)
+    SURFACE: 'SKUNK',      // Surface contacts (depth <= 50m)
+    UNKNOWN: 'WRAITH'      // Unknown status
+  },
+  
+  // Initialize track system
+  init() {
+    this.tracks = [];
+    this.nextTrackNumber = 1;
+  },
+  
+  // Assign a new track designation to a contact
+  assignTrack(contact) {
+    // Determine if subsurface or surface based on depth
+    const isSubsurface = (contact.depth > 50);
+    const designation = isSubsurface ? 
+      this.DESIGNATIONS.SUBSURFACE : 
+      this.DESIGNATIONS.SURFACE;
+    
+    // Create track object
+    const track = {
+      number: this.nextTrackNumber++,
+      designation: designation,
+      fullDesignation: `${designation}-${String(contact.trackNumber).padStart(2, '0')}`,
+      contactRef: contact,  // Reference to actual contact object
+      status: 'UNKNOWN',
+      detectedFrames: 1,
+      lastSweepAngle: null,
+      isLocked: false,
+      assignedName: null
+    };
+    
+    // Assign track number to contact for reference
+    contact.trackNumber = track.number;
+    contact.designation = track.fullDesignation;
+    contact.status = 'UNKNOWN';
+    
+    this.tracks.push(track);
+    return track;
+  },
+  
+  // Update track status based on detection
+  updateTrackStatus(track, isCurrentlyInSweep) {
+    if (isCurrentlyInSweep) {
+      track.detectedFrames++;
+      track.lastSweepAngle = null; // Reset lost track timer
+      if (track.status === 'LOST_TRACK') {
+        track.status = 'CONFIRMED';
+      }
+    } else {
+      // Contact not currently in sweep arc
+      if (!track.lastSweepAngle) {
+        track.lastSweepAngle = 0;
+      }
+      track.lastSweepAngle += 1; // Count sweeps since last detection
+      
+      // Mark as LOST_TRACK after 5 undetected sweeps
+      if (track.lastSweepAngle > 5 && track.status !== 'LOST_TRACK') {
+        track.status = 'LOST_TRACK';
+      }
+    }
+    
+    return track;
+  },
+  
+  // Toggle track lock status
+  toggleTrackLock(track) {
+    track.isLocked = !track.isLocked;
+    if (track.contactRef) {
+      track.contactRef.isLocked = track.isLocked;
+    }
+    return track.isLocked;
+  },
+  
+  // Get all active tracks (not LOST_TRACK)
+  getActiveTracks() {
+    return this.tracks.filter(track => track.status !== 'LOST_TRACK');
+  },
+  
+  // Get lost tracks
+  getLostTracks() {
+    return this.tracks.filter(track => track.status === 'LOST_TRACK');
+  },
+  
+  // Remove a track (when it's been lost too long)
+  removeTrack(track) {
+    const index = this.tracks.indexOf(track);
+    if (index > -1) {
+      this.tracks.splice(index, 1);
+    }
+  },
+  
+  // Clear all tracks
+  clearTracks() {
+    this.tracks = [];
+    this.nextTrackNumber = 1;
+  },
+  
+  // Get track by contact reference
+  getTrackByContact(contact) {
+    return this.tracks.find(track => track.contactRef === contact);
+  }
+};
+
+// =============================================================================
 // 🎯 FILTERING SYSTEM - Fixed range and depth filtering logic
 // =============================================================================
 
@@ -476,7 +732,9 @@ const DrawingSystem = {
     hostile: 'rgba(255,0,0,',
     grid: 'rgba(0, 255, 64, 0.1)',
     depthRing: 'rgba(0, 255, 64, ',
-    crosshair: 'rgba(0, 255, 64, 0.3)'
+    crosshair: 'rgba(0, 255, 64, 0.3)',
+    locked: 'rgba(255, 165, 0,', // Orange for locked targets
+    reticle: 'rgba(255, 165, 0,'  // Bright orange for targeting reticle
   },
   
   init(canvas) {
@@ -573,6 +831,46 @@ const DrawingSystem = {
     this.ctx.stroke();
   },
   
+  // Draw targeting reticle around locked contacts
+  drawTargetingReticle(contact) {
+    const { width, height } = this.canvas;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    // Calculate offset from center for reticle positioning
+    const dx = contact.x - centerX;
+    const dy = contact.y - centerY;
+    const distPx = Math.hypot(dx, dy);
+    
+    // Only draw reticle if contact is in reasonable range
+    if (distPx > 50 && distPx < width/1.2) {
+      this.ctx.strokeStyle = `${this.colors.reticle}0.8)`;
+      this.ctx.lineWidth = 2;
+      
+      // Outer circle
+      this.ctx.beginPath();
+      this.ctx.arc(contact.x, contact.y, 15, 0, Math.PI * 2);
+      this.ctx.stroke();
+      
+      // Crosshairs
+      this.ctx.beginPath();
+      this.ctx.moveTo(contact.x - 20, contact.y);
+      this.ctx.lineTo(contact.x + 20, contact.y);
+      this.ctx.moveTo(contact.x, contact.y - 20);
+      this.ctx.lineTo(contact.x, contact.y + 20);
+      this.ctx.stroke();
+      
+      // Diamond marker
+      this.ctx.beginPath();
+      this.ctx.moveTo(contact.x - 10, contact.y);
+      this.ctx.lineTo(contact.x, contact.y - 10);
+      this.ctx.lineTo(contact.x + 10, contact.y);
+      this.ctx.lineTo(contact.x, contact.y + 10);
+      this.ctx.closePath();
+      this.ctx.stroke();
+    }
+  },
+  
   // Draw radar sweep with optimized gradient
   drawRadarSweep(sweepAngle) {
     const { width, height } = this.canvas;
@@ -638,7 +936,7 @@ const DrawingSystem = {
   },
   
   // Draw contacts with trails and optimized rendering
-  drawContacts(contacts, sweepAngle, selectedContact) {
+  drawContacts(contacts, sweepAngle) {
     const { width, height } = this.canvas;
     const centerX = width / 2;
     const centerY = height / 2;
@@ -703,8 +1001,13 @@ const DrawingSystem = {
         contactAlpha = Math.max(0, 1 - (contact.undetectedFrames - 5) * 0.2);
       }
       
+      // Draw targeting reticle for locked contacts FIRST (behind blip)
+      if (contact.isLocked) {
+        this.drawTargetingReticle(contact);
+      }
+      
       // Determine base color based on whether this is selected
-      let isSelected = selectedContact === contact;
+      let isSelected = GameState.selectedContact === contact;
       const baseColor = i === 0 || isSelected ? 
         `rgba(0,255,64,` : `rgba(255,0,0,`;
       
@@ -714,8 +1017,8 @@ const DrawingSystem = {
       
       const alphaValue = contactAlpha * (1 - signalStrength * 0.3);
       
-      // Larger size for selected contacts
-      const blipSize = isSelected ? 6 : (inSweep ? 4 : Math.max(2, 3 - signalStrength));
+      // Larger size for selected/locked contacts
+      const blipSize = (isSelected || contact.isLocked) ? 6 : (inSweep ? 4 : Math.max(2, 3 - signalStrength));
       
       this.ctx.fillStyle = baseColor + alphaValue + ")";
       this.ctx.beginPath();
@@ -723,8 +1026,8 @@ const DrawingSystem = {
       this.ctx.fill();
       
       // Draw selection ring for highlighted contacts
-      if (isSelected) {
-        this.ctx.strokeStyle = "rgba(255,255,0,0.8)";
+      if (isSelected || contact.isLocked) {
+        this.ctx.strokeStyle = "rgba(255,165,0,0.8)";
         this.ctx.lineWidth = 2;
         this.ctx.beginPath();
         this.ctx.arc(contact.x, contact.y, blipSize + 3, 0, Math.PI * 2);
@@ -732,14 +1035,17 @@ const DrawingSystem = {
       }
       
       // Label (distance and bearing) — only show when under sweep or friendly
-      if (inSweep || i === 0 || isSelected) {
+      if (inSweep || i === 0 || isSelected || contact.isLocked) {
         const rangeNm = Math.round(distPx / 5);
         const bearingDeg = Math.round(angleFromCenter * (180/Math.PI));
         const depthInfo = contact.depth > 0 ? ` D:${contact.depth}m` : '';
         
+        // Show track designation if available
+        const trackDesignation = contact.designation || `CONTACT-${i+1}`;
+        
         this.ctx.fillStyle = `rgba(207, 255, 207, ${alphaValue})`;
         this.ctx.font = "10px monospace";
-        this.ctx.fillText(`BLIP-${i+1} R:${rangeNm}nm B:${bearingDeg}${depthInfo}`, 
+        this.ctx.fillText(`${trackDesignation} R:${rangeNm}nm B:${bearingDeg}${depthInfo}`, 
                          contact.x + 10, contact.y - 8);
       }
       
@@ -1026,7 +1332,11 @@ const GameState = {
       angle,
       depth,
       lastInSweep: false,
-      undetectedFrames: 0
+      undetectedFrames: 0,
+      trackNumber: null,    // Will be assigned by TrackManager
+      designation: null,    // Will be assigned by TrackManager
+      status: 'UNKNOWN',
+      isLocked: false
     });
     
     return this.contacts[this.contacts.length - 1];
@@ -1093,6 +1403,21 @@ const GameState = {
     return selected !== null; // Return true if contact was selected
   },
   
+  // Toggle track lock on a contact
+  toggleTrackLock(contact) {
+    const track = TrackManager.getTrackByContact(contact);
+    if (track) {
+      const isLocked = TrackManager.toggleTrackLock(track);
+      
+      // Also update the contact's locked state directly for drawing
+      contact.isLocked = isLocked;
+      
+      return isLocked;
+    }
+    
+    return false;
+  },
+  
   // Update the contact info display UI
   updateContactInfoUI(contact) {
     const { width, height } = DrawingSystem.canvas;
@@ -1108,13 +1433,19 @@ const GameState = {
     if (angleFromCenter < 0) angleFromCenter += Math.PI * 2;
     const bearingDeg = Math.round(angleFromCenter * (180/Math.PI));
     
+    // Get track info
+    const track = TrackManager.getTrackByContact(contact);
+    const designation = contact.designation || 'UNKNOWN';
+    const status = contact.status || 'UNKNOWN';
+    
     // Update UI elements
     document.getElementById('contactLabel').textContent = 
-      `SELECTED: ${contact === this.contacts[0] ? 'FRIENDLY' : 'HOSTILE'}-${this.contacts.indexOf(contact) + 1}`;
+      `SELECTED: ${track ? track.fullDesignation : designation}`;
     document.getElementById('contactRange').textContent = `Range: ${Math.round(distNm)} nm`;
     document.getElementById('contactBearing').textContent = `Bearing: ${bearingDeg}°`;
     document.getElementById('contactDepth').textContent = `Depth: ${contact.depth || 150} m`;
     document.getElementById('contactSpeed').textContent = `Speed: ${(contact.speed * 2).toFixed(1)} kn`;
+    document.getElementById('contactStatus').textContent = status;
     
     // Show the contact info panel
     document.getElementById('contactInfo').classList.add('active');
@@ -1149,7 +1480,9 @@ const GameState = {
         y: c.y,
         speed: c.speed,
         angle: c.angle,
-        depth: c.depth
+        depth: c.depth,
+        trackNumber: c.trackNumber,
+        isLocked: c.isLocked
       })),
       timestamp: Date.now()
     };
@@ -1236,6 +1569,9 @@ const GameState = {
     
     document.getElementById('contactInfo').classList.remove('active');
     this.selectedContact = null;
+    
+    // Clear tracks
+    TrackManager.clearTracks();
   }
 };
 
@@ -1457,6 +1793,9 @@ function animate() {
     
     document.getElementById('filteredCount').innerText = visibleContacts;
     
+    // Update track list panel
+    TrackManager.updateTrackListUI();
+    
     frameCount = 0;
     lastTime = now;
   }
@@ -1471,7 +1810,7 @@ function animate() {
   DrawingSystem.drawBackground();
   
   // 2. Contacts (includes ghost blips and sonar effects)
-  DrawingSystem.drawContacts(GameState.contacts, GameState.sweepAngle, GameState.selectedContact);
+  DrawingSystem.drawContacts(GameState.contacts, GameState.sweepAngle);
   
   // 3. RADAR SWEEP - MUST BE LAST to appear on top of everything!
   DrawingSystem.drawRadarSweep(GameState.sweepAngle);
@@ -1492,6 +1831,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize drawing system
   DrawingSystem.init(canvas);
   
+  // Initialize track manager
+  TrackManager.init();
+  
   // Initialize game state
   GameState.init();
   
@@ -1504,12 +1846,123 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log("✅ Tactical Radar System Online");
 });
 
+// =============================================================================
+// 🎯 TRACK LIST UI - Update the track management panel
+// =============================================================================
+
+TrackManager.updateTrackListUI = function() {
+  const tbody = document.getElementById('trackListBody');
+  const activeCountDisplay = document.getElementById('activeTrackCount');
+  const lostCountDisplay = document.getElementById('lostTrackCount');
+  
+  if (!tbody) return;
+  
+  // Count active and lost tracks
+  let activeCount = 0;
+  let lostCount = 0;
+  
+  this.tracks.forEach(track => {
+    if (track.status === 'LOST_TRACK') {
+      lostCount++;
+    } else {
+      activeCount++;
+    }
+  });
+  
+  activeCountDisplay.textContent = activeCount;
+  lostCountDisplay.textContent = lostCount;
+  
+  // Update table rows
+  tbody.innerHTML = '';
+  
+  this.tracks.forEach(track => {
+    const contact = track.contactRef;
+    
+    if (!contact) return;
+    
+    // Calculate current range and bearing
+    const { width, height } = DrawingSystem.canvas;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    let rangeNm = '--';
+    let bearing = '--';
+    
+    if (FilterSystem.isVisible(contact, centerX, centerY)) {
+      const dx = contact.x - centerX;
+      const dy = contact.y - centerY;
+      const distPx = Math.hypot(dx, dy);
+      rangeNm = FilterSystem.pxToNm(distPx).toFixed(0);
+      
+      let angleFromCenter = Math.atan2(dy, dx);
+      if (angleFromCenter < 0) angleFromCenter += Math.PI * 2;
+      bearing = Math.round(angleFromCenter * (180/Math.PI));
+    }
+    
+    const tr = document.createElement('tr');
+    if (track.isLocked) {
+      tr.className = 'targeted-track';
+    }
+    
+    // Status styling
+    let statusClass = '';
+    let statusText = track.status;
+    
+    switch(track.status) {
+      case 'UNKNOWN': statusClass = 'status-unknown'; break;
+      case 'LOST_TRACK': statusClass = 'status-lost'; break;
+      case 'HOSTILE': statusClass = 'status-hostile'; break;
+      case 'FRIENDLY': statusClass = 'status-friendly'; break;
+    }
+    
+    // Calculate time since last detection
+    let lastDetectedText = track.lastSweepAngle === null 
+      ? 'NOW' 
+      : `LST ${track.lastSweepAngle} SWP`;
+    
+    if (track.status === 'LOST_TRACK') {
+      lastDetectedText = 'LOST';
+    }
+    
+    tr.innerHTML = `
+      <td>GOBLIN-${String(track.number).padStart(2, '0')}</td>
+      <td class="track-designation">${track.designation}</td>
+      <td><span class="track-status ${statusClass}">${statusText}</span></td>
+      <td>${rangeNm}</td>
+      <td>${bearing}°</td>
+      <td>${contact.depth || 150}m</td>
+      <td style="font-size: 0.8rem;">${lastDetectedText}</td>
+      <td>
+        <button class="track-lock-toggle" onclick="TrackManager.toggleLock(${track.number})">
+          ${track.isLocked ? 'LOCKED' : 'UNLOCK'}
+        </button>
+      </td>
+    `;
+    
+    tbody.appendChild(tr);
+  });
+};
+
+// Add method to toggle lock from button clicks
+TrackManager.toggleLock = function(trackNumber) {
+  const track = this.tracks.find(t => t.number === trackNumber);
+  if (track && track.contactRef) {
+    this.toggleTrackLock(track);
+    // Update the contact's locked state directly for drawing
+    track.contactRef.isLocked = track.isLocked;
+    
+    // Update UI immediately
+    this.updateTrackListUI();
+  }
+};
+
 // Expose global functions for testing
 window.RadarSystem = {
   GameState,
   AudioSystem,
   FilterSystem,
   GhostSystem,
+  TrackManager,
   SonarEffects
 };
 
