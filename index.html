@@ -339,26 +339,22 @@
       border-left: 3px solid #ffaa00 !important;
     }
 
-    /* Weapons Panel (Foundation for Future) */
-    .weapons-panel {
-      margin-top: 20px;
-      width: 900px;
-      background: linear-gradient(135deg, #1a0a0a 0%, #0f0505 100%);
-      border: 4px inset #444;
-      box-shadow: inset 0 0 20px rgba(0,0,0,1), 0 0 10px rgba(255,69,0,0.1);
-      padding: 15px;
-      display: none; /* Hidden until weapon system implemented */
-    }
-    
-    .weapons-panel.active {
-      display: block;
-    }
-    
-    .weapon-status-bar {
+    /* Audio Status Indicator */
+    .audio-status {
       margin-top: 10px;
-      background: rgba(255, 0, 0, 0.1);
-      padding: 8px;
-      border-radius: 3px;
+      font-size: 0.8rem;
+      color: #88aaff;
+      text-align: center;
+    }
+    
+    .audio-enabled {
+      color: #0f0;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
 
   </style>
@@ -368,6 +364,11 @@
 
   <div class="console-border">
     <canvas id="radarCanvas" width="800" height="600"></canvas>
+  </div>
+
+  <!-- Audio Status Indicator -->
+  <div class="audio-status">
+    AUDIO: <span id="audioStatus">CLICK TO ENABLE</span>
   </div>
 
   <!-- Contact Information Display -->
@@ -470,10 +471,47 @@ const AudioSystem = {
     if (!this.ctx) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       this.ctx = new AudioContext();
+      
+      // Update UI to show audio is enabled
+      const statusEl = document.getElementById('audioStatus');
+      if (statusEl) {
+        statusEl.textContent = 'AUDIO ACTIVE';
+        statusEl.classList.add('audio-enabled');
+      }
     }
+    
     if (this.ctx.state === 'suspended') {
       this.ctx.resume();
+      
+      // Update UI to show audio is enabled
+      const statusEl = document.getElementById('audioStatus');
+      if (statusEl) {
+        statusEl.textContent = 'AUDIO ACTIVE';
+        statusEl.classList.add('audio-enabled');
+      }
     }
+    
+    return this.ctx !== null && this.ctx.state === 'running';
+  },
+
+  // Play radar sweep "bleep" - short high-pitched beep every revolution
+  playRadarBleep() {
+    if (!this.init()) return;
+    
+    const osc = this.ctx.createOscillator();
+    const gainNode = this.ctx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200, this.ctx.currentTime); // High pitch bleep
+    
+    gainNode.gain.setValueAtTime(0.15, this.ctx.currentTime); // Subtle volume
+    gainNode.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+    
+    osc.connect(gainNode);
+    gainNode.connect(this.ctx.destination);
+    
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.1);
   },
 
   // Play realistic sonar ping with Doppler shift and spatial audio
@@ -1289,7 +1327,7 @@ const GhostSystem = {
 };
 
 // =============================================================================
-// 🎮 GAME STATE & LOGIC - Contact management and movement
+// 🎮 GAME STATE & LOGIC - Contact management and movement with realistic speeds
 // =============================================================================
 
 const GameState = {
@@ -1313,7 +1351,7 @@ const GameState = {
     console.log("✅ Radar system initialized");
   },
   
-  // Add random contact at position (or random if not specified)
+  // Add random contact at position (or random if not specified) with realistic speeds
   addRandomContact(contactType, x = null, y = null) {
     const { width, height } = DrawingSystem.canvas;
     
@@ -1325,10 +1363,25 @@ const GameState = {
     const angle = Math.random() * Math.PI * 2;
     const depth = Math.floor(Math.random() * 400) + 50; // 50-450m
     
+    // REALISTIC SPEEDS BY TARGET TYPE:
+    // Subsurface (GOBLIN): depth > 50m → slow movement (2-15 knots)
+    // Surface (SKUNK): depth ≤ 50m → medium movement (5-30 knots)
+    
+    let speed;
+    if (depth > 50) {
+      // Subsurface contacts move slowly (like real submarines)
+      // 0.3-2.0 px/frame = ~6-40 knots
+      speed = 0.3 + Math.random() * 1.7; 
+    } else {
+      // Surface contacts move at ship speeds
+      // 0.8-4.0 px/frame = ~16-80 knots  
+      speed = 0.8 + Math.random() * 3.2;
+    }
+    
     this.contacts.push({
       x,
       y,
-      speed: Math.random() + 0.75, // 0.75 to 1.75 px/frame
+      speed: speed, // Realistic variable speed based on type
       angle,
       depth,
       lastInSweep: false,
@@ -1362,6 +1415,9 @@ const GameState = {
     this.sweepAngle += this.SWEEP_SPEED;
     if (this.sweepAngle >= Math.PI * 2) {
       this.sweepAngle -= Math.PI * 2;
+      
+      // Play radar bleep when sweep completes a revolution
+      AudioSystem.playRadarBleep();
     }
   },
   
@@ -1444,7 +1500,9 @@ const GameState = {
     document.getElementById('contactRange').textContent = `Range: ${Math.round(distNm)} nm`;
     document.getElementById('contactBearing').textContent = `Bearing: ${bearingDeg}°`;
     document.getElementById('contactDepth').textContent = `Depth: ${contact.depth || 150} m`;
-    document.getElementById('contactSpeed').textContent = `Speed: ${(contact.speed * 2).toFixed(1)} kn`;
+    // Calculate speed in knots (px/frame * 2 for approximate conversion)
+    const speedKnots = (contact.speed * 2).toFixed(1);
+    document.getElementById('contactSpeed').textContent = `Speed: ${speedKnots} kn`;
     document.getElementById('contactStatus').textContent = status;
     
     // Show the contact info panel
@@ -1466,7 +1524,7 @@ const GameState = {
       AudioSystem.playAlarmSound();
     } else {
       // Return to normal speeds
-      this.contacts.forEach(c => c.speed = Math.max(0.75, c.speed / 1.5));
+      this.contacts.forEach(c => c.speed = Math.max(0.3, c.speed / 1.5));
     }
     
     return newMode;
