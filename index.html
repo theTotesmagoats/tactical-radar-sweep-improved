@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #02040a; /* Almost black behind the chassis */
+            background-color: #02040a; 
             display: flex;
             justify-content: center;
             align-items: center;
@@ -20,14 +20,14 @@
         }
 
         #chassis {
-            background-color: #0a1128; /* Deep Navy */
+            background-color: #0a1128; 
             background-image: 
                 radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05) 0%, transparent 70%),
                 url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.04"/%3E%3C/svg%3E');
             width: 96vw;
             height: 96vh;
-            padding: 50px 40px 80px 40px; 
-            border-radius: 16px; /* Sharper corners for federal feel */
+            padding: 40px 40px 60px 40px; 
+            border-radius: 16px; 
             box-sizing: border-box;
             box-shadow: inset 0 0 40px #010205, 0 0 50px rgba(10, 17, 40, 0.8), 0 20px 50px rgba(0,0,0,0.9);
             border: 8px solid #050814;
@@ -37,37 +37,50 @@
             flex-direction: column;
         }
 
-        #bezel-stamp {
-            position: absolute;
-            top: 18px;
-            left: 50px;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 1.1rem;
-            font-weight: 900;
-            color: rgba(255, 255, 255, 0.15);
-            letter-spacing: 4px;
+        #news-ticker {
+            width: 100%;
+            background: #030712;
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            color: #94a3b8;
+            padding: 5px 15px;
+            font-size: 1.4rem;
+            letter-spacing: 2px;
             text-transform: uppercase;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.9);
-            pointer-events: none;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            white-space: nowrap;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+        
+        .ticker-text {
+            display: inline-block;
+            animation: scroll-ticker 20s linear infinite;
+        }
+
+        @keyframes scroll-ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-150%); }
         }
 
         #screen {
-            background: #030712; /* Core screen background */
+            background: #030712; 
             width: 100%;
-            height: 100%;
+            flex-grow: 1;
             border-radius: 12px;
-            padding: 30px;
+            padding: 25px;
             box-sizing: border-box;
-            border: 2px solid rgba(88, 166, 255, 0.2); /* Subtle blue glow frame */
+            border: 2px solid rgba(88, 166, 255, 0.2); 
             box-shadow: inset 0 0 80px rgba(0,0,0,1), 0 0 15px rgba(88, 166, 255, 0.05);
             position: relative;
             display: flex;
             flex-direction: column;
-            color: #f8fafc; /* Crisp White Text */
+            color: #f8fafc; 
             text-shadow: 0 0 2px rgba(255, 255, 255, 0.8), 0 0 8px rgba(255, 255, 255, 0.3); 
-            font-size: 1.8rem;
+            font-size: 1.5rem; 
             letter-spacing: 1px;
-            line-height: 1.4;
+            line-height: 1.35;
             animation: flicker 0.15s infinite;
         }
 
@@ -92,16 +105,13 @@
             flex-grow: 1;
             overflow-y: auto;
             white-space: pre-wrap;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             padding-right: 15px;
-            padding-top: 10px;
             z-index: 3;
             word-wrap: break-word;
         }
 
-        .msg-block {
-            margin-bottom: 20px;
-        }
+        .msg-block { margin-bottom: 15px; }
 
         #input-line {
             display: flex; 
@@ -130,7 +140,7 @@
 
         #hud-bar {
             border-top: 2px solid rgba(255, 255, 255, 0.1);
-            padding-top: 15px;
+            padding-top: 10px;
             margin-top: auto;
             font-size: 1.6rem;
             color: #f8fafc;
@@ -139,13 +149,12 @@
             justify-content: space-between;
         }
 
-        .hud-stat { font-weight: bold; }
-        
-        /* Critical Red State */
+        .hud-stat { font-weight: bold; transition: color 0.3s, text-shadow 0.3s; }
         .stat-critical { color: #e63946 !important; text-shadow: 0 0 8px #e63946 !important; animation: blinker 1s infinite; }
+        .stat-optimal { color: #4ade80 !important; text-shadow: 0 0 8px #4ade80 !important; }
         @keyframes blinker { 50% { opacity: 0.4; } }
 
-        /* THE LEXICON ENGINE (Blue) */
+        /* THE LEXICON ENGINE */
         .lexicon-term {
             color: #58a6ff;
             text-decoration: underline;
@@ -159,92 +168,79 @@
             .lexicon-term::after {
                 content: attr(data-definition);
                 position: absolute;
-                bottom: 120%;
-                left: 50%;
-                transform: translateX(-50%);
+                top: 140%;
+                bottom: auto;
+                left: 0;
                 width: 450px;
                 background: #050814;
                 border: 1px solid #58a6ff;
                 color: #f8fafc;
                 padding: 15px;
                 font-family: 'VT323', monospace;
-                font-size: 1.4rem;
+                font-size: 1.3rem;
                 line-height: 1.3;
                 text-align: left;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+                box-shadow: 0 15px 40px rgba(0,0,0,0.95);
                 opacity: 0;
                 pointer-events: none;
                 transition: opacity 0.2s;
-                z-index: 10;
+                z-index: 9999;
                 white-space: normal;
                 text-shadow: none;
             }
             .lexicon-term:hover::after { opacity: 1; }
         }
 
-        /* PROGRESSIVE DISCLOSURE ACCORDION (Red) */
-        .decrypt-btn {
-            display: inline-block;
-            background: rgba(230, 57, 70, 0.1);
-            border: 1px solid #e63946;
-            color: #e63946;
-            padding: 4px 10px;
-            margin-top: 10px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 1em;
-            text-shadow: 0 0 5px #e63946;
-            transition: all 0.2s;
-            user-select: none;
+        /* PROGRESSIVE DISCLOSURE COMPONENTS */
+        .btn-container { display: flex; gap: 15px; margin-top: 5px; margin-bottom: 5px; }
+        .decrypt-btn, .audit-btn {
+            display: inline-block; padding: 2px 10px; cursor: pointer; font-family: inherit; font-size: 0.9em; transition: all 0.2s; user-select: none;
         }
-        .decrypt-btn:hover {
-            background: #e63946;
-            color: #030712;
-            box-shadow: 0 0 15px rgba(230, 57, 70, 0.6);
-            text-shadow: none;
+        .decrypt-btn { background: rgba(230, 57, 70, 0.1); border: 1px solid #e63946; color: #e63946; text-shadow: 0 0 5px #e63946; }
+        .decrypt-btn:hover { background: #e63946; color: #030712; box-shadow: 0 0 15px rgba(230, 57, 70, 0.6); text-shadow: none; }
+        .audit-btn { background: rgba(74, 222, 128, 0.1); border: 1px solid #4ade80; color: #4ade80; text-shadow: 0 0 5px #4ade80; }
+        .audit-btn:hover { background: #4ade80; color: #030712; box-shadow: 0 0 15px rgba(74, 222, 128, 0.6); text-shadow: none; }
+        .accordion-content {
+            max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.4s ease-out, opacity 0.4s ease-out, padding 0.4s;
+            color: #cbd5e1; text-shadow: none; padding-left: 15px;
         }
-        .decrypt-content {
-            max-height: 0;
-            overflow: hidden;
-            opacity: 0;
-            transition: max-height 0.4s ease-out, opacity 0.4s ease-out;
-            color: #cbd5e1;
-            border-left: 2px solid #e63946;
-            padding-left: 15px;
-            margin-top: 0px;
-            text-shadow: none;
-        }
-        .decrypt-content.expanded {
-            max-height: 1200px;
-            opacity: 1;
-            margin-top: 15px;
-            margin-bottom: 15px;
-        }
+        .accordion-content.expanded { max-height: 1500px; opacity: 1; padding-top: 10px; padding-bottom: 10px; }
+        .content-red { border-left: 2px solid #e63946; }
+        .content-green { border-left: 2px solid #4ade80; background: rgba(74, 222, 128, 0.05); }
 
-        .voice-cos { color: #94a3b8; font-weight: bold; } /* Muted silver for CoS */
-        .voice-friedman { color: #ffffff; font-weight: bold; text-shadow: 0 0 5px #fff; } /* Stark white for Truth */
-        .highlight-directive { color: #58a6ff; font-weight: bold; } /* Blue for player inputs */
-        .sys-alert { color: #e63946; text-shadow: 0 0 5px #e63946; font-weight: bold; } /* Aggressive Red */
+        .voice-cos { color: #94a3b8; font-weight: bold; } 
+        .voice-friedman { color: #ffffff; font-weight: bold; text-shadow: 0 0 5px #fff; } 
+        .highlight-directive { color: #58a6ff; font-weight: bold; } 
+        .sys-alert { color: #e63946; text-shadow: 0 0 5px #e63946; font-weight: bold; } 
+        .sys-success { color: #4ade80; text-shadow: 0 0 5px #4ade80; font-weight: bold; }
+        .audit-header { color: #4ade80; font-weight: bold; letter-spacing: 2px; display: block; margin-bottom: 5px; }
+
+        .time-jump-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 7, 18, 0.9); z-index: 100;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 5rem; color: #58a6ff; font-weight: bold;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s;
+            text-shadow: 0 0 20px #58a6ff;
+        }
+        .time-jump-overlay.active { opacity: 1; }
 
     </style>
 </head>
 <body>
 
 <div id="chassis">
-    <div class="rivet r-tl"></div>
-    <div class="rivet r-tr"></div>
-    <div class="rivet r-bl"></div>
-    <div class="rivet r-br"></div>
+    <div id="news-ticker"><span class="ticker-text" id="ticker-content">>> GLOBAL MARKETS STABLE // AWAITING EXECUTIVE DIRECTIVE...</span></div>
     
-    <div id="bezel-stamp">ATLAS // CONTINUITY OF GOV // v1.3</div>
-
     <div id="screen">
+        <div class="time-jump-overlay" id="time-overlay">2002</div>
         <div id="output"></div>
         <div id="input-line">
             <span id="prompt">EXEC_CMD></span>
             <input type="text" id="cmd" autocomplete="off" autofocus>
         </div>
         <div id="hud-bar">
+            <span id="hud-year" class="hud-stat" style="color:#58a6ff;">YEAR: 2002</span>
             <span id="hud-pp" class="hud-stat">PP: 100%</span>
             <span id="hud-pol" class="hud-stat">POL: 50%</span>
             <span id="hud-vel" class="hud-stat">VEL: 100%</span>
@@ -256,108 +252,277 @@
 <script>
     const outputDiv = document.getElementById('output');
     const inputField = document.getElementById('cmd');
+    const tickerContent = document.getElementById('ticker-content');
+    const timeOverlay = document.getElementById('time-overlay');
 
     let metrics = {
+        year: 2002,
         pp: 100,      // Purchasing Power
         pol: 50,      // Political Capital
         vel: 100,     // Capital Velocity
         friction: 0   // Systemic Friction
     };
 
-    let currentNodeId = 'SETUP_1';
+    let currentNodeId = 'SETUP_2002';
     let isTyping = false;
 
-    // THE PHASED NARRATIVE MATRIX
+    // BASE RATES FOR 'METRICS' AUDIT COMMAND
+    const historicalReality = {
+        2002: { pp: 100, pol: 50, vel: 100, fric: 0, optimal_fric: 0 },
+        2004: { pp: 96,  pol: 65, vel: 115, fric: 30, optimal_fric: 0 },
+        2006: { pp: 88,  pol: 45, vel: 125, fric: 65, optimal_fric: 0 },
+        2008: { pp: 82,  pol: 20, vel: 70,  fric: 95, optimal_fric: 0 }
+    };
+
+    function updateTicker() {
+        let headlines = [];
+        if (metrics.pp < 50 && metrics.pol > 70) {
+            headlines = ["PRESIDENT HAILED AS HERO OF THE WORKING CLASS AMIDST 12% INFLATION", "STOCK BUYBACKS HIT RECORD HIGHS AS GROCERY PRICES SOAR", "DOW BREAKS RECORDS; REAL WAGES DOWN FOR 4TH CONSECUTIVE QUARTER"];
+        } else if (metrics.pp > 90 && metrics.pol < 30) {
+            headlines = ["MEDIA CONDEMNS 'DRACONIAN' AUSTERITY MEASURES", "PRESIDENT'S APPROVAL RATING TANKS DESPITE ZERO INFLATION", "UNIONS THREATEN STRIKE OVER 'HARSH' FREE MARKET REFORMS"];
+        } else if (metrics.friction > 80) {
+            headlines = ["REGULATORY COMPLIANCE COSTS BANKRUPT RECORD NUMBER OF SMALL BUSINESSES", "MEGA-CORPS REPORT RECORD QUARTER AS COMPETITORS FOLD", "LOBBYING SPENDING HITS ALL TIME HIGH IN D.C."];
+        } else {
+            headlines = ["MARKETS DIGEST LATEST FED GUIDANCE", "CHAMBER OF COMMERCE REPORTS MIXED SENTIMENT", "BOND YIELDS STABILIZE AHEAD OF EARNINGS SEASON"];
+        }
+        tickerContent.innerText = ">> " + headlines[Math.floor(Math.random() * headlines.length)] + " // " + headlines[Math.floor(Math.random() * headlines.length)];
+    }
+
+    // THE NARRATIVE MATRIX
     const storyNodes = {
-        'SETUP_1': {
-            text: `<span class="sys-alert">> SYSTEM ALERT: CRISIS PROTOCOL INITIATED</span>\n
-<span class="voice-cos">[CHIEF OF STAFF]:</span> "Mr. President, the <u class="lexicon-term" data-definition="Consumer Price Index (Core). Strips out food and energy under the guise of 'volatility'. True incentive: If the government reported true inflation including food and fuel, entitlement obligations tied to CPI would bankrupt the Treasury.">Core CPI</u> print came in hot. Housing costs in major metros are up 18% YoY. Congress just put the 'Emergency Rent Stabilization Act' on your desk. It caps rent increases at 2% nationally. If we veto this, we hemorrhage seats in the midterms. We need a signature."\n
-<span style="color:#64748b;">>> TYPE 'ANALYZE' TO ENGAGE FRIEDMAN PROTOCOL</span>`,
-            choices: { 'ANALYZE': 'FRIEDMAN_1' }
+        
+        // ==========================================
+        // EPOCH: 2002 - MACRO ORIGINS
+        // ==========================================
+        'SETUP_2002': {
+            text: `<span class="sys-alert">> SYSTEM ALERT: RECESSIONARY PRESSURE DETECTED [EPOCH: 2002]</span>\n
+<span class="voice-cos">[CHIEF OF STAFF]:</span> "The tech bubble wiped out trillions. GDP is flatlining. The Fed is ready to slash the <u class="lexicon-term" data-definition="The interest rate banks charge each other for overnight loans. True incentive: By artificially lowering this rate, the central bank floods the market with cheap credit, penalizing responsible savers while rewarding speculative debtors.">Federal Funds Rate</u> to 1%. We pair this with HUD directives for GSEs to lower underwriting standards. We call it the 'Ownership Society.' I need the green light."\n
+<span style="color:#64748b;">>> TYPE 'ANALYZE' TO ENGAGE FRIEDMAN PROTOCOL</span>
+<span style="color:#64748b;">>> TYPE 'DIRECTIVES' TO PROCEED</span>
+<span style="color:#64748b;">>> TYPE 'METRICS' TO AUDIT STRUCTURAL HEALTH</span>`,
+            choices: { 'ANALYZE': 'FRIEDMAN_2002', 'DIRECTIVES': 'CHOICES_2002' }
         },
         
-        'FRIEDMAN_1': {
+        'FRIEDMAN_2002': {
             text: `> INITIATE_FRIEDMAN_PROTOCOL...\n
-<span class="voice-friedman">[FRIEDMAN_AI]:</span> "The political instinct is to treat the symptom. We must treat the incentive. If you dictate that a builder cannot charge the market clearing rate, capital will instantly reallocate away from housing. A price ceiling creates a visual illusion of affordability while mathematically guaranteeing a physical shortage."\n
-<div class="decrypt-btn" onclick="toggleDecrypt(this)">[+] DECRYPT SECOND-ORDER PHYSICS</div>
-<div class="decrypt-content">The bill contains a <u class="lexicon-term" data-definition="A legal mechanism where developers pay zero property taxes for decades if they designate a fraction of units as 'affordable'. True incentive: Forfeits municipal revenue, shifting the tax burden to the existing middle class to subsidize institutional profit margins.">421-a Tax Abatement</u>. By suppressing the legal price of a commodity, the cost does not disappear; it is transferred to the political sphere. Incumbent developers will use the abatement to monopolize new builds, while existing housing stock rots as landlords slash maintenance to preserve margins.</div>\n
+<span class="voice-friedman">[FRIEDMAN_AI]:</span> "Interest rates are the price of risk and time. Suppressing that price to 1% sends a false signal that savings are abundant. Capital will seek the highest leveraged yield available. You will weaponize the mortgage market." \n
+<div class="btn-container">
+    <div class="decrypt-btn" onclick="toggleAccordion(this, 'decrypt-btn')">[+] DECRYPT SECOND-ORDER PHYSICS</div>
+    <div class="audit-btn" onclick="toggleAccordion(this, 'audit-btn')">[+] PULL HISTORICAL AUDIT</div>
+</div>
+<div class="accordion-content content-red">You are injecting absolute <u class="lexicon-term" data-definition="A situation where a party is protected from risk, and therefore acts recklessly. True incentive: Profits are privatized; losses are socialized.">Moral Hazard</u> into the banking sector. The 'seen' effect is a housing boom. The 'unseen' effect is an economy built on adjustable-rate leverage. You are trading a mild recession today for a catastrophic depression in six years.</div>
+<div class="accordion-content content-green"><span class="audit-header">:: EMPIRICAL BASE RATE: DOT-COM RECOVERY</span>
+> To meet aggressive government quotas, GSEs dropped underwriting standards, accumulating $1 trillion in subprime bonds. This guaranteed market allowed Wall Street to securitize toxic debt with zero inherent risk.</div>\n
 <span style="color:#64748b;">>> TYPE 'DIRECTIVES' TO VIEW EXECUTIVE OPTIONS</span>`,
-            choices: { 'DIRECTIVES': 'CHOICES_1' }
+            choices: { 'DIRECTIVES': 'CHOICES_2002' }
         },
 
-        'CHOICES_1': {
+        'CHOICES_2002': {
             text: `SYSTEM AWAITING EXECUTIVE DIRECTIVE:\n
-<span class="highlight-directive">:: SIGN_STABILIZATION_ACT</span>
-(The Political Play: Secure midterms, lock in generational housing deficit.)
-
-<span class="highlight-directive">:: VETO_AND_SUBSIDIZE</span>
-(The Coward's Compromise: Float rents, issue federal housing vouchers. Drives localized inflation.)
-
-<span class="highlight-directive">:: VETO_AND_DEREGULATE</span>
-(The Structural Fix: Withhold federal highway funds to break localized zoning laws.)`,
-            choices: { 
-                'SIGN_STABILIZATION_ACT': 'BLOCKADE_1', 
-                'VETO_AND_SUBSIDIZE': 'BLOCKADE_1', 
-                'VETO_AND_DEREGULATE': 'BLOCKADE_1' 
-            }
+<span class="highlight-directive">:: AUTHORIZE_CREDIT_EXPANSION</span> (The Political Fix: Drop rates to 1%. Triggers the housing boom.)
+<span class="highlight-directive">:: VETO_INTERVENTION</span> (The Market Purge: Let the tech recession clear bad debt naturally.)`,
+            choices: { 'AUTHORIZE_CREDIT_EXPANSION': 'CREDIT_EXPANSION', 'VETO_INTERVENTION': 'MARKET_PURGE' }
         },
 
-        'BLOCKADE_1': {
-            effect: (m) => { m.pol -= 10; },
-            text: `> EXECUTING STRUCTURAL FIX...
-<span class="sys-alert">> ERROR: LEGISLATIVE BLOCKADE DETECTED.</span>\n
-<span class="voice-cos">[CHIEF OF STAFF]:</span> "We are dead on arrival. The Senate Whip reports we have 47 votes. We need 51 to push the deregulation mandate past the committee. The farm lobby controls the missing four senators. They will not vote for your housing fix unless you pay the toll."\n
-<span style="color:#64748b;">>> TYPE 'DIRECTIVES' TO VIEW CAPITULATION OPTIONS</span>`,
-            choices: { 'DIRECTIVES': 'CHOICES_2' }
-        },
-
-        'CHOICES_2': {
-            text: `SYSTEM AWAITING CAPITULATION DIRECTIVE:\n
-<span class="highlight-directive">:: APPEND_RIDER_AG_SUBSIDY</span>
-(Inject $50B in printed liquidity to domestic corn producers. Secures +4 Votes.)
-
-<span class="highlight-directive">:: BURN_POLITICAL_CAPITAL</span>
-(Rely on executive orders. Bypasses the Senate entirely. -40 POL.)`,
-            choices: { 'APPEND_RIDER_AG_SUBSIDY': 'AG_SUBSIDY', 'BURN_POLITICAL_CAPITAL': 'BURN_POL' }
-        },
-
-        'AG_SUBSIDY': {
-            effect: (m) => { m.vel += 15; m.friction -= 10; m.pp -= 8; },
-            text: `> RIDER APPENDED. DEREGULATION PASSED.\n
-<span class="voice-friedman">[FRIEDMAN_AI]:</span> "Structural fix achieved. Local zoning is broken. Capital will flood the housing market, lowering costs over the next 36 months.\n
-However, the $50B injection triggers localized inflation via the <u class="lexicon-term" data-definition="The observation that newly created fiat money does not enter the economy evenly. It benefits those closest to the creation point (asset holders, subsidized industries) before filtering down to wages, structurally reducing the purchasing power of the working class.">Cantillon Effect</u>. Absolute Purchasing Power (PP) has dropped. You fixed housing, but you debased the currency to do it."\n
-<span style="color:#64748b;">>> SYSTEM HALTED FOR DIAGNOSTICS.</span>`,
+        'MARKET_PURGE': {
+            effect: (m) => { m.pol -= 45; m.vel -= 20; m.pp += 15; m.friction = 0; },
+            text: `> INTERVENTION VETOED. MARKET CLEARING INITIATED.\n
+<span class="voice-friedman">[FRIEDMAN_AI]:</span> "You absorbed the political cost of the J-Curve. Bankruptcies have cleared the bad debt. Asset prices are returning to their historical mean. Purchasing Power (PP) has strengthened."\n
+<span class="sys-success">> SIMULATION SURVIVED. STRUCTURAL INTEGRITY SECURED.</span>\n
+<span style="color:#64748b;">>> SYSTEM HALTED.</span>`,
             choices: {}
         },
 
-        'BURN_POL': {
-            effect: (m) => { m.pol -= 40; m.vel += 15; m.friction -= 15; },
-            text: `> EXECUTIVE ORDER ISSUED. DEREGULATION PASSED.\n
-<span class="voice-cos">[CHIEF OF STAFF]:</span> "You got your clean bill, but the Senate is furious. We are politically bankrupt. Do not expect them to pass anything else this year."\n
-<span class="voice-friedman">[FRIEDMAN_AI]:</span> "You absorbed the political cost to maintain mathematical integrity. Purchasing Power remains intact."\n
-<span style="color:#64748b;">>> SYSTEM HALTED FOR DIAGNOSTICS.</span>`,
+        'CREDIT_EXPANSION': {
+            effect: (m) => { m.pol += 30; m.vel += 20; m.friction += 30; m.pp -= 5; },
+            lag: { years: 2, target: 'SETUP_2004' },
+            text: `> CREDIT EXPANSION AUTHORIZED. INITIATING TEMPORAL ADVANCEMENT...`
+        },
+
+        // ==========================================
+        // EPOCH: 2004 - MAIN STREET MICROECONOMICS
+        // ==========================================
+        'SETUP_2004': {
+            text: `<span class="sys-alert">> SYSTEM ALERT: LABOR MARKET DISTORTION [EPOCH: 2004]</span>\n
+<span class="voice-cos">[CHIEF OF STAFF]:</span> "Mr. President, the housing boom is covering up localized inflation. The populist wing is demanding an executive push for the 'Fair Wage Act'—a federal $25/hour mandate. We sign it to secure the <u class="lexicon-term" data-definition="A massive, outsourced political labor force paid for by union dues. True incentive: Politicians desperately need this subsidized infrastructure to survive elections, paid for by passing legislation that protects union monopolies.">union ground game</u> for re-election. We'll offset corporate blowback by inserting accelerated tax depreciation for labor-saving robotics."\n
+<span style="color:#64748b;">>> TYPE 'ANALYZE' TO ENGAGE FRIEDMAN PROTOCOL</span>
+<span style="color:#64748b;">>> TYPE 'DIRECTIVES' TO PROCEED</span>`,
+            choices: { 'ANALYZE': 'FRIEDMAN_2004', 'DIRECTIVES': 'CHOICES_2004' }
+        },
+
+        'FRIEDMAN_2004': {
+            text: `> INITIATE_FRIEDMAN_PROTOCOL...\n
+<span class="voice-friedman">[FRIEDMAN_AI]:</span> "A price floor on labor makes it illegal to employ anyone whose marginal output is worth less than the mandate. You are mandating an artificially high floor for human labor, while simultaneously subsidizing the exact machines designed to replace them." \n
+<div class="btn-container">
+    <div class="decrypt-btn" onclick="toggleAccordion(this, 'decrypt-btn')">[+] DECRYPT SECOND-ORDER PHYSICS</div>
+    <div class="audit-btn" onclick="toggleAccordion(this, 'audit-btn')">[+] PULL HISTORICAL AUDIT</div>
+</div>
+<div class="accordion-content content-red">The 'seen' effect is higher paystubs for retained workers. The 'unseen' effect is that the bottom 20% of the unskilled labor pool is permanently priced out of the market. Small businesses will collapse because they lack the capital to buy the tax-subsidized robotics. You are solidifying corporate monopolies.</div>
+<div class="accordion-content content-green"><span class="audit-header">:: EMPIRICAL BASE RATE: FAST FOOD AUTOMATION</span>
+> <b>MATHEMATICAL OUTPUT:</b> Following California's aggressively scaled minimum wage hikes (AB 1228 to $20/hr), major franchises accelerated the deployment of automated ordering kiosks and AI drive-thrus. Small, single-location operators who could not afford $100k capital expenditures were forced to close or reduce operating hours. The structural unemployment rate for unskilled youth structurally elevated.</div>\n
+<span style="color:#64748b;">>> TYPE 'DIRECTIVES' TO VIEW EXECUTIVE OPTIONS</span>`,
+            choices: { 'DIRECTIVES': 'CHOICES_2004' }
+        },
+
+        'CHOICES_2004': {
+            text: `SYSTEM AWAITING EXECUTIVE DIRECTIVE:\n
+<span class="highlight-directive">:: SIGN_FAIR_WAGE_ACT</span> (The Political Fix: Lock in the unions. Subsidize corporate automation.)
+<span class="highlight-directive">:: VETO_AND_DEREGULATE</span> (The Structural Fix: Veto mandate, abolish predatory occupational licensing to unlock micro-businesses.)`,
+            choices: { 'SIGN_FAIR_WAGE_ACT': 'WAGE_ACT', 'VETO_AND_DEREGULATE': 'WAGE_VETO' }
+        },
+
+        'WAGE_ACT': {
+            effect: (m) => { m.pol += 25; m.friction += 25; m.pp -= 10; },
+            lag: { years: 2, target: 'SETUP_2006' },
+            text: `> WAGE MANDATE AUTHORIZED. INITIATING TEMPORAL ADVANCEMENT...`
+        },
+
+        'WAGE_VETO': {
+            effect: (m) => { m.pol -= 30; m.vel += 15; m.friction -= 10; },
+            lag: { years: 2, target: 'SETUP_2006' },
+            text: `> MANDATE VETOED. INITIATING TEMPORAL ADVANCEMENT...`
+        },
+
+        // ==========================================
+        // EPOCH: 2006 - THE RENT CONTROL AUDIT
+        // ==========================================
+        'SETUP_2006': {
+            text: `<span class="sys-alert">> SYSTEM ALERT: HOUSING SHORTAGE DETECTED [EPOCH: 2006]</span>\n
+<span class="voice-cos">[CHIEF OF STAFF]:</span> "The housing market is overheating. Urban renters are being squeezed. Congress has the 'Emergency Rent Stabilization Act' ready. It caps rent increases at 2% nationally. We need a signature."\n
+<span style="color:#64748b;">>> TYPE 'ANALYZE' TO ENGAGE FRIEDMAN PROTOCOL</span>
+<span style="color:#64748b;">>> TYPE 'DIRECTIVES' TO PROCEED</span>`,
+            choices: { 'ANALYZE': 'FRIEDMAN_2006', 'DIRECTIVES': 'CHOICES_2006' }
+        },
+
+        'FRIEDMAN_2006': {
+            text: `> INITIATE_FRIEDMAN_PROTOCOL...\n
+<span class="voice-friedman">[FRIEDMAN_AI]:</span> "If you dictate that a builder cannot charge the market clearing rate, capital will instantly reallocate away from housing. A price ceiling creates a visual illusion of affordability while mathematically guaranteeing a physical shortage."\n
+<div class="btn-container">
+    <div class="decrypt-btn" onclick="toggleAccordion(this, 'decrypt-btn')">[+] DECRYPT SECOND-ORDER PHYSICS</div>
+    <div class="audit-btn" onclick="toggleAccordion(this, 'audit-btn')">[+] PULL HISTORICAL AUDIT</div>
+</div>
+<div class="accordion-content content-red">Incumbent developers will use loopholes to monopolize new builds, while existing housing stock rots as landlords slash maintenance to preserve margins. You are freezing the housing supply exactly where it is.</div>
+<div class="accordion-content content-green"><span class="audit-header">:: EMPIRICAL BASE RATE: ST. PAUL VS MINNEAPOLIS (2021)</span>
+> <b>POLICY INPUT:</b> St. Paul passed a strict 3% rent cap. Across the river, Minneapolis did not.\n
+> <b>MATHEMATICAL OUTPUT:</b> Within 90 days, multi-family building permits in St. Paul plummeted by over 80%. Meanwhile, in Minneapolis, construction permits spiked by nearly 70%. Capital is agnostic; it fled across the river. The 'unseen' missing houses in St. Paul were mathematically captured by the surge in Minneapolis.</div>\n
+<span style="color:#64748b;">>> TYPE 'DIRECTIVES' TO VIEW EXECUTIVE OPTIONS</span>`,
+            choices: { 'DIRECTIVES': 'CHOICES_2006' }
+        },
+
+        'CHOICES_2006': {
+            text: `SYSTEM AWAITING EXECUTIVE DIRECTIVE:\n
+<span class="highlight-directive">:: SIGN_STABILIZATION_ACT</span> (The Political Play: Secure midterms, lock in generational housing deficit.)
+<span class="highlight-directive">:: VETO_AND_DEREGULATE</span> (The Structural Fix: Withhold federal funds to break localized zoning laws.)`,
+            choices: { 'SIGN_STABILIZATION_ACT': 'RENT_ACT', 'VETO_AND_DEREGULATE': 'RENT_VETO' }
+        },
+
+        'RENT_ACT': {
+            effect: (m) => { m.pol += 20; m.friction += 30; m.pp -= 15; },
+            lag: { years: 2, target: 'SETUP_2008' },
+            text: `> RENT CAP AUTHORIZED. INITIATING TEMPORAL ADVANCEMENT...`
+        },
+
+        'RENT_VETO': {
+            effect: (m) => { m.pol -= 25; m.vel += 15; m.friction -= 15; },
+            lag: { years: 2, target: 'SETUP_2008' },
+            text: `> RENT CAP VETOED. INITIATING TEMPORAL ADVANCEMENT...`
+        },
+
+        // ==========================================
+        // EPOCH: 2008 - TOO BIG TO FAIL
+        // ==========================================
+        'SETUP_2008': {
+            text: `<span class="sys-alert">> CRITICAL FAILURE: SUBPRIME DETONATION DETECTED [EPOCH: 2008]</span>\n
+<span class="voice-cos">[CHIEF OF STAFF]:</span> "Mr. President, Lehman Brothers just filed for bankruptcy. The commercial paper market has frozen. The Treasury Secretary says if we do not inject $700 Billion to buy toxic mortgage-backed securities by Monday, the global ATM network will shut down. We must pass TARP immediately. The banks are 'Too Big To Fail'."\n
+<span style="color:#64748b;">>> TYPE 'ANALYZE' TO ENGAGE FRIEDMAN PROTOCOL</span>
+<span style="color:#64748b;">>> TYPE 'DIRECTIVES' TO PROCEED</span>`,
+            choices: { 'ANALYZE': 'FRIEDMAN_2008', 'DIRECTIVES': 'CHOICES_2008' }
+        },
+
+        'FRIEDMAN_2008': {
+            text: `> INITIATE_FRIEDMAN_PROTOCOL...\n
+<span class="voice-friedman">[FRIEDMAN_AI]:</span> "This is the mathematical destination of the credit expansion you authorized. The banks did not act irrationally; they acted exactly as your incentive structure dictated."\n
+<div class="btn-container">
+    <div class="decrypt-btn" onclick="toggleAccordion(this, 'decrypt-btn')">[+] DECRYPT SECOND-ORDER PHYSICS</div>
+    <div class="audit-btn" onclick="toggleAccordion(this, 'audit-btn')">[+] PULL HISTORICAL AUDIT</div>
+</div>
+<div class="accordion-content content-red">If you authorize TARP, you institutionalize <u class="lexicon-term" data-definition="The phenomenon where policymakers break their own long-term rules to solve a short-term crisis. True incentive: Bailouts teach the market that catastrophic risk is subsidized by the state.">Time Inconsistency</u>. You permanently sever the relationship between risk and consequence. Through the Cantillon Effect, the $700B will stabilize prime brokers while the middle class absorbs the inflation.</div>
+<div class="accordion-content content-green"><span class="audit-header">:: EMPIRICAL BASE RATE: QUANTITATIVE EASING</span>
+> The Federal Reserve's balance sheet exploded from $900B to $4.5T. The intended effect was Main Street lending. The actual effect was zero-interest rates driving institutional capital into equities. Result: The S&P 500 experienced record bull runs while median wages stagnated.</div>\n
+<span style="color:#64748b;">>> TYPE 'DIRECTIVES' TO VIEW EXECUTIVE OPTIONS</span>`,
+            choices: { 'DIRECTIVES': 'CHOICES_2008' }
+        },
+
+        'CHOICES_2008': {
+            text: (m) => {
+                let options = `SYSTEM AWAITING EXECUTIVE DIRECTIVE:\n\n<span class="highlight-directive">:: SIGN_TARP_BAILOUT</span>\n(The Extortion: Print $700B to purchase toxic assets. Socialize the losses.)\n\n`;
+                if (m.friction > 80) {
+                    options += `<span style="color:#64748b; text-decoration: line-through;">:: LIQUIDATE_THE_BANKS</span>\n<span class="sys-alert">[SYSTEM LOCKED]: SYSTEMIC FRICTION TOO HIGH (${m.friction}%). PAST CAPITULATIONS HAVE ROTTED THE FOUNDATION. MARKET CLEARING IMPOSSIBLE WITHOUT SOVEREIGN DEFAULT.</span>`;
+                } else {
+                    options += `<span class="highlight-directive">:: LIQUIDATE_THE_BANKS</span>\n(The Mellon Approach: Let the banks fail. Purge the rottenness out of the system.)`;
+                }
+                return options;
+            },
+            choices: (m) => {
+                if (m.friction > 80) return { 'SIGN_TARP_BAILOUT': 'TARP_BAILOUT' };
+                return { 'SIGN_TARP_BAILOUT': 'TARP_BAILOUT', 'LIQUIDATE_THE_BANKS': 'LIQUIDATE_BANKS' };
+            }
+        },
+
+        'TARP_BAILOUT': {
+            effect: (m) => { m.pol += 20; m.pp -= 40; m.friction = 100; },
+            text: `> TARP AUTHORIZED. $700B INJECTED INTO PRIME BROKERS.\n
+<span class="voice-cos">[CHIEF OF STAFF]:</span> "The bleeding has stopped. The Dow is rallying. The press is calling you the savior of the global financial system."\n
+<span class="voice-friedman">[FRIEDMAN_AI]:</span> "You have saved the banks, but destroyed the currency. Purchasing Power (PP) is structurally compromised. Systemic Friction is at absolute maximum. The next bubble will be sovereign debt."\n
+<span class="sys-alert">> SIMULATION SURVIVED. STRUCTURAL INTEGRITY COMPROMISED.</span>\n
+<span style="color:#64748b;">>> SYSTEM HALTED.</span>`,
+            choices: {}
+        },
+
+        'LIQUIDATE_BANKS': {
+            effect: (m) => { m.pol = 0; m.vel -= 60; m.pp += 10; m.friction = 0; },
+            text: `> BAILOUT VETOED. INSTITUTIONAL LIQUIDATION INITIATED.\n
+<span class="voice-cos">[CHIEF OF STAFF]:</span> "God help us. The ATMs are down. Main Street businesses are shuttering. You will face impeachment proceedings by the end of the month."\n
+<span class="voice-friedman">[FRIEDMAN_AI]:</span> "The short-term devastation is absolute. Capital Velocity (VEL) has collapsed. However... Systemic Friction is gone. The banks that emerge from this wreckage will be over-capitalized. You burned your presidency to save the integrity of the dollar."\n
+<span class="sys-success">> INCUMBENCY TERMINATED. VINDICATED IN EXILE.</span>\n
+<span style="color:#64748b;">>> SYSTEM HALTED.</span>`,
+            choices: {}
+        },
+
+        'WEIMAR_COLLAPSE': {
+            text: `<span class="sys-alert">> CRITICAL FAILURE: PURCHASING POWER DEPLETED. CURRENCY COLLAPSE DETECTED.</span>\n
+<span class="voice-cos">[CHIEF OF STAFF]:</span> "Mr. President... the Treasury bond auctions just failed. Foreign creditors are dumping the dollar. The inflation rate is unquantifiable. The polling data doesn't matter anymore; there are riots outside the Fed."\n
+<span class="voice-friedman">[FRIEDMAN_AI]:</span> "You optimized entirely for Political Capital. You subsidized demand, capped prices, and printed liquidity to appease every lobbyist and union that threatened your incumbency. You won the elections, but you destroyed the mathematics of the state. The fiat currency has returned to its intrinsic value: zero." \n
+<span class="sys-alert">> INCUMBENCY IRRELEVANT. SOVEREIGN DEFAULT.</span>\n
+<span style="color:#64748b;">>> SYSTEM HALTED.</span>`,
             choices: {}
         }
     };
 
     function updateHUD() {
+        document.getElementById('hud-year').innerText = `YEAR: ${metrics.year}`;
         document.getElementById('hud-pp').innerText = `PP: ${metrics.pp}%`;
         document.getElementById('hud-pol').innerText = `POL: ${metrics.pol}%`;
         document.getElementById('hud-vel').innerText = `VEL: ${metrics.vel}%`;
         document.getElementById('hud-fric').innerText = `FRIC: ${metrics.friction}%`;
         
-        if(metrics.pp < 50) document.getElementById('hud-pp').classList.add('stat-critical');
-        if(metrics.pol < 20) document.getElementById('hud-pol').classList.add('stat-critical');
+        const ppEl = document.getElementById('hud-pp');
+        const polEl = document.getElementById('hud-pol');
+        const fricEl = document.getElementById('hud-fric');
+
+        ppEl.className = 'hud-stat'; polEl.className = 'hud-stat'; fricEl.className = 'hud-stat';
+
+        if(metrics.pp < 50) ppEl.classList.add('stat-critical');
+        if(metrics.pp > 110) ppEl.classList.add('stat-optimal');
+        if(metrics.pol < 20) polEl.classList.add('stat-critical');
+        if(metrics.friction > 80) fricEl.classList.add('stat-critical');
+
+        updateTicker();
     }
 
-    // String-builder typewriter prevents unclosed tags and DOM corruption
     function printText(textString, speed = 8, callback) {
-        isTyping = true;
-        inputField.disabled = true;
-        
-        let i = 0;
-        let currentHTML = "";
-        
+        isTyping = true; inputField.disabled = true;
+        let i = 0; let currentHTML = "";
         const block = document.createElement('div');
         block.className = 'msg-block';
         outputDiv.appendChild(block);
@@ -366,79 +531,146 @@ However, the $50B injection triggers localized inflation via the <u class="lexic
             if (i < textString.length) {
                 if (textString.charAt(i) === '<') {
                     let tag = "";
-                    while (textString.charAt(i) !== '>' && i < textString.length) {
-                        tag += textString.charAt(i);
-                        i++;
-                    }
-                    tag += '>';
-                    currentHTML += tag;
-                } else {
-                    currentHTML += textString.charAt(i);
-                }
-                
-                block.innerHTML = currentHTML;
-                i++;
+                    while (textString.charAt(i) !== '>' && i < textString.length) { tag += textString.charAt(i); i++; }
+                    tag += '>'; currentHTML += tag;
+                } else { currentHTML += textString.charAt(i); }
+                block.innerHTML = currentHTML; i++;
                 outputDiv.scrollTop = outputDiv.scrollHeight;
                 setTimeout(type, speed);
             } else {
-                isTyping = false;
-                inputField.disabled = false;
-                inputField.focus();
+                isTyping = false; inputField.disabled = false; inputField.focus();
                 if (callback) callback();
             }
         }
         type();
     }
 
-    function toggleDecrypt(btn) {
-        const content = btn.nextElementSibling;
-        if (content && content.classList.contains('decrypt-content')) {
-            content.classList.toggle('expanded');
-            btn.innerText = content.classList.contains('expanded') 
-                ? '[-] COLLAPSE STRUCTURAL AUDIT' 
-                : '[+] DECRYPT SECOND-ORDER PHYSICS';
+    function toggleAccordion(btn, type) {
+        let targetContent = btn.parentElement.nextElementSibling;
+        if (type === 'audit-btn') {
+            targetContent = btn.parentElement.nextElementSibling.nextElementSibling;
+            if(!targetContent || !targetContent.classList.contains('accordion-content')) targetContent = btn.nextElementSibling; 
+        }
+        if (targetContent && targetContent.classList.contains('accordion-content')) {
+            targetContent.classList.toggle('expanded');
+            if (type === 'decrypt-btn') {
+                btn.innerText = targetContent.classList.contains('expanded') ? '[-] COLLAPSE STRUCTURAL AUDIT' : '[+] DECRYPT SECOND-ORDER PHYSICS';
+            } else if (type === 'audit-btn') {
+                btn.innerText = targetContent.classList.contains('expanded') ? '[-] CLOSE HISTORICAL AUDIT' : '[+] PULL HISTORICAL AUDIT';
+            }
             setTimeout(() => outputDiv.scrollTop = outputDiv.scrollHeight, 150);
         }
+    }
+
+    function executeMetricsCommand() {
+        const hReal = historicalReality[metrics.year] || { pp: 'N/A', pol: 'N/A', vel: 'N/A', fric: 'N/A', optimal_fric: '0' };
+        let metricsOutput = `> EXECUTING STRUCTURAL AUDIT [EPOCH: ${metrics.year}]...\n\n`;
+        metricsOutput += `<span style="color:#94a3b8;">--------------------------------------------------</span>\n`;
+        metricsOutput += `<span style="color:#f8fafc; font-weight:bold;">METRIC                 PLAYER    | HISTORICAL | OPTIMAL</span>\n`;
+        metricsOutput += `<span style="color:#94a3b8;">--------------------------------------------------</span>\n`;
+        metricsOutput += `Purchasing Power (PP): <span style="color:#58a6ff;">${metrics.pp.toString().padEnd(9)}</span> | ${hReal.pp.toString().padEnd(10)} | 100+\n`;
+        metricsOutput += `Systemic Fric. (FRIC): <span style="color:#e63946;">${metrics.friction.toString().padEnd(9)}</span> | ${hReal.fric.toString().padEnd(10)} | 0\n`;
+        metricsOutput += `Capital Velocity (VEL):<span style="color:#f8fafc;">${metrics.vel.toString().padEnd(9)}</span> | ${hReal.vel.toString().padEnd(10)} | 100+\n`;
+        metricsOutput += `Political Cap. (POL):  <span style="color:#4ade80;">${metrics.pol.toString().padEnd(9)}</span> | ${hReal.pol.toString().padEnd(10)} | N/A\n`;
+        metricsOutput += `<span style="color:#94a3b8;">--------------------------------------------------</span>\n`;
+        
+        const echoBlock = document.createElement('div');
+        echoBlock.style.color = '#58a6ff';
+        echoBlock.style.marginBottom = '15px';
+        echoBlock.innerHTML = `> METRICS`;
+        outputDiv.appendChild(echoBlock);
+        inputField.value = '';
+
+        printText(metricsOutput);
+    }
+
+    function simulateLag(yearsToPass, targetNode) {
+        inputField.disabled = true;
+        isTyping = true;
+        let count = 0;
+        
+        function tick() {
+            if (count < yearsToPass) {
+                metrics.year++;
+                timeOverlay.innerText = metrics.year;
+                timeOverlay.classList.add('active');
+                
+                // Slight random drift during transition to simulate market noise
+                metrics.vel += Math.floor(Math.random() * 5) - 2;
+                if(metrics.friction > 50) metrics.pp -= 2; 
+                
+                updateHUD();
+                
+                setTimeout(() => { timeOverlay.classList.remove('active'); }, 400);
+                count++;
+                setTimeout(tick, 1000);
+            } else {
+                isTyping = false;
+                inputField.disabled = false;
+                
+                // Check Weimar condition post-lag
+                if (metrics.pp <= 20) {
+                    renderNode('WEIMAR_COLLAPSE');
+                } else {
+                    renderNode(targetNode);
+                }
+            }
+        }
+        setTimeout(tick, 500);
     }
 
     function renderNode(nodeId) {
         currentNodeId = nodeId;
         const nodeRaw = storyNodes[nodeId];
         
+        if (nodeRaw.lag) {
+            simulateLag(nodeRaw.lag.years, nodeRaw.lag.target);
+            return;
+        }
+
         if (typeof nodeRaw.effect === 'function') {
             nodeRaw.effect(metrics);
             updateHUD();
         }
 
-        printText(nodeRaw.text);
+        let textToPrint = typeof nodeRaw.text === 'function' ? nodeRaw.text(metrics) : nodeRaw.text;
+        printText(textToPrint);
+        
+        // Immediate check for Weimar
+        if (metrics.pp <= 20 && nodeId !== 'WEIMAR_COLLAPSE') {
+            setTimeout(() => { renderNode('WEIMAR_COLLAPSE'); }, 2000);
+        }
     }
 
     function handleInput(rawCmd) {
         if (isTyping) return;
-        
         const cmd = rawCmd.trim().toUpperCase().replace(/\s+/g, '_');
         if (cmd === '') return;
 
-        // Echo command
+        if (cmd === 'METRICS') {
+            executeMetricsCommand();
+            return;
+        }
+
         const echoBlock = document.createElement('div');
         echoBlock.style.color = '#58a6ff';
         echoBlock.style.marginBottom = '15px';
         echoBlock.innerHTML = `> ${cmd}`;
         outputDiv.appendChild(echoBlock);
-        
         inputField.value = '';
 
         const node = storyNodes[currentNodeId];
         let nextNodeId = null;
 
-        if (node.choices) {
-            for (const [key, val] of Object.entries(node.choices)) {
+        let availableChoices = typeof node.choices === 'function' ? node.choices(metrics) : node.choices;
+
+        if (availableChoices) {
+            for (const [key, val] of Object.entries(availableChoices)) {
                 if (cmd === key.toUpperCase()) {
                     nextNodeId = val;
                     break;
                 }
             }
-            
             if (nextNodeId && storyNodes[nextNodeId]) {
                 renderNode(nextNodeId);
             } else {
@@ -448,17 +680,10 @@ However, the $50B injection triggers localized inflation via the <u class="lexic
     }
 
     inputField.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            handleInput(inputField.value);
-        }
+        if (e.key === 'Enter') { e.preventDefault(); handleInput(inputField.value); }
     });
 
-    // Boot Sequence
-    setTimeout(() => {
-        updateHUD();
-        renderNode('SETUP_1');
-    }, 500);
+    setTimeout(() => { updateHUD(); renderNode('SETUP_2002'); }, 500);
 
 </script>
 </body>
