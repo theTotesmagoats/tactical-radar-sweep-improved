@@ -1,17 +1,3 @@
-Here is the first draft of the ATLAS Economic Simulator chassis.
-
-I have stripped the physical survival narrative and re-engineered the logic loop to process macroeconomic trade-offs, public choice theory, and the progressive disclosure architecture we designed.
-
-### Architectural Updates:
-
-1. **The HUD:** Variables are now `PP` (Purchasing Power), `POL` (Political Capital), `VEL` (Capital Velocity), and `FRIC` (Systemic Friction).
-2. **The Lexicon Engine:** CSS logic specifically designed to handle `<u class="lexicon-term">` tags, rendering unvarnished institutional definitions on hover.
-3. **Progressive Disclosure:** A dynamic `[+] DECRYPT SECOND-ORDER PHYSICS` button that expands hidden structural audits without breaking the terminal's typewriter effect.
-4. **The Capitulation Engine:** Node 1 (Rent Stabilization) includes the legislative blockade mechanism.
-
-Save this as an `.html` file and run it locally.
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,7 +8,7 @@ Save this as an `.html` file and run it locally.
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #010409;
+            background-color: #02040a; /* Almost black behind the chassis */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -34,36 +20,22 @@ Save this as an `.html` file and run it locally.
         }
 
         #chassis {
-            background-color: #16191e;
+            background-color: #0a1128; /* Deep Navy */
             background-image: 
-                radial-gradient(circle at 50% 0%, rgba(255,255,255,0.03) 0%, transparent 70%),
-                url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.06"/%3E%3C/svg%3E');
+                radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05) 0%, transparent 70%),
+                url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.04"/%3E%3C/svg%3E');
             width: 96vw;
             height: 96vh;
             padding: 50px 40px 80px 40px; 
-            border-radius: 32px;
+            border-radius: 16px; /* Sharper corners for federal feel */
             box-sizing: border-box;
-            box-shadow: inset 0 0 30px #000, 0 0 50px rgba(255, 176, 0, 0.05), 0 20px 50px rgba(0,0,0,0.8);
-            border: 8px solid #080a0c;
-            border-top: 8px solid #11141a;
+            box-shadow: inset 0 0 40px #010205, 0 0 50px rgba(10, 17, 40, 0.8), 0 20px 50px rgba(0,0,0,0.9);
+            border: 8px solid #050814;
+            border-top: 8px solid #080d1f;
             position: relative;
             display: flex;
             flex-direction: column;
-            transition: transform 0.05s, border-color 0.3s;
         }
-
-        .rivet {
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            background: #111;
-            border-radius: 50%;
-            box-shadow: inset 2px 2px 4px #333, inset -2px -2px 4px #000, 1px 1px 2px rgba(255,255,255,0.05);
-        }
-        .r-tl { top: 20px; left: 20px; }
-        .r-tr { top: 20px; right: 20px; }
-        .r-bl { bottom: 20px; left: 20px; }
-        .r-br { bottom: 20px; right: 20px; }
 
         #bezel-stamp {
             position: absolute;
@@ -72,44 +44,30 @@ Save this as an `.html` file and run it locally.
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             font-size: 1.1rem;
             font-weight: 900;
-            color: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.15);
             letter-spacing: 4px;
             text-transform: uppercase;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.9), -1px -1px 1px rgba(255,255,255,0.03);
-            pointer-events: none;
-        }
-
-        #bezel-warning {
-            position: absolute;
-            top: 18px;
-            right: 50px;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 0.6rem;
-            font-weight: bold;
-            color: rgba(255, 170, 0, 0.15);
-            text-align: right;
-            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.9);
             pointer-events: none;
         }
 
         #screen {
-            background: #0d0901;
+            background: #030712; /* Core screen background */
             width: 100%;
             height: 100%;
-            border-radius: 24px;
-            padding: 35px;
+            border-radius: 12px;
+            padding: 30px;
             box-sizing: border-box;
-            border: 2px solid rgba(255, 176, 0, 0.3);
-            box-shadow: inset 0 0 80px rgba(0,0,0,1), 0 0 10px rgba(255, 176, 0, 0.05);
+            border: 2px solid rgba(88, 166, 255, 0.2); /* Subtle blue glow frame */
+            box-shadow: inset 0 0 80px rgba(0,0,0,1), 0 0 15px rgba(88, 166, 255, 0.05);
             position: relative;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
-            color: #ffb000; 
-            text-shadow: 0 0 3px #ffb000, 0 0 8px rgba(255, 176, 0, 0.4); 
-            font-size: 1.9rem;
+            color: #f8fafc; /* Crisp White Text */
+            text-shadow: 0 0 2px rgba(255, 255, 255, 0.8), 0 0 8px rgba(255, 255, 255, 0.3); 
+            font-size: 1.8rem;
             letter-spacing: 1px;
-            line-height: 1.35;
+            line-height: 1.4;
             animation: flicker 0.15s infinite;
         }
 
@@ -134,10 +92,15 @@ Save this as an `.html` file and run it locally.
             flex-grow: 1;
             overflow-y: auto;
             white-space: pre-wrap;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             padding-right: 15px;
+            padding-top: 10px;
             z-index: 3;
             word-wrap: break-word;
+        }
+
+        .msg-block {
+            margin-bottom: 20px;
         }
 
         #input-line {
@@ -146,9 +109,11 @@ Save this as an `.html` file and run it locally.
             font-weight: bold;
             z-index: 3;
             margin-bottom: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        #prompt { margin-right: 15px; }
+        #prompt { margin-right: 15px; color: #58a6ff; }
 
         input[type="text"] {
             background: transparent;
@@ -164,21 +129,23 @@ Save this as an `.html` file and run it locally.
         }
 
         #hud-bar {
-            border-top: 2px solid #664f1c;
-            padding-top: 10px;
+            border-top: 2px solid rgba(255, 255, 255, 0.1);
+            padding-top: 15px;
             margin-top: auto;
             font-size: 1.6rem;
-            color: #ffb000;
+            color: #f8fafc;
             z-index: 3;
             display: flex;
             justify-content: space-between;
         }
 
         .hud-stat { font-weight: bold; }
-        .stat-critical { color: #ff3333 !important; text-shadow: 0 0 5px #ff3333 !important; animation: blinker 1s infinite; }
+        
+        /* Critical Red State */
+        .stat-critical { color: #e63946 !important; text-shadow: 0 0 8px #e63946 !important; animation: blinker 1s infinite; }
         @keyframes blinker { 50% { opacity: 0.4; } }
 
-        /* THE LEXICON ENGINE */
+        /* THE LEXICON ENGINE (Blue) */
         .lexicon-term {
             color: #58a6ff;
             text-decoration: underline;
@@ -195,14 +162,14 @@ Save this as an `.html` file and run it locally.
                 bottom: 120%;
                 left: 50%;
                 transform: translateX(-50%);
-                width: 400px;
-                background: #080a0c;
-                border: 1px solid #ff3333;
-                color: #e0e0e0;
+                width: 450px;
+                background: #050814;
+                border: 1px solid #58a6ff;
+                color: #f8fafc;
                 padding: 15px;
                 font-family: 'VT323', monospace;
-                font-size: 1.3rem;
-                line-height: 1.2;
+                font-size: 1.4rem;
+                line-height: 1.3;
                 text-align: left;
                 box-shadow: 0 10px 30px rgba(0,0,0,0.9);
                 opacity: 0;
@@ -215,46 +182,49 @@ Save this as an `.html` file and run it locally.
             .lexicon-term:hover::after { opacity: 1; }
         }
 
-        /* PROGRESSIVE DISCLOSURE ACCORDION */
+        /* PROGRESSIVE DISCLOSURE ACCORDION (Red) */
         .decrypt-btn {
             display: inline-block;
-            background: #2a0a0a;
-            border: 1px solid #ff3333;
-            color: #ff3333;
-            padding: 2px 8px;
+            background: rgba(230, 57, 70, 0.1);
+            border: 1px solid #e63946;
+            color: #e63946;
+            padding: 4px 10px;
             margin-top: 10px;
             cursor: pointer;
             font-family: inherit;
             font-size: 1em;
-            text-shadow: 0 0 5px #ff3333;
+            text-shadow: 0 0 5px #e63946;
             transition: all 0.2s;
+            user-select: none;
         }
         .decrypt-btn:hover {
-            background: #ff3333;
-            color: #000;
-            box-shadow: 0 0 15px #ff3333;
+            background: #e63946;
+            color: #030712;
+            box-shadow: 0 0 15px rgba(230, 57, 70, 0.6);
+            text-shadow: none;
         }
         .decrypt-content {
             max-height: 0;
             overflow: hidden;
             opacity: 0;
             transition: max-height 0.4s ease-out, opacity 0.4s ease-out;
-            color: #e0e0e0;
-            border-left: 2px solid #ff3333;
+            color: #cbd5e1;
+            border-left: 2px solid #e63946;
             padding-left: 15px;
-            margin-top: 5px;
+            margin-top: 0px;
             text-shadow: none;
         }
         .decrypt-content.expanded {
-            max-height: 1000px;
+            max-height: 1200px;
             opacity: 1;
             margin-top: 15px;
             margin-bottom: 15px;
         }
 
-        .voice-cos { color: #a8b2c1; }
-        .voice-friedman { color: #58a6ff; }
-        .highlight-directive { color: #ffb000; opacity: 0.8; }
+        .voice-cos { color: #94a3b8; font-weight: bold; } /* Muted silver for CoS */
+        .voice-friedman { color: #ffffff; font-weight: bold; text-shadow: 0 0 5px #fff; } /* Stark white for Truth */
+        .highlight-directive { color: #58a6ff; font-weight: bold; } /* Blue for player inputs */
+        .sys-alert { color: #e63946; text-shadow: 0 0 5px #e63946; font-weight: bold; } /* Aggressive Red */
 
     </style>
 </head>
@@ -266,8 +236,7 @@ Save this as an `.html` file and run it locally.
     <div class="rivet r-bl"></div>
     <div class="rivet r-br"></div>
     
-    <div id="bezel-stamp">ATLAS // MACRO-SIM // v1.0</div>
-    <div id="bezel-warning">UNAUTHORIZED ACCESS RESTRICTED</div>
+    <div id="bezel-stamp">ATLAS // CONTINUITY OF GOV // v1.3</div>
 
     <div id="screen">
         <div id="output"></div>
@@ -288,57 +257,86 @@ Save this as an `.html` file and run it locally.
     const outputDiv = document.getElementById('output');
     const inputField = document.getElementById('cmd');
 
-    // MACROECONOMIC METRICS
     let metrics = {
-        pp: 100,      // Purchasing Power (True wealth)
-        pol: 50,      // Political Capital (Legislative power)
-        vel: 100,     // Capital Velocity (Market efficiency)
-        friction: 0   // Systemic Friction (Regulatory capture/deadweight loss)
+        pp: 100,      // Purchasing Power
+        pol: 50,      // Political Capital
+        vel: 100,     // Capital Velocity
+        friction: 0   // Systemic Friction
     };
 
-    let currentNodeId = 'INIT';
+    let currentNodeId = 'SETUP_1';
     let isTyping = false;
 
-    // THE NARRATIVE MATRIX
+    // THE PHASED NARRATIVE MATRIX
     const storyNodes = {
-        'INIT': {
-            text: `> SYSTEM ALERT: CRISIS PROTOCOL INITIATED\n
-<span class="voice-cos">[CHIEF OF STAFF]:</span> "Mr. President, housing costs in major metros are up 18% YoY. The press is demanding action. Congress has the 'Emergency Rent Stabilization Act' ready. It caps rent increases at 2% nationally. We need a signature, or we hemorrhage seats in the midterms."\n
-> INITIATE_FRIEDMAN_PROTOCOL...\n
-<span class="voice-friedman">[FRIEDMAN_AI]:</span> "The political instinct is to treat the symptom. We must treat the incentive. If you dictate that a builder cannot charge the market clearing rate, capital will instantly reallocate away from housing. A price ceiling creates a visual illusion of affordability while mathematically guaranteeing a physical shortage."\n
-<div class="decrypt-btn" onclick="toggleDecrypt(this)">[+] DECRYPT SECOND-ORDER PHYSICS</div>
-<div class="decrypt-content">
-
-[Image of supply and demand curve with a price ceiling]
-
-<br><br>The bill contains a <u class="lexicon-term" data-definition="A legal mechanism where developers pay zero property taxes for decades if they designate a fraction of units as 'affordable'. True incentive: Forfeits municipal revenue, shifting the tax burden to the existing middle class to subsidize institutional profit margins.">421-a Tax Abatement</u>. By suppressing the legal price of a commodity, the cost does not disappear; it is transferred to the political sphere. Incumbent developers will use the abatement to monopolize new builds, while existing housing stock rots as landlords slash maintenance to preserve margins.</div>\n
-SYSTEM AWAITING EXECUTIVE DIRECTIVE:
-<span class="highlight-directive">:: SIGN_STABILIZATION_ACT</span> (The Political Play: Buy time today, burn the future.)
-<span class="highlight-directive">:: VETO_AND_SUBSIDIZE</span> (The Compromise: Federal vouchers.)
-<span class="highlight-directive">:: VETO_AND_DEREGULATE</span> (The Structural Fix: Withhold federal highway funds to break local zoning.)`,
-            choices: { 'SIGN_STABILIZATION_ACT': 'SIGN_ACT', 'VETO_AND_SUBSIDIZE': 'SUBSIDIZE', 'VETO_AND_DEREGULATE': 'CAPITULATION_ENGINE' }
+        'SETUP_1': {
+            text: `<span class="sys-alert">> SYSTEM ALERT: CRISIS PROTOCOL INITIATED</span>\n
+<span class="voice-cos">[CHIEF OF STAFF]:</span> "Mr. President, the <u class="lexicon-term" data-definition="Consumer Price Index (Core). Strips out food and energy under the guise of 'volatility'. True incentive: If the government reported true inflation including food and fuel, entitlement obligations tied to CPI would bankrupt the Treasury.">Core CPI</u> print came in hot. Housing costs in major metros are up 18% YoY. Congress just put the 'Emergency Rent Stabilization Act' on your desk. It caps rent increases at 2% nationally. If we veto this, we hemorrhage seats in the midterms. We need a signature."\n
+<span style="color:#64748b;">>> TYPE 'ANALYZE' TO ENGAGE FRIEDMAN PROTOCOL</span>`,
+            choices: { 'ANALYZE': 'FRIEDMAN_1' }
         },
         
-        'CAPITULATION_ENGINE': {
+        'FRIEDMAN_1': {
+            text: `> INITIATE_FRIEDMAN_PROTOCOL...\n
+<span class="voice-friedman">[FRIEDMAN_AI]:</span> "The political instinct is to treat the symptom. We must treat the incentive. If you dictate that a builder cannot charge the market clearing rate, capital will instantly reallocate away from housing. A price ceiling creates a visual illusion of affordability while mathematically guaranteeing a physical shortage."\n
+<div class="decrypt-btn" onclick="toggleDecrypt(this)">[+] DECRYPT SECOND-ORDER PHYSICS</div>
+<div class="decrypt-content">The bill contains a <u class="lexicon-term" data-definition="A legal mechanism where developers pay zero property taxes for decades if they designate a fraction of units as 'affordable'. True incentive: Forfeits municipal revenue, shifting the tax burden to the existing middle class to subsidize institutional profit margins.">421-a Tax Abatement</u>. By suppressing the legal price of a commodity, the cost does not disappear; it is transferred to the political sphere. Incumbent developers will use the abatement to monopolize new builds, while existing housing stock rots as landlords slash maintenance to preserve margins.</div>\n
+<span style="color:#64748b;">>> TYPE 'DIRECTIVES' TO VIEW EXECUTIVE OPTIONS</span>`,
+            choices: { 'DIRECTIVES': 'CHOICES_1' }
+        },
+
+        'CHOICES_1': {
+            text: `SYSTEM AWAITING EXECUTIVE DIRECTIVE:\n
+<span class="highlight-directive">:: SIGN_STABILIZATION_ACT</span>
+(The Political Play: Secure midterms, lock in generational housing deficit.)
+
+<span class="highlight-directive">:: VETO_AND_SUBSIDIZE</span>
+(The Coward's Compromise: Float rents, issue federal housing vouchers. Drives localized inflation.)
+
+<span class="highlight-directive">:: VETO_AND_DEREGULATE</span>
+(The Structural Fix: Withhold federal highway funds to break localized zoning laws.)`,
+            choices: { 
+                'SIGN_STABILIZATION_ACT': 'BLOCKADE_1', 
+                'VETO_AND_SUBSIDIZE': 'BLOCKADE_1', 
+                'VETO_AND_DEREGULATE': 'BLOCKADE_1' 
+            }
+        },
+
+        'BLOCKADE_1': {
             effect: (m) => { m.pol -= 10; },
-            text: `> COMMAND ENTERED: VETO_AND_DEREGULATE
-> EXECUTING...
-> <span style="color:#ff3333">ERROR: LEGISLATIVE BLOCKADE DETECTED.</span>\n
+            text: `> EXECUTING STRUCTURAL FIX...
+<span class="sys-alert">> ERROR: LEGISLATIVE BLOCKADE DETECTED.</span>\n
 <span class="voice-cos">[CHIEF OF STAFF]:</span> "We are dead on arrival. The Senate Whip reports we have 47 votes. We need 51 to push the deregulation mandate past the committee. The farm lobby controls the missing four senators. They will not vote for your housing fix unless you pay the toll."\n
-SYSTEM AWAITING CAPITULATION DIRECTIVE:
-<span class="highlight-directive">:: APPEND_RIDER_AG_SUBSIDY</span> (Inject $50B in printed liquidity to domestic corn producers. Secures +4 Votes.)
-<span class="highlight-directive">:: APPEND_RIDER_TARIFF</span> (Place a 20% tariff on imported steel to appease domestic manufacturers. Secures +4 Votes.)
-<span class="highlight-directive">:: BURN_POLITICAL_CAPITAL</span> (Rely on executive orders. Bypasses the Senate. -40 POL.)`,
-            choices: { 'APPEND_RIDER_AG_SUBSIDY': 'AG_SUBSIDY', 'APPEND_RIDER_TARIFF': 'TARIFF', 'BURN_POLITICAL_CAPITAL': 'BURN_POL' }
+<span style="color:#64748b;">>> TYPE 'DIRECTIVES' TO VIEW CAPITULATION OPTIONS</span>`,
+            choices: { 'DIRECTIVES': 'CHOICES_2' }
+        },
+
+        'CHOICES_2': {
+            text: `SYSTEM AWAITING CAPITULATION DIRECTIVE:\n
+<span class="highlight-directive">:: APPEND_RIDER_AG_SUBSIDY</span>
+(Inject $50B in printed liquidity to domestic corn producers. Secures +4 Votes.)
+
+<span class="highlight-directive">:: BURN_POLITICAL_CAPITAL</span>
+(Rely on executive orders. Bypasses the Senate entirely. -40 POL.)`,
+            choices: { 'APPEND_RIDER_AG_SUBSIDY': 'AG_SUBSIDY', 'BURN_POLITICAL_CAPITAL': 'BURN_POL' }
         },
 
         'AG_SUBSIDY': {
             effect: (m) => { m.vel += 15; m.friction -= 10; m.pp -= 8; },
             text: `> RIDER APPENDED. DEREGULATION PASSED.\n
 <span class="voice-friedman">[FRIEDMAN_AI]:</span> "Structural fix achieved. Local zoning is broken. Capital will flood the housing market, lowering costs over the next 36 months.\n
-However, the $50B injection triggers localized inflation via the <u class="lexicon-term" data-definition="The observation that newly created fiat money does not enter the economy evenly. It benefits those closest to the creation point (asset holders, subsidized industries) before filtering down to wages, structurally reducing the purchasing power of the working class.">Cantillon Effect</u>. Absolute Purchasing Power (PP) has dropped by 8%. You fixed housing, but you debased the currency to do it."\n
-> NEXT QUARTER DATA LOADING...`,
-            choices: { 'NEXT': 'INIT' } // Loops for draft purposes
+However, the $50B injection triggers localized inflation via the <u class="lexicon-term" data-definition="The observation that newly created fiat money does not enter the economy evenly. It benefits those closest to the creation point (asset holders, subsidized industries) before filtering down to wages, structurally reducing the purchasing power of the working class.">Cantillon Effect</u>. Absolute Purchasing Power (PP) has dropped. You fixed housing, but you debased the currency to do it."\n
+<span style="color:#64748b;">>> SYSTEM HALTED FOR DIAGNOSTICS.</span>`,
+            choices: {}
+        },
+
+        'BURN_POL': {
+            effect: (m) => { m.pol -= 40; m.vel += 15; m.friction -= 15; },
+            text: `> EXECUTIVE ORDER ISSUED. DEREGULATION PASSED.\n
+<span class="voice-cos">[CHIEF OF STAFF]:</span> "You got your clean bill, but the Senate is furious. We are politically bankrupt. Do not expect them to pass anything else this year."\n
+<span class="voice-friedman">[FRIEDMAN_AI]:</span> "You absorbed the political cost to maintain mathematical integrity. Purchasing Power remains intact."\n
+<span style="color:#64748b;">>> SYSTEM HALTED FOR DIAGNOSTICS.</span>`,
+            choices: {}
         }
     };
 
@@ -352,49 +350,44 @@ However, the $50B injection triggers localized inflation via the <u class="lexic
         if(metrics.pol < 20) document.getElementById('hud-pol').classList.add('stat-critical');
     }
 
-    // A robust DOM-based typewriter to handle complex nested HTML (like accordions and tooltips)
-    function printText(htmlString, speed = 10, callback) {
+    // String-builder typewriter prevents unclosed tags and DOM corruption
+    function printText(textString, speed = 8, callback) {
         isTyping = true;
         inputField.disabled = true;
         
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = htmlString;
-        const nodes = Array.from(tempDiv.childNodes);
+        let i = 0;
+        let currentHTML = "";
         
-        let currentNodeIndex = 0;
-        let currentCharIndex = 0;
+        const block = document.createElement('div');
+        block.className = 'msg-block';
+        outputDiv.appendChild(block);
 
-        function typeLoop() {
-            if (currentNodeIndex >= nodes.length) {
+        function type() {
+            if (i < textString.length) {
+                if (textString.charAt(i) === '<') {
+                    let tag = "";
+                    while (textString.charAt(i) !== '>' && i < textString.length) {
+                        tag += textString.charAt(i);
+                        i++;
+                    }
+                    tag += '>';
+                    currentHTML += tag;
+                } else {
+                    currentHTML += textString.charAt(i);
+                }
+                
+                block.innerHTML = currentHTML;
+                i++;
+                outputDiv.scrollTop = outputDiv.scrollHeight;
+                setTimeout(type, speed);
+            } else {
                 isTyping = false;
                 inputField.disabled = false;
                 inputField.focus();
                 if (callback) callback();
-                return;
-            }
-
-            const node = nodes[currentNodeIndex];
-
-            if (node.nodeType === Node.TEXT_NODE) {
-                if (currentCharIndex < node.textContent.length) {
-                    outputDiv.appendChild(document.createTextNode(node.textContent[currentCharIndex]));
-                    currentCharIndex++;
-                    outputDiv.scrollTop = outputDiv.scrollHeight;
-                    setTimeout(typeLoop, speed);
-                } else {
-                    currentCharIndex = 0;
-                    currentNodeIndex++;
-                    typeLoop();
-                }
-            } else {
-                // Instantly append HTML elements (buttons, divs, spans) to preserve structure
-                outputDiv.appendChild(node.cloneNode(true));
-                currentNodeIndex++;
-                outputDiv.scrollTop = outputDiv.scrollHeight;
-                setTimeout(typeLoop, speed); 
             }
         }
-        typeLoop();
+        type();
     }
 
     function toggleDecrypt(btn) {
@@ -404,7 +397,7 @@ However, the $50B injection triggers localized inflation via the <u class="lexic
             btn.innerText = content.classList.contains('expanded') 
                 ? '[-] COLLAPSE STRUCTURAL AUDIT' 
                 : '[+] DECRYPT SECOND-ORDER PHYSICS';
-            setTimeout(() => outputDiv.scrollTop = outputDiv.scrollHeight, 100);
+            setTimeout(() => outputDiv.scrollTop = outputDiv.scrollHeight, 150);
         }
     }
 
@@ -417,7 +410,6 @@ However, the $50B injection triggers localized inflation via the <u class="lexic
             updateHUD();
         }
 
-        outputDiv.innerHTML += '<br><br>';
         printText(nodeRaw.text);
     }
 
@@ -427,7 +419,13 @@ However, the $50B injection triggers localized inflation via the <u class="lexic
         const cmd = rawCmd.trim().toUpperCase().replace(/\s+/g, '_');
         if (cmd === '') return;
 
-        outputDiv.innerHTML += `<br><span style="color:#e0e0e0">> ${cmd}</span><br>`;
+        // Echo command
+        const echoBlock = document.createElement('div');
+        echoBlock.style.color = '#58a6ff';
+        echoBlock.style.marginBottom = '15px';
+        echoBlock.innerHTML = `> ${cmd}`;
+        outputDiv.appendChild(echoBlock);
+        
         inputField.value = '';
 
         const node = storyNodes[currentNodeId];
@@ -444,7 +442,7 @@ However, the $50B injection triggers localized inflation via the <u class="lexic
             if (nextNodeId && storyNodes[nextNodeId]) {
                 renderNode(nextNodeId);
             } else {
-                printText(`> UNRECOGNIZED COMMAND. VALIDATE INPUT.`, 5);
+                printText(`<span class="sys-alert">> UNRECOGNIZED COMMAND. VALIDATE INPUT.</span>`, 5);
             }
         }
     }
@@ -456,14 +454,12 @@ However, the $50B injection triggers localized inflation via the <u class="lexic
         }
     });
 
-    // Boot
+    // Boot Sequence
     setTimeout(() => {
         updateHUD();
-        renderNode('INIT');
+        renderNode('SETUP_1');
     }, 500);
 
 </script>
 </body>
 </html>
-
-```
