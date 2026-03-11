@@ -1,14 +1,3 @@
-The malfunctions stem from critical omissions and state-handling errors in the class execution loop.
-
-### Fault Analysis
-
-1. **Missing Update Loop:** The `updateUI()` method is completely absent from the `USSAtlasGame` class. As a result, when `systemTick()` or `fireWeapon()` calls `this.updateUI()`, a `TypeError` is thrown. This crashes the interval's execution stack, permanently halting sequential logic like `resolveScan()` and leaving the tractor beam permanently stuck on "SCANNING...". It also prevents the station's resource bars from updating.
-2. **Premature Unfreezing:** The `resolveScan()` method erroneously resets `tgt.frozen = false` immediately after a scan, even when a hostile or unidentified result triggers an action prompt. This causes ships to fly away and shoot at the station while the player is trapped in the decision overlay.
-3. **Despawn Logic:** Target decision endpoints (e.g., `attackUnidentified`) did not unfreeze targets before returning them to active combat, causing them to act as static turrets instead of resuming their orbital paths.
-
-Here is the fully corrected file. The `updateUI()` method has been restored and the tractor beam execution logic has been properly isolated so targets remain frozen until a command decision is issued.
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,130 +6,29 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
     <title>ATLAS ORBITAL STATION - COMMAND</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap');
-
-        :root {
-            --bg-color: #020408;
-            --screen-bg: #060b12;
-            --primary-color: #ffffff; 
-            
-            --enemy-color: #ff3333;    
-            --friendly-color: #39ff14; 
-            --mystery-color: #33ccff;  
-            --viper-color: #ffffff;
-            
-            --warn-color: #ffaa00;
-            --info-color: #33ccff;
-            --alert-color: #ff3333;
-            --panel-border: 2px solid #1a2b3c;
-            --text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-        }
-
-        * { box-sizing: border-box; }
-        
-        body {
-            margin: 0; padding: 0; background-color: var(--bg-color); color: var(--primary-color);
-            font-family: 'Courier New', Courier, monospace; height: 100vh; overflow: hidden; user-select: none;
-        }
-
-        #bridge {
-            display: grid; grid-template-columns: 310px 1fr 280px; grid-template-rows: 70px 1fr 240px;
-            gap: 12px; padding: 15px; height: 100vh;
-        }
-
-        .panel {
-            background-color: var(--screen-bg); border: var(--panel-border); border-radius: 8px;
-            padding: 12px; box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 5px 15px rgba(0,0,0,0.5);
-            display: flex; flex-direction: column; position: relative; overflow: hidden;
-            transition: border-color 0.3s;
-        }
-
-        .header-bar {
-            background-color: #0d1a26; border-bottom: 1px solid var(--info-color); padding: 4px;
-            text-align: center; font-weight: bold; letter-spacing: 3px; color: var(--primary-color); margin-bottom: 8px;
-            flex-shrink: 0; text-transform: uppercase; font-size: 0.9em;
-            transition: border-color 0.3s;
-        }
-
-        .top-left { grid-column: 1; grid-row: 1 / span 2; display: flex; flex-direction: column; gap: 10px; }
-        .main-view-container { grid-column: 2; grid-row: 1 / span 3; display: flex; flex-direction: column; gap: 12px; }
-        .top-right { grid-column: 3; grid-row: 1 / span 2; }
-
-        /* Tactical Canvas */
-        #main-view {
-            flex-grow: 1; background-color: #000102; border-radius: 8px; position: relative;
-            overflow: hidden; border: 2px solid var(--primary-color);
-            box-shadow: inset 0 0 80px rgba(0,0,0,1), 0 0 20px rgba(255,255,255,0.1);
-            cursor: crosshair; transition: border-color 0.3s;
-        }
-
-        #main-view::after {
-            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), 
-                        radial-gradient(circle, transparent 50%, rgba(0,0,0,0.8) 100%);
-            background-size: 100% 4px, 100% 100%; pointer-events: none; z-index: 10;
-        }
-
-        canvas#tactical-display { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; }
-
-        .view-overlay { position: absolute; top: 20px; left: 20px; font-size: 1.1em; z-index: 11; text-shadow: 0 0 5px #000; pointer-events: none; }
-
-        .bottom-left { grid-column: 1; grid-row: 3; }
-        .bridge-controls { grid-column: 2; grid-row: 3; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; padding-top: 0; }
-        .bottom-right { grid-column: 3; grid-row: 3; }
-
-        .system-grid { display: flex; flex-direction: column; gap: 8px; }
-        .system-item { display: flex; flex-direction: column; gap: 4px; }
-        .system-label { font-weight: bold; color: var(--primary-color); font-size: 0.8em; }
-        
-        /* Lists */
-        .scroll-list { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; flex-grow: 1; padding-right: 5px; min-height: 0; }
-        .list-item {
-            background-color: rgba(255,255,255,0.05); padding: 6px; border-radius: 4px;
-            display: flex; justify-content: space-between; align-items: center; border-left: 3px solid var(--primary-color);
-            transition: opacity 0.3s;
-        }
-        .health-bar { width: 100%; height: 4px; background-color: #1a2b3c; border-radius: 2px; overflow: hidden; margin-top: 4px; }
-        .health-fill { height: 100%; transition: width 0.2s, background-color 0.5s; }
-
-        #comms-log { font-size: 0.8em; line-height: 1.4; overflow-y: auto; flex-grow: 1; padding-right: 5px; color: #ccc; }
-        .log-entry { margin-bottom: 6px; border-bottom: 1px dashed rgba(255,255,255,0.15); padding-bottom: 4px; }
-        .log-time { color: var(--mystery-color); font-size: 0.85em; margin-right: 8px; }
-        .log-sci { color: #d066ff; font-weight: bold; margin-right: 4px; }
-        .log-warn { color: var(--warn-color); font-weight: bold; }
-        .log-alert { color: var(--enemy-color); font-weight: bold; }
-        .log-info { color: var(--info-color); font-style: italic; }
-
-        /* Buttons */
-        button {
-            background-color: rgba(255,255,255,0.05); color: var(--primary-color); border: 1px solid var(--primary-color);
-            padding: 6px 10px; font-family: inherit; cursor: pointer; transition: all 0.2s; font-weight: bold; border-radius: 3px; font-size: 0.85em;
-        }
-        button:hover:not(:disabled) { background-color: rgba(255,255,255,0.2); box-shadow: 0 0 12px rgba(255,255,255,0.4); }
-        button:disabled { border-color: #333; color: #555; background: rgba(0,0,0,0.5); cursor: not-allowed; }
-        button:active:not(:disabled) { transform: scale(0.97); }
-
-        .btn-alert { border-color: var(--enemy-color); color: var(--enemy-color); background: rgba(255,51,51,0.05); }
-        .btn-alert:hover:not(:disabled) { background-color: rgba(255,51,51,0.2); box-shadow: 0 0 12px rgba(255,51,51,0.4); }
-        
-        .btn-warn { border-color: var(--warn-color); color: var(--warn-color); background: rgba(255,170,0,0.05); }
-        .btn-warn:hover:not(:disabled) { background-color: rgba(255,170,0,0.2); box-shadow: 0 0 12px rgba(255,170,0,0.4); }
-        
-        .btn-info { border-color: var(--mystery-color); color: var(--mystery-color); background: rgba(51,204,255,0.05); }
-        .btn-info:hover:not(:disabled) { background-color: rgba(51,204,255,0.2); box-shadow: 0 0 12px rgba(51,204,255,0.4); }
-        
-        .btn-white { border-color: var(--viper-color); color: var(--viper-color); background: rgba(255,255,255,0.05); }
-        .btn-white:hover:not(:disabled) { background-color: rgba(255,255,255,0.2); box-shadow: 0 0 12px rgba(255,255,255,0.6); }
-
-        .btn-mode.active { background-color: var(--primary-color); color: #000; box-shadow: 0 0 10px var(--primary-color); }
-
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #1a2b3c; border-radius: 2px; }
-
-        .flash-red { animation: flashRed 1s infinite; }
-        .flash-warn { animation: flashWarn 1s infinite; }
-        @keyframes flashRed { 0% { background-color: rgba(255,51,51,0.1); } 50% { background-color: rgba(255,51,51,0.4); } 100% { background-color: rgba(255,51,51,0.1); } }
-        @keyframes flashWarn { 0% { background-color: rgba(255,170,0,0.1); } 50% { background-color: rgba(255,170,0,0.4); } 100% { background-color: rgba(255,170,0,0.1); } }
+        :root{--bg-color:#020408;--screen-bg:#060b12;--primary-color:#ffffff;--enemy-color:#ff3333;--friendly-color:#39ff14;--mystery-color:#33ccff;--viper-color:#ffffff;--warn-color:#ffaa00;--info-color:#33ccff;--alert-color:#ff3333;--panel-border:2px solid #1a2b3c;}
+        *{box-sizing:border-box;} body{margin:0;padding:0;background-color:var(--bg-color);color:var(--primary-color);font-family:'Courier New',Courier,monospace;height:100vh;overflow:hidden;user-select:none;}
+        #bridge{display:grid;grid-template-columns:310px 1fr 280px;grid-template-rows:70px 1fr 240px;gap:12px;padding:15px;height:100vh;}
+        .panel{background-color:var(--screen-bg);border:var(--panel-border);border-radius:8px;padding:12px;box-shadow:inset 0 0 30px rgba(0,0,0,0.8),0 5px 15px rgba(0,0,0,0.5);display:flex;flex-direction:column;position:relative;overflow:hidden;transition:border-color 0.3s;}
+        .header-bar{background-color:#0d1a26;border-bottom:1px solid var(--info-color);padding:4px;text-align:center;font-weight:bold;letter-spacing:3px;margin-bottom:8px;flex-shrink:0;text-transform:uppercase;font-size:0.9em;transition:border-color 0.3s;}
+        .top-left{grid-column:1;grid-row:1 / span 2;display:flex;flex-direction:column;gap:10px;} .main-view-container{grid-column:2;grid-row:1 / span 3;display:flex;flex-direction:column;gap:12px;} .top-right{grid-column:3;grid-row:1 / span 2;}
+        #main-view{flex-grow:1;background-color:#000102;border-radius:8px;position:relative;overflow:hidden;border:2px solid var(--primary-color);box-shadow:inset 0 0 80px rgba(0,0,0,1),0 0 20px rgba(255,255,255,0.1);cursor:crosshair;transition:border-color 0.3s;}
+        #main-view::after{content:" ";display:block;position:absolute;top:0;left:0;bottom:0;right:0;background:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,0.4) 50%),radial-gradient(circle,transparent 50%,rgba(0,0,0,0.8) 100%);background-size:100% 4px,100% 100%;pointer-events:none;z-index:10;}
+        canvas#tactical-display{width:100%;height:100%;display:block;position:absolute;top:0;left:0;}
+        .view-overlay{position:absolute;top:20px;left:20px;font-size:1.1em;z-index:11;text-shadow:0 0 5px #000;pointer-events:none;}
+        .bottom-left{grid-column:1;grid-row:3;} .bridge-controls{grid-column:2;grid-row:3;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding-top:0;} .bottom-right{grid-column:3;grid-row:3;}
+        .system-grid{display:flex;flex-direction:column;gap:8px;} .system-item{display:flex;flex-direction:column;gap:4px;} .system-label{font-weight:bold;color:var(--primary-color);font-size:0.8em;}
+        .scroll-list{display:flex;flex-direction:column;gap:4px;overflow-y:auto;flex-grow:1;padding-right:5px;min-height:0;} .list-item{background-color:rgba(255,255,255,0.05);padding:6px;border-radius:4px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid var(--primary-color);transition:opacity 0.3s;}
+        .health-bar{width:100%;height:4px;background-color:#1a2b3c;border-radius:2px;overflow:hidden;margin-top:4px;} .health-fill{height:100%;transition:width 0.2s,background-color 0.5s;}
+        #comms-log{font-size:0.8em;line-height:1.4;overflow-y:auto;flex-grow:1;padding-right:5px;color:#ccc;} .log-entry{margin-bottom:6px;border-bottom:1px dashed rgba(255,255,255,0.15);padding-bottom:4px;} .log-time{color:var(--mystery-color);font-size:0.85em;margin-right:8px;} .log-sci{color:#d066ff;font-weight:bold;margin-right:4px;} .log-warn{color:var(--warn-color);font-weight:bold;} .log-alert{color:var(--enemy-color);font-weight:bold;} .log-info{color:var(--info-color);font-style:italic;}
+        button{background-color:rgba(255,255,255,0.05);color:var(--primary-color);border:1px solid var(--primary-color);padding:6px 10px;font-family:inherit;cursor:pointer;transition:all 0.2s;font-weight:bold;border-radius:3px;font-size:0.85em;} button:hover:not(:disabled){background-color:rgba(255,255,255,0.2);box-shadow:0 0 12px rgba(255,255,255,0.4);} button:disabled{border-color:#333;color:#555;background:rgba(0,0,0,0.5);cursor:not-allowed;} button:active:not(:disabled){transform:scale(0.97);}
+        .btn-alert{border-color:var(--enemy-color);color:var(--enemy-color);background:rgba(255,51,51,0.05);} .btn-alert:hover:not(:disabled){background-color:rgba(255,51,51,0.2);box-shadow:0 0 12px rgba(255,51,51,0.4);}
+        .btn-warn{border-color:var(--warn-color);color:var(--warn-color);background:rgba(255,170,0,0.05);} .btn-warn:hover:not(:disabled){background-color:rgba(255,170,0,0.2);box-shadow:0 0 12px rgba(255,170,0,0.4);}
+        .btn-info{border-color:var(--mystery-color);color:var(--mystery-color);background:rgba(51,204,255,0.05);} .btn-info:hover:not(:disabled){background-color:rgba(51,204,255,0.2);box-shadow:0 0 12px rgba(51,204,255,0.4);}
+        .btn-white{border-color:var(--viper-color);color:var(--viper-color);background:rgba(255,255,255,0.05);} .btn-white:hover:not(:disabled){background-color:rgba(255,255,255,0.2);box-shadow:0 0 12px rgba(255,255,255,0.6);}
+        .btn-mode.active{background-color:var(--primary-color);color:#000;box-shadow:0 0 10px var(--primary-color);}
+        ::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#1a2b3c;border-radius:2px;}
+        .flash-red{animation:flashRed 1s infinite;} .flash-warn{animation:flashWarn 1s infinite;} @keyframes flashRed{0%,100%{background-color:rgba(255,51,51,0.1);}50%{background-color:rgba(255,51,51,0.4);}} @keyframes flashWarn{0%,100%{background-color:rgba(255,170,0,0.1);}50%{background-color:rgba(255,170,0,0.4);}}
     </style>
 </head>
 <body>
@@ -178,7 +66,8 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                     <h2 style="margin:0; font-size: 1.2em; color: var(--mystery-color);">ATLAS ORBITAL STATION</h2>
                     <div style="font-size: 1.1em; color: #fff; text-shadow: 0 0 5px #fff; letter-spacing: 1px;">
                         SCORE: <span id="val-score" style="color: var(--friendly-color);">0</span> &nbsp;|&nbsp; 
-                        HI: <span id="val-highscore" style="color: var(--warn-color);">0</span>
+                        HI: <span id="val-highscore" style="color: var(--warn-color);">0</span> &nbsp;|&nbsp; 
+                        WAVE: <span id="val-wave" style="color: var(--info-color);">0</span>
                     </div>
                 </div>
             </div>
@@ -190,7 +79,6 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
             </div>
 
             <div class="panel bridge-controls">
-                
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                     <div class="header-bar" style="margin-bottom: 0;">ORDNANCE</div>
                     <div class="system-grid">
@@ -213,7 +101,7 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                     <div id="ops-default" style="display: flex; flex-direction: column; gap: 8px;">
                         <button class="btn-info" id="btn-tractor" onclick="game.engageTractorBeam()" disabled>TRACTOR & ANALYZE</button>
                         <div style="font-size: 0.8em; color: #888; text-align: center; padding: 10px;">
-                            Lock onto an Unknown (Blue) vessel to scan for contraband.
+                            Lock onto an Unknown vessel to scan for contraband.
                         </div>
                     </div>
 
@@ -230,7 +118,6 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                         <button class="btn-info" onclick="game.releaseUnidentified()" style="padding: 4px;">RELEASE VESSEL</button>
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -287,7 +174,6 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
     <script>
         class USSAtlasGame {
             constructor() {
-                // Core Systems & Scoring
                 this.systems = { hull: 100, shields: 100, morale: 100, supplies: 100, energy: 100 };
                 this.resources = { credits: 0, data: 0 };
                 this.ammo = { torpedoes: 12, pulsars: 4 };
@@ -295,17 +181,15 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                 this.shieldLockout = 0; 
                 this.alertLevel = 'GREEN'; 
                 
-                this.lullTimer = 30; 
-                this.lullActive = false;
+                this.currentWave = 0;
+                this.waveDelay = 5;
 
                 this.score = 0;
                 this.highScore = parseInt(localStorage.getItem('atlas_highscore')) || 0;
 
-                // Sub-Space Missions State
                 this.missionState = 'NONE'; 
                 this.activeMission = null;
 
-                // Personnel Arrays
                 this.crew = [
                     { id: 1, name: "CMDR VANCE", role: "SEC", hp: 100, deployed: false },
                     { id: 2, name: "LT KOWALSKI", role: "SEC", hp: 100, deployed: false },
@@ -317,14 +201,12 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                 ];
                 this.crewMissionActive = false; 
 
-                // Fighter Squadron
                 this.fighters = Array.from({length: 6}, (_, i) => ({
                     id: i, callsign: `VIPER-${i+1}`, hp: 100, alive: true, 
                     x: 0, y: 0, z: 0, idleAngle: Math.random() * Math.PI * 2, target: null, 
                     speed: 0.04, rebuilding: 0, deployed: false
                 }));
                 
-                // Canvas & Math
                 this.canvas = document.getElementById('tactical-display');
                 this.ctx = this.canvas.getContext('2d');
                 this.mouseX = -100; this.mouseY = -100;
@@ -347,13 +229,11 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                 this.pendingDecisionTarget = null;
 
                 this.scienceFacts = [
-                    "Because space is a vacuum, destroyed ships produce no sound. Explosions are synthesized by the computer for awareness.",
-                    "Firing a projectile weapon alters our orbit. Station thrusters automatically compensate to preserve momentum.",
-                    "Lasers are invisible from the side due to the lack of scattering particles. You only see the beam via AR overlay.",
-                    "In a vacuum, heat cannot dissipate via convection; firing heavy weapons forces the station to vent coolant.",
+                    "Because space is a vacuum, destroyed ships produce no sound.",
+                    "Firing heavy weapons forces the station to vent coolant.",
                     "There is no 'up' in space. The enemy's gate is down.",
-                    "To catch a ship in a lower orbit, you must decelerate to drop your perigee, increasing your angular velocity.",
-                    "Energy weapons don't go 'pew'. They deposit thermal energy at the speed of light, explosively ablating the target's hull."
+                    "Energy weapons don't go 'pew'. They ablate armor at the speed of light.",
+                    "Aggressive targeting algorithms will adapt to your engagement velocity."
                 ];
 
                 this.audioCtx = null;
@@ -387,7 +267,6 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                     this.mouseX = e.clientX - rect.left; this.mouseY = e.clientY - rect.top;
                 });
                 this.canvas.addEventListener('mouseleave', () => { this.mouseX = -100; this.mouseY = -100; });
-                
                 this.canvas.addEventListener('click', () => this.attemptLock());
 
                 document.getElementById('fire-phaser').addEventListener('click', () => this.fireWeapon('phaser'));
@@ -420,7 +299,6 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                     document.getElementById('val-highscore').innerText = this.highScore;
                 }
                 document.getElementById('val-score').innerText = this.score;
-                
                 if (reason) {
                     const color = points >= 0 ? 'var(--friendly-color)' : 'var(--enemy-color)';
                     const sign = points >= 0 ? '+' : '';
@@ -430,21 +308,16 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
 
             initAudio() {
                 if (!this.audioCtx) {
-                    try { 
-                        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); 
-                    } catch(e) { return; }
+                    try { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return; }
                 }
                 if (this.audioCtx.state === 'suspended') {
                     this.audioCtx.resume().then(() => this.startAmbientDrone()).catch(e=>{});
-                } else {
-                    this.startAmbientDrone();
-                }
+                } else { this.startAmbientDrone(); }
             }
 
             startAmbientDrone() {
                 if (this.ambientStarted || !this.audioCtx) return;
                 this.ambientStarted = true;
-                
                 try {
                     const osc1 = this.audioCtx.createOscillator();
                     const osc2 = this.audioCtx.createOscillator();
@@ -453,19 +326,11 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
 
                     osc1.type = 'sine'; osc1.frequency.value = 40;
                     osc2.type = 'sine'; osc2.frequency.value = 42; 
-
-                    filter.type = 'lowpass';
-                    filter.frequency.value = 150; 
-
+                    filter.type = 'lowpass'; filter.frequency.value = 150; 
                     gain.gain.value = 0.2; 
 
-                    osc1.connect(filter);
-                    osc2.connect(filter);
-                    filter.connect(gain);
-                    gain.connect(this.audioCtx.destination);
-
-                    osc1.start();
-                    osc2.start();
+                    osc1.connect(filter); osc2.connect(filter); filter.connect(gain); gain.connect(this.audioCtx.destination);
+                    osc1.start(); osc2.start();
                 } catch(e) {}
             }
 
@@ -496,8 +361,7 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                         osc.start(now); osc.stop(now + 0.2);
                     } else if (type === 'torpedo') {
                         osc.type = 'square'; osc.frequency.setValueAtTime(150, now); 
-                        osc.frequency.linearRampToValueAtTime(400, now + 0.2);
-                        osc.frequency.linearRampToValueAtTime(50, now + 0.5);
+                        osc.frequency.linearRampToValueAtTime(400, now + 0.2); osc.frequency.linearRampToValueAtTime(50, now + 0.5);
                         gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0.2, now + 0.2); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
                         osc.start(now); osc.stop(now + 0.5);
                     } else if (type === 'explosion') {
@@ -507,8 +371,7 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                     } else if (type === 'heavy_explosion') {
                         osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(5, now + 1.5);
                         osc2.type = 'square'; osc2.frequency.setValueAtTime(80, now); osc2.frequency.exponentialRampToValueAtTime(1, now + 1.5);
-                        osc2.connect(gain);
-                        gain.gain.setValueAtTime(0.4, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+                        osc2.connect(gain); gain.gain.setValueAtTime(0.4, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
                         osc.start(now); osc2.start(now); osc.stop(now + 1.5); osc2.stop(now + 1.5);
                     } else if (type === 'tractor') {
                         osc.type = 'sine'; osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(250, now + 3.0);
@@ -523,18 +386,14 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                         gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
                         osc.start(now); osc.stop(now + 1.5);
                     } else if (type === 'telegram') {
-                        osc.type = 'square'; osc.frequency.setValueAtTime(800, now);
-                        gain.gain.setValueAtTime(0, now);
+                        osc.type = 'square'; osc.frequency.setValueAtTime(800, now); gain.gain.setValueAtTime(0, now);
                         gain.gain.setValueAtTime(0.05, now + 0.1); gain.gain.setValueAtTime(0, now + 0.2); 
                         gain.gain.setValueAtTime(0.05, now + 0.3); gain.gain.setValueAtTime(0, now + 0.4); 
                         gain.gain.setValueAtTime(0.05, now + 0.5); gain.gain.setValueAtTime(0, now + 0.6); 
                         osc.start(now); osc.stop(now + 0.7);
                     } else if (type === 'pulsar') {
-                        osc.type = 'sawtooth';
-                        osc.frequency.setValueAtTime(400, now);
-                        osc.frequency.exponentialRampToValueAtTime(20, now + 1.5);
-                        gain.gain.setValueAtTime(0.3, now);
-                        gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+                        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(20, now + 1.5);
+                        gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
                         osc.start(now); osc.stop(now + 1.5);
                     }
                 } catch(e) {} 
@@ -542,19 +401,13 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
 
             triggerShake(intensity = 5, duration = 250) {
                 const start = Date.now();
-                const canvas = this.canvas;
                 const shake = () => {
                     const elapsed = Date.now() - start;
                     if (elapsed < duration) {
-                        const dx = (Math.random() - 0.5) * intensity;
-                        const dy = (Math.random() - 0.5) * intensity;
-                        canvas.style.transform = `translate(${dx}px, ${dy}px)`;
-                        requestAnimationFrame(shake);
-                    } else {
-                        canvas.style.transform = 'translate(0px, 0px)';
-                    }
-                };
-                shake();
+                        const dx = (Math.random() - 0.5) * intensity; const dy = (Math.random() - 0.5) * intensity;
+                        this.canvas.style.transform = `translate(${dx}px, ${dy}px)`; requestAnimationFrame(shake);
+                    } else { this.canvas.style.transform = 'translate(0px, 0px)'; }
+                }; shake();
             }
 
             triggerExplosion(x, y, isLarge = false) {
@@ -563,23 +416,16 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                 if (isLarge) {
                     this.triggerShake(15, 400);
                     const flash = document.createElement('div');
-                    flash.style.position = 'fixed'; flash.style.top = '0'; flash.style.left = '0';
-                    flash.style.width = '100%'; flash.style.height = '100%';
-                    flash.style.backgroundColor = 'rgba(255, 200, 200, 0.3)';
+                    flash.style.position = 'fixed'; flash.style.inset = '0'; flash.style.backgroundColor = 'rgba(255, 200, 200, 0.3)';
                     flash.style.pointerEvents = 'none'; flash.style.transition = 'opacity 0.5s';
                     document.body.appendChild(flash);
                     setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 500); }, 100);
                 }
-
                 const count = isLarge ? 80 : 35;
                 for(let i=0; i<count; i++) {
                     this.particles.push({
-                        x: x, y: y,
-                        vx: (Math.random() - 0.5) * (isLarge ? 20 : 15), 
-                        vy: (Math.random() - 0.5) * (isLarge ? 20 : 15),
-                        life: 1.0, 
-                        color: Math.random() > 0.5 ? '#ffaa00' : '#ff3333',
-                        size: Math.random() * 5 + 2 
+                        x: x, y: y, vx: (Math.random() - 0.5) * (isLarge ? 20 : 15), vy: (Math.random() - 0.5) * (isLarge ? 20 : 15),
+                        life: 1.0, color: Math.random() > 0.5 ? '#ffaa00' : '#ff3333', size: Math.random() * 5 + 2 
                     });
                 }
                 this.updateTargetUI();
@@ -598,11 +444,7 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
             get3DCoords(tgt) {
                 if (!tgt) return { x:0, y:0, z:0 };
                 if (tgt.isCapital || tgt.isLinear) return { x: tgt.cx, y: tgt.cy, z: tgt.cz };
-                return {
-                    x: tgt.orbitRadius * Math.cos(tgt.angle),
-                    y: tgt.yOffset,
-                    z: tgt.orbitRadius * Math.sin(tgt.angle)
-                };
+                return { x: tgt.orbitRadius * Math.cos(tgt.angle), y: tgt.yOffset, z: tgt.orbitRadius * Math.sin(tgt.angle) };
             }
 
             setPowerMode(mode) {
@@ -614,7 +456,67 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                 let stats = mode === 'SHIELDS' ? "+3 SHD / +2 EN" : mode === 'WEAPONS' ? "NO SHD / +8 EN" : "+1 HULL / +4 EN";
                 if (this.shieldLockout > 0) stats += " [SHIELDS OFFLINE]";
                 this.log(`Reactor routed to ${mode}. [${stats}]`);
-                this.updateUI();
+            }
+
+            triggerSOS() {
+                this.playSound('telegram');
+                this.log("<span class='log-warn'>TAC-ALERT: SOS DETECTED! Civilian transport under pirate attack!</span>");
+                
+                let orbitR = this.globeRadius + 80 + Math.random() * 80;
+                let angle = Math.random() * Math.PI * 2;
+                let speed = 0.002 * (Math.random() > 0.5 ? 1 : -1);
+                let yOff = (Math.random() - 0.5) * 80;
+
+                let cargoId = 'TRN-' + Math.floor(Math.random()*899+100);
+                this.targets.push({
+                    id: cargoId, class: 'transport', faction: 'friendly', color: '#ffffff', 
+                    isCapital: false, isEscortMission: true, orbitRadius: orbitR, angle: angle, speed: speed, yOffset: yOff,
+                    hull: 150, maxHull: 150, alive: true, frozen: false, beamCooldown: 0
+                });
+
+                let numPirates = 2 + Math.floor(Math.random() * 2);
+                for(let i=0; i<numPirates; i++) {
+                    this.targets.push({
+                        id: 'PIR-' + Math.floor(Math.random()*899+100), class: 'pirate', faction: 'enemy', color: '#ff8800', hunting: cargoId, 
+                        isCapital: false, orbitRadius: orbitR + (Math.random() * 15 - 7.5), angle: angle - (speed * 15) - (i * 0.05), 
+                        speed: speed * 1.05, yOffset: yOff + (Math.random() * 15 - 7.5),
+                        hull: 80, maxHull: 80, alive: true, frozen: false, beamCooldown: 1 + i
+                    });
+                }
+            }
+
+            startNextWave() {
+                this.currentWave++;
+                const wEl = document.getElementById('val-wave');
+                if (wEl) wEl.innerText = this.currentWave;
+
+                this.playSound('alert');
+                this.log(`<span class='log-alert'>TACTICAL: WAVE ${this.currentWave} INBOUND! ALL HANDS TO BATTLE STATIONS.</span>`);
+                
+                let numFighters = this.currentWave * 2 + Math.floor(Math.random() * 3);
+                let numCapitals = Math.floor(this.currentWave / 3);
+                
+                for(let i=0; i<numFighters; i++) {
+                    let orbitR = this.globeRadius + 60 + Math.random() * 120;
+                    let speed = (Math.random() * 0.005 + 0.002) * (Math.random() > 0.5 ? 1 : -1);
+                    this.targets.push({
+                        id: 'KLI-' + Math.floor(Math.random()*899+100),
+                        class: 'fighter', faction: 'enemy', color: '#ff3333', isCapital: false,
+                        hull: 100, maxHull: 100, alive: true, frozen: false, beamCooldown: Math.floor(Math.random()*3),
+                        orbitRadius: orbitR, angle: Math.random() * Math.PI * 2, speed: speed, yOffset: (Math.random() - 0.5) * 120
+                    });
+                }
+                
+                for(let i=0; i<numCapitals; i++) {
+                    this.targets.push({
+                        id: 'KLI-CAP-' + Math.floor(Math.random()*89+10),
+                        class: 'capital', faction: 'enemy', color: '#ff3333',
+                        isCapital: true, provoked: true, fightersDeployed: false, isLinear: true,
+                        cx: Math.random() > 0.5 ? -600 : 600, cy: -150 + Math.random() * 100, cz: Math.random() * 200 - 100, 
+                        vx: (Math.random() > 0.5 ? 1 : -1) * (0.2 + Math.random() * 0.3), vy: 0, vz: 0,
+                        hull: 400 + (this.currentWave * 50), maxHull: 400 + (this.currentWave * 50), alive: true, frozen: false, beamCooldown: 0
+                    });
+                }
             }
 
             systemTick() {
@@ -624,7 +526,6 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
 
                 if (this.missionState === 'ACTIVE' && this.activeMission) {
                     this.activeMission.progress++;
-                    
                     if (this.activeMission.type === 'SQUAD') {
                         let fAlive = false;
                         this.fighters.forEach(f => {
@@ -646,7 +547,7 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                                 if (Math.random() < 0.15) c.hp -= (Math.random() * 5 + 2);
                                 if (c.hp <= 0) {
                                     c.hp = 0; c.deployed = false;
-                                    this.log(`<span class="log-alert">DISPATCH TRAGEDY: ${c.name} killed in action!</span>`);
+                                    this.log(`<span class="log-alert">DISPATCH TRAGEDY: ${c.name} killed!</span>`);
                                 }
                             }
                         });
@@ -660,51 +561,39 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                 } else if (this.missionState === 'PENDING' && this.activeMission) {
                     this.activeMission.timeout--;
                     if (this.activeMission.timeout <= 0) {
-                        this.missionState = 'NONE';
-                        this.activeMission = null;
+                        this.missionState = 'NONE'; this.activeMission = null;
                         this.log("<span class='log-info'>Missed dispatch window. Signal lost.</span>");
                         this.updateMissionUI();
-                    } else {
-                        this.updateMissionUI();
-                    }
+                    } else { this.updateMissionUI(); }
                 }
 
-                if (this.lullTimer > 0) {
-                    this.lullTimer--;
-                    if (this.lullTimer <= 0) {
-                        this.lullActive = !this.lullActive;
-                        this.lullTimer = this.lullActive ? (Math.random() * 5 + 10) : (Math.random() * 15 + 30);
-                        if (this.lullActive) this.log("<span class='log-info'>Sensors indicate sector clearing. Entering lull phase.</span>");
-                        else this.log("<span class='log-warn'>Sensors detect inbound signatures. Brace for new contacts.</span>");
+                // Wave Check Logic
+                let enemiesRemaining = this.targets.filter(t => t.faction === 'enemy' || t.faction === 'pirate').length;
+                if (enemiesRemaining === 0) {
+                    if (this.waveDelay > 0) {
+                        this.waveDelay--;
+                        if (this.waveDelay === 10 && this.currentWave > 0 && Math.random() < 0.6) this.triggerSOS();
+                        if (this.waveDelay <= 0) {
+                            this.startNextWave();
+                            this.waveDelay = 20 + this.currentWave * 2; 
+                        }
                     }
                 }
 
                 if (this.analyzingTarget) {
                     if (Date.now() - this.analyzingTarget.scanStart >= 3000) this.resolveScan();
                 }
-                if (this.analyzingTarget && !this.analyzingTarget.alive) {
-                    this.analyzingTarget = null; this.resetOpsPanel();
-                }
+                if (this.analyzingTarget && !this.analyzingTarget.alive) { this.analyzingTarget = null; this.resetOpsPanel(); }
                 if (this.pendingDecisionTarget && !this.pendingDecisionTarget.alive) this.resetOpsPanel();
 
-                if (this.shieldLockout > 0) {
-                    this.shieldLockout--; this.systems.shields = 0; 
-                }
+                if (this.shieldLockout > 0) { this.shieldLockout--; this.systems.shields = 0; }
 
                 if (this.powerMode === 'SYSTEMS') {
-                    this.systems.energy = Math.min(100, this.systems.energy + 4);
-                    this.systems.hull = Math.min(100, this.systems.hull + 1);
+                    this.systems.energy = Math.min(100, this.systems.energy + 4); this.systems.hull = Math.min(100, this.systems.hull + 1);
                 } else if (this.powerMode === 'SHIELDS') {
-                    if (this.shieldLockout <= 0) {
-                        this.systems.energy = Math.min(100, this.systems.energy + 2);
-                        this.systems.shields = Math.min(100, this.systems.shields + 3); 
-                    } else {
-                        this.systems.energy = Math.min(100, this.systems.energy + 2);
-                        this.systems.hull = Math.min(100, this.systems.hull + 1);
-                    }
-                } else if (this.powerMode === 'WEAPONS') {
-                    this.systems.energy = Math.min(100, this.systems.energy + 8); 
-                }
+                    if (this.shieldLockout <= 0) { this.systems.energy = Math.min(100, this.systems.energy + 2); this.systems.shields = Math.min(100, this.systems.shields + 3); 
+                    } else { this.systems.energy = Math.min(100, this.systems.energy + 2); this.systems.hull = Math.min(100, this.systems.hull + 1); }
+                } else if (this.powerMode === 'WEAPONS') { this.systems.energy = Math.min(100, this.systems.energy + 8); }
 
                 let prevSupplies = this.systems.supplies;
                 this.systems.supplies -= 0.8; 
@@ -718,80 +607,18 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                     this.log(`<span class="log-sci">[SCIENCE OFF.]</span> ${fact}`);
                 }
 
-                let spawnMult = this.lullActive ? 0.1 : 1.0;
-
-                if (Math.random() < 0.02 * spawnMult && !this.targets.some(t => t.isCapital)) {
-                    const roll = Math.random();
-                    let factionData = roll < 0.33 ? { type: 'mystery', color: '#33ccff', prefix: 'UNK-CAP-' } :
-                                      roll < 0.66 ? { type: 'friendly', color: '#39ff14', prefix: 'FED-CAP-' } :
-                                                    { type: 'enemy', color: '#ff3333', prefix: 'KLI-CAP-' };
-
+                // Ambient Traffic
+                if (Math.random() < 0.1 && this.targets.filter(t => t.faction === 'mystery' || t.faction === 'friendly').length < 3) {
+                    let classType = Math.random() > 0.5 ? 'transport' : 'unknown';
+                    let faction = classType === 'unknown' ? 'mystery' : 'friendly';
+                    let color = classType === 'unknown' ? '#33ccff' : '#39ff14';
                     this.targets.push({
-                        id: factionData.prefix + Math.floor(Math.random()*89+10),
-                        faction: factionData.type, color: factionData.color,
-                        isCapital: true, provoked: false, fightersDeployed: false, isLinear: true,
-                        cx: -500, cy: -150 + Math.random() * 100, cz: Math.random() * 200 - 100, 
-                        vx: 0.3 + Math.random() * 0.4, vy: 0, vz: 0,
-                        hull: 400, maxHull: 400, alive: true, frozen: false, beamCooldown: 0
+                        id: (classType === 'unknown' ? 'UNK-' : 'FRT-') + Math.floor(Math.random()*899+100),
+                        class: classType, faction: faction, color: color, isCapital: false, isEscortMission: false,
+                        hull: 100, maxHull: 100, alive: true, frozen: false, beamCooldown: 3,
+                        orbitRadius: this.globeRadius + 60 + Math.random() * 120, angle: Math.random() * Math.PI * 2, 
+                        speed: (Math.random() * 0.003 + 0.001) * (Math.random() > 0.5 ? 1 : -1), yOffset: (Math.random() - 0.5) * 120
                     });
-                    this.playSound('telegram');
-                    this.log(`<span class='log-warn'>TAC-ALERT: MASSIVE SENSOR SIGNATURE DETECTED. CAPITAL SHIP ENTERING SECTOR.</span>`);
-                }
-                else if (Math.random() < 0.08 * spawnMult && this.targets.length < 13) {
-                    this.playSound('telegram');
-                    this.log("<span class='log-warn'>TAC-ALERT: Pirate pursuit detected! Civilian cargo under fire!</span>");
-                    
-                    let orbitR = this.globeRadius + 60 + Math.random() * 120;
-                    let angle = Math.random() * Math.PI * 2;
-                    let speed = (Math.random() * 0.005 + 0.003) * (Math.random() > 0.5 ? 1 : -1);
-                    let yOff = (Math.random() - 0.5) * 120;
-
-                    let cargoId = 'CRG-' + Math.floor(Math.random()*899+100);
-                    this.targets.push({
-                        id: cargoId, faction: 'friendly', color: '#39ff14', isCargo: true, isCapital: false, isLinear: false,
-                        orbitRadius: orbitR, angle: angle, speed: speed, yOffset: yOff,
-                        hull: 100, maxHull: 100, alive: true, frozen: false, beamCooldown: 0
-                    });
-
-                    this.targets.push({
-                        id: 'PIR-' + Math.floor(Math.random()*899+100), faction: 'enemy', color: '#ff3333', hunting: cargoId, isCapital: false, isLinear: false,
-                        orbitRadius: orbitR + (Math.random() * 5 - 2.5), angle: angle - (speed * 15), 
-                        speed: speed, yOffset: yOff + (Math.random() * 5 - 2.5),
-                        hull: 100, maxHull: 100, alive: true, frozen: false, beamCooldown: 2
-                    });
-                } 
-                else if (Math.random() < 0.3 * spawnMult && this.targets.length < 15) {
-                    const roll = Math.random();
-                    let factionData;
-                    if (roll <= 0.25) { 
-                        factionData = { type: 'mystery', color: '#33ccff', prefix: 'UNK-' };
-                        if (Math.random() < 0.3) { this.playSound('telegram'); this.log(`<span class='log-warn'>TAC-ALERT: Unknown vessel exhibiting suspicious trajectory.</span>`); }
-                    } else if (roll <= 0.65) { factionData = { type: 'friendly', color: '#39ff14', prefix: 'FRT-' };
-                    } else { factionData = { type: 'enemy', color: '#ff3333', prefix: 'KLI-' }; }
-
-                    let isLinear = Math.random() < 0.3; 
-                    let tgt = {
-                        id: factionData.prefix + Math.floor(Math.random()*899+100),
-                        faction: factionData.type, color: factionData.color, isCapital: false, isLinear: isLinear,
-                        hull: 100, maxHull: 100, alive: true, frozen: false, beamCooldown: 3
-                    };
-
-                    if (isLinear) {
-                        tgt.cx = (Math.random() > 0.5 ? -500 : 500);
-                        tgt.cy = -150 + Math.random() * 300;
-                        tgt.cz = Math.random() * 300 - 150;
-                        tgt.vx = (tgt.cx < 0 ? 1 : -1) * (Math.random() * 1.5 + 0.5);
-                        tgt.vy = (Math.random() - 0.5) * 0.5;
-                        tgt.vz = (Math.random() - 0.5) * 0.5;
-                    } else {
-                        const speedMag = Math.random() > 0.85 ? (Math.random() * 0.005 + 0.003) : (Math.random() * 0.002 + 0.0005);
-                        tgt.orbitRadius = this.globeRadius + 60 + Math.random() * 120;
-                        tgt.angle = Math.random() * Math.PI * 2;
-                        tgt.speed = speedMag * (Math.random() > 0.5 ? 1 : -1);
-                        tgt.yOffset = (Math.random() - 0.5) * 120;
-                    }
-
-                    this.targets.push(tgt);
                 }
 
                 this.fighters.forEach(f => {
@@ -806,39 +633,29 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
 
                 this.fighters.forEach(f => {
                     if (f.alive && f.deployed && !(this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'SQUAD')) {
-                        let enemies = this.targets.filter(t => t.alive && t.faction === 'enemy');
+                        let enemies = this.targets.filter(t => t.alive && (t.faction === 'enemy' || t.faction === 'pirate'));
                         let smallEnemies = enemies.filter(t => !t.isCapital);
                         let validTargets = smallEnemies.length > 0 ? smallEnemies : enemies;
-                        
-                        if (validTargets.length > 0) {
-                            f.target = validTargets[Math.floor(Math.random() * validTargets.length)];
-                        } else {
-                            f.target = null;
-                        }
+                        if (validTargets.length > 0) f.target = validTargets[Math.floor(Math.random() * validTargets.length)];
+                        else f.target = null;
                     }
                 });
 
                 this.targets.forEach((tgt) => {
                     if (tgt.isCapital) {
-                        if (tgt.cx > 800 || tgt.cx < -800 || tgt.cy > 800 || tgt.cy < -800) tgt.alive = false; 
-                        
                         if (tgt.faction === 'enemy' && tgt.provoked && !tgt.frozen) {
                             if (tgt.beamCooldown <= 0) {
                                 this.projectiles.push({ type: 'enemy_beam', target: { screenX: this.shipX, screenY: this.shipY }, origin: tgt, progress: 0 });
-                                tgt.beamCooldown = 2; 
-                                this.playSound('enemy_laser');
+                                tgt.beamCooldown = 2; this.playSound('enemy_laser');
                             }
                             if (!tgt.fightersDeployed) {
-                                tgt.fightersDeployed = true;
-                                this.playSound('alert');
+                                tgt.fightersDeployed = true; this.playSound('alert');
                                 this.log(`<span class='log-alert'>CRITICAL: CAPITAL SHIP LAUNCHING FIGHTER SQUADRON!</span>`);
                                 for(let i=0; i<6; i++) {
                                     this.targets.push({
-                                        id: 'FTR-' + Math.floor(Math.random()*899+100), faction: 'enemy', color: '#ff3333', isCapital: false, isLinear: false,
-                                        orbitRadius: this.globeRadius + 80 + Math.random() * 50,
-                                        angle: Math.random() * Math.PI * 2, speed: (Math.random() * 0.02 + 0.01),
-                                        yOffset: tgt.cy + (Math.random() - 0.5) * 50,
-                                        hull: 50, maxHull: 50, alive: true, frozen: false, beamCooldown: Math.floor(Math.random()*5)
+                                        id: 'FTR-' + Math.floor(Math.random()*899+100), class: 'fighter', faction: 'enemy', color: '#ff3333', isCapital: false,
+                                        orbitRadius: this.globeRadius + 80 + Math.random() * 50, angle: Math.random() * Math.PI * 2, speed: (Math.random() * 0.02 + 0.01),
+                                        yOffset: tgt.cy + (Math.random() - 0.5) * 50, hull: 50, maxHull: 50, alive: true, frozen: false, beamCooldown: Math.floor(Math.random()*5)
                                     });
                                 }
                             }
@@ -847,17 +664,19 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
 
                     if (tgt.beamCooldown > 0) tgt.beamCooldown--;
 
-                    if (tgt.faction === 'friendly' && !tgt.isCargo && !tgt.isCapital && Math.random() < 0.03) {
-                        this.resources.credits += 10;
-                        tgt.alive = false; 
+                    if (tgt.faction === 'friendly' && !tgt.isEscortMission && !tgt.isCapital && Math.random() < 0.03) {
+                        this.resources.credits += 10; tgt.alive = false; 
                     }
 
-                    if (tgt.isCargo && tgt.alive) {
-                        let hunter = this.targets.find(t => t.hunting === tgt.id);
-                        if (!hunter || !hunter.alive) {
-                            this.resources.credits += 150; this.resources.data += 20;
-                            this.addScore(75, `Civilian Cargo ${tgt.id} secured! Gratitude protocol active.`);
-                            tgt.alive = false; 
+                    if (tgt.isEscortMission && tgt.alive) {
+                        let hunters = this.targets.filter(t => t.hunting === tgt.id && t.alive);
+                        if (hunters.length === 0 && tgt.hull > 0) {
+                            this.resources.credits += 250; this.resources.data += 50;
+                            this.addScore(200, `Transport ${tgt.id} secured! Escort reward transmitted.`);
+                            tgt.alive = false; this.spawnWarpOut(1, tgt.color);
+                        } else if (tgt.hull <= 0) {
+                            this.log(`<span class="log-alert">Tragedy: Transport ${tgt.id} destroyed by pirates.</span>`);
+                            this.systems.morale -= 10; tgt.alive = false;
                         }
                     }
 
@@ -866,26 +685,21 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                         if (prey && prey.alive && !tgt.frozen) {
                             if (tgt.beamCooldown <= 0 && Math.random() < 0.2) {
                                 this.projectiles.push({ type: 'enemy_beam', target: prey, origin: tgt, progress: 0, isShipToShip: true });
-                                tgt.beamCooldown = 3;
-                                this.playSound('enemy_laser');
+                                tgt.beamCooldown = 3; this.playSound('enemy_laser');
                             }
-                        } else {
-                            tgt.hunting = null; 
-                        }
-                    } else if (tgt.faction === 'enemy' && tgt.beamCooldown <= 0 && !tgt.frozen && !tgt.isCapital) {
+                        } else { tgt.hunting = null; }
+                    } else if ((tgt.faction === 'enemy' || tgt.faction === 'pirate') && tgt.beamCooldown <= 0 && !tgt.frozen && !tgt.isCapital) {
                         let availVipers = this.fighters.filter(f => f.alive && f.deployed && !(this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'SQUAD'));
                         if (availVipers.length > 0 && Math.random() < 0.4) {
                             let prey = availVipers[Math.floor(Math.random() * availVipers.length)];
                             this.projectiles.push({ type: 'enemy_beam', target: prey, origin: tgt, progress: 0, isFighterTarget: true });
-                            tgt.beamCooldown = 3;
-                            this.playSound('enemy_laser');
+                            tgt.beamCooldown = 3; this.playSound('enemy_laser');
                         } else if (Math.random() < 0.05) {
                             this.projectiles.push({ type: 'bombardment', target: { screenX: this.canvas.width/2, screenY: this.canvas.height/2 }, origin: tgt, progress: 0 });
                             tgt.beamCooldown = 5;
                         } else if (Math.random() < 0.1) {
                             this.projectiles.push({ type: 'enemy_beam', target: { screenX: this.shipX, screenY: this.shipY }, origin: tgt, progress: 0 });
-                            tgt.beamCooldown = 4;
-                            this.playSound('enemy_laser');
+                            tgt.beamCooldown = 4; this.playSound('enemy_laser');
                         }
                     }
                 });
@@ -893,10 +707,8 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                 this.fighters.forEach(f => {
                     if (f.alive && f.rebuilding <= 0) {
                         if (this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'SQUAD') return;
-
                         if (f.deployed) {
                             f.hp -= (Math.random() * 2 + 1); 
-                            
                             if (f.target && f.target.alive) {
                                 let coords = this.get3DCoords(f.target);
                                 if (!isNaN(coords.x) && !isNaN(coords.y) && !isNaN(coords.z)) {
@@ -907,150 +719,99 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                                     }
                                 }
                             }
-                            
                             if (f.hp <= 0) {
-                                f.hp = 0; f.alive = false; f.deployed = false;
-                                this.playSound('explosion');
+                                f.hp = 0; f.alive = false; f.deployed = false; this.playSound('explosion');
                                 this.log(`<span class="log-alert">SQUADRON LEADER: ${f.callsign} lost with all hands!</span>`);
                                 this.systems.morale -= 5;
                             }
-                        } else {
-                            f.hp = Math.min(100, f.hp + 5);
-                        }
+                        } else { f.hp = Math.min(100, f.hp + 5); }
                     }
                 });
 
                 if (this.crewMissionActive) {
-                    let teamAlive = false;
-                    let gatherRate = 0;
-
+                    let teamAlive = false; let gatherRate = 0;
                     this.crew.forEach(c => {
                         if (c.deployed && c.hp > 0) {
-                            teamAlive = true;
-                            gatherRate += 0.5; 
+                            teamAlive = true; gatherRate += 0.5; 
                             if (Math.random() > 0.4) {
                                 c.hp -= (Math.random() * 6 + 1); 
                                 if (c.hp <= 0) { c.hp = 0; this.playSound('alert'); this.log(`TRAGEDY: ${c.name} killed on surface.`); this.systems.morale -= 15;}
                             }
                         }
                     });
-
                     if (gatherRate > 0) this.systems.supplies = Math.min(100, this.systems.supplies + gatherRate);
-
-                    if (!teamAlive) {
-                        this.crewMissionActive = false;
-                    }
+                    if (!teamAlive) this.crewMissionActive = false;
                 } else if (!(this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'CREW')) {
-                    this.crew.forEach(c => {
-                        if (!c.deployed && c.hp > 0 && c.hp < 100) c.hp = Math.min(100, c.hp + 6); 
-                    });
+                    this.crew.forEach(c => { if (!c.deployed && c.hp > 0 && c.hp < 100) c.hp = Math.min(100, c.hp + 6); });
                 }
 
-                this.renderUI_Lists();
-                this.timeElapsed++;
-                this.updateUI();
+                this.renderUI_Lists(); this.timeElapsed++; this.updateUI();
             }
 
             generateMission() {
                 const isSquad = Math.random() > 0.5;
                 const templates = isSquad ? [
-                    { title: "ESCORT CONVOY", desc: "Protect civilian transport through hostile space.", dur: Math.floor(Math.random() * 15 + 15), rw: {cr: 250, data: 0, torp: 2, pts: 300} },
+                    { title: "ESCORT CONVOY", desc: "Protect transport through hostile space.", dur: Math.floor(Math.random() * 15 + 15), rw: {cr: 250, data: 0, torp: 2, pts: 300} },
                     { title: "DISTRESS BEACON", desc: "Respond to SOS in Sector 4.", dur: Math.floor(Math.random() * 15 + 15), rw: {cr: 100, data: 100, torp: 0, pts: 200} }
                 ] : [
                     { title: "ALIEN ARTIFACT", desc: "Investigate anomaly on nearby moon.", dur: Math.floor(Math.random() * 15 + 15), rw: {cr: 0, data: 250, pul: 1, pts: 400} },
                     { title: "RESCUE MINERS", desc: "Extract personnel from unstable asteroid.", dur: Math.floor(Math.random() * 15 + 15), rw: {cr: 300, data: 0, torp: 1, pts: 250} }
                 ];
-                
                 const m = templates[Math.floor(Math.random() * templates.length)];
-                this.activeMission = {
-                    ...m, type: isSquad ? 'SQUAD' : 'CREW', progress: 0, timeout: 15
-                };
-                this.missionState = 'PENDING';
-                this.playSound('telegram');
+                this.activeMission = { ...m, type: isSquad ? 'SQUAD' : 'CREW', progress: 0, timeout: 15 };
+                this.missionState = 'PENDING'; this.playSound('telegram');
                 this.log(`<span class="log-info">INCOMING TRANSMISSION: Sub-space dispatch request received.</span>`);
                 this.updateMissionUI();
             }
 
             acceptMission() {
                 if (!this.activeMission || this.missionState !== 'PENDING') return;
-
                 if (this.activeMission.type === 'SQUAD') {
                     if (!this.fighters.some(f => f.alive && f.rebuilding <= 0)) {
                         this.playSound('alert'); this.log("<span class='log-alert'>Cannot accept: No flight-ready interceptors.</span>"); return;
                     }
-                    this.fighters.forEach(f => f.deployed = false);
-                    this.spawnWarpOut(3, '#ffffff');
+                    this.fighters.forEach(f => f.deployed = false); this.spawnWarpOut(3, '#ffffff');
                 } else {
                     if (!this.crew.some(c => c.hp > 0)) {
                         this.playSound('alert'); this.log("<span class='log-alert'>Cannot accept: No able-bodied crew.</span>"); return;
                     }
-                    this.crewMissionActive = false; 
-                    this.crew.forEach(c => c.deployed = false);
-                    this.spawnWarpOut(1, '#39ff14');
+                    this.crewMissionActive = false; this.crew.forEach(c => c.deployed = false); this.spawnWarpOut(1, '#39ff14');
                 }
-
-                this.missionState = 'ACTIVE';
-                this.playSound('teleport');
+                this.missionState = 'ACTIVE'; this.playSound('teleport');
                 this.log(`Dispatch approved. Assets departed for ${this.activeMission.title}.`);
-                this.updateMissionUI();
-                this.renderUI_Lists();
+                this.updateMissionUI(); this.renderUI_Lists();
             }
 
-            declineMission() {
-                this.missionState = 'NONE';
-                this.activeMission = null;
-                this.updateMissionUI();
-            }
+            declineMission() { this.missionState = 'NONE'; this.activeMission = null; this.updateMissionUI(); }
 
             abortMission() {
                 if (this.missionState !== 'ACTIVE') return;
-                this.playSound('explosion');
-                this.log("<span class='log-warn'>Mission Aborted. Assets recalling. Penalty applied.</span>");
-                this.resources.credits = Math.max(0, this.resources.credits - 20);
-                this.resources.data = Math.max(0, this.resources.data - 10);
+                this.playSound('explosion'); this.log("<span class='log-warn'>Mission Aborted. Assets recalling. Penalty applied.</span>");
+                this.resources.credits = Math.max(0, this.resources.credits - 20); this.resources.data = Math.max(0, this.resources.data - 10);
                 this.systems.morale -= 5;
-                
                 this.spawnWarpOut(this.activeMission.type === 'SQUAD' ? 3 : 1, this.activeMission.type === 'SQUAD' ? '#ffffff' : '#39ff14', true);
-                
-                this.missionState = 'NONE';
-                this.activeMission = null;
-                this.updateMissionUI();
-                this.renderUI_Lists();
-                this.updateUI();
+                this.missionState = 'NONE'; this.activeMission = null; this.updateMissionUI(); this.renderUI_Lists(); this.updateUI();
             }
 
             completeMission(success, reason = "") {
                 if (success) {
-                    this.playSound('lock');
-                    const rw = this.activeMission.rw;
-                    this.resources.credits += rw.cr || 0;
-                    this.resources.data += rw.data || 0;
-                    if (rw.torp) this.ammo.torpedoes += rw.torp;
-                    if (rw.pul) this.ammo.pulsars += rw.pul;
+                    this.playSound('lock'); const rw = this.activeMission.rw;
+                    this.resources.credits += rw.cr || 0; this.resources.data += rw.data || 0;
+                    if (rw.torp) this.ammo.torpedoes += rw.torp; if (rw.pul) this.ammo.pulsars += rw.pul;
                     this.addScore(rw.pts || 100, `DISPATCH SUCCESS: ${this.activeMission.title}. Resources secured.`);
                     this.systems.morale = Math.min(100, this.systems.morale + 10);
-                    
                     const tEl = document.getElementById('torpedo-count'); if(tEl) tEl.innerText = this.ammo.torpedoes;
                     const pEl = document.getElementById('pulsar-count'); if(pEl) pEl.innerText = this.ammo.pulsars;
-                    
                     this.spawnWarpOut(this.activeMission.type === 'SQUAD' ? 3 : 1, this.activeMission.type === 'SQUAD' ? '#ffffff' : '#39ff14', true);
                 } else {
-                    this.playSound('explosion');
-                    this.log(`<span class="log-alert">DISPATCH FAILED: ${reason}</span>`);
-                    this.systems.morale -= 20;
+                    this.playSound('explosion'); this.log(`<span class="log-alert">DISPATCH FAILED: ${reason}</span>`); this.systems.morale -= 20;
                 }
-                
-                this.missionState = 'NONE';
-                this.activeMission = null;
-                this.updateMissionUI();
-                this.renderUI_Lists();
-                this.updateUI();
+                this.missionState = 'NONE'; this.activeMission = null; this.updateMissionUI(); this.renderUI_Lists(); this.updateUI();
             }
 
             updateMissionUI() {
                 const panel = document.getElementById('mission-content');
                 if (!panel) return;
-
                 if (this.missionState === 'NONE') {
                     panel.innerHTML = `<div style="color: #555; font-size: 0.9em;">NO SIGNALS DETECTED.<br>MONITORING SECTOR.</div>`;
                 } else if (this.missionState === 'PENDING') {
@@ -1061,8 +822,7 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                         <div style="display: flex; gap: 5px; width: 100%; margin-top: 4px;">
                             <button class="btn-info" onclick="game.acceptMission()" style="flex: 1; padding: 4px;">ACCEPT</button>
                             <button class="btn-alert" onclick="game.declineMission()" style="flex: 1; padding: 4px;">DECLINE</button>
-                        </div>
-                    `;
+                        </div>`;
                 } else if (this.missionState === 'ACTIVE') {
                     const pct = (this.activeMission.progress / this.activeMission.duration) * 100;
                     panel.innerHTML = `
@@ -1071,8 +831,7 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                         <div class="health-bar" style="width: 100%; height: 8px; margin-top: 5px;">
                             <div class="health-fill" style="width: ${pct}%; background-color: var(--info-color);"></div>
                         </div>
-                        <button class="btn-alert" onclick="game.abortMission()" style="width: 100%; padding: 4px; margin-top: 5px; font-size: 0.7em;">ABORT (PENALTY)</button>
-                    `;
+                        <button class="btn-alert" onclick="game.abortMission()" style="width: 100%; padding: 4px; margin-top: 5px; font-size: 0.7em;">ABORT (PENALTY)</button>`;
                 }
             }
 
@@ -1080,15 +839,11 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                 if (this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'SQUAD') {
                     this.playSound('alert'); this.log("<span class='log-alert'>COMMAND REFUSED: Wing is currently on a dispatch!</span>"); return;
                 }
-
                 let f = this.fighters.find(f => f.id === id);
                 if (f && f.alive && f.rebuilding <= 0) {
                     f.deployed = !f.deployed;
                     if (f.deployed) {
-                        f.x = (Math.random() - 0.5) * 50;
-                        f.y = this.globeRadius + Math.random() * 50;
-                        f.z = (Math.random() - 0.5) * 50;
-                        f.idleAngle = Math.random() * Math.PI * 2;
+                        f.x = (Math.random() - 0.5) * 50; f.y = this.globeRadius + Math.random() * 50; f.z = (Math.random() - 0.5) * 50; f.idleAngle = Math.random() * Math.PI * 2;
                         this.playSound('teleport');
                     }
                     this.renderUI_Lists();
@@ -1099,17 +854,12 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                 if (this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'SQUAD') {
                     this.playSound('alert'); this.log("<span class='log-alert'>COMMAND REFUSED: Wing is currently on a dispatch!</span>"); return;
                 }
-                
-                const anyDeployed = this.fighters.some(f => f.alive && f.deployed);
-                let count = 0;
+                const anyDeployed = this.fighters.some(f => f.alive && f.deployed); let count = 0;
                 this.fighters.forEach(f => {
                     if (f.alive && f.rebuilding <= 0) {
                         f.deployed = !anyDeployed;
                         if (f.deployed) {
-                            f.x = (Math.random() - 0.5) * 50;
-                            f.y = this.globeRadius + Math.random() * 50;
-                            f.z = (Math.random() - 0.5) * 50;
-                            f.idleAngle = Math.random() * Math.PI * 2;
+                            f.x = (Math.random() - 0.5) * 50; f.y = this.globeRadius + Math.random() * 50; f.z = (Math.random() - 0.5) * 50; f.idleAngle = Math.random() * Math.PI * 2;
                             count++;
                         }
                     }
@@ -1125,28 +875,20 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                 if (this.resources.credits >= 50 && this.resources.data >= 20) {
                     const f = this.fighters.find(f => f.id === id);
                     if(f && !f.alive && f.rebuilding <= 0) {
-                        this.resources.credits -= 50; this.resources.data -= 20;
-                        f.rebuilding = 30; 
+                        this.resources.credits -= 50; this.resources.data -= 20; f.rebuilding = 30; 
                         this.log(`Engineering: Fabricating replica for ${f.callsign}. ETA: 30s.`);
-                        this.renderUI_Lists();
-                        this.updateUI();
+                        this.renderUI_Lists(); this.updateUI();
                     }
-                } else {
-                    this.log("<span class='log-warn'>Insufficient resources to rebuild interceptor. Needs 50 CR, 20 Data.</span>");
-                }
+                } else { this.log("<span class='log-warn'>Insufficient resources to rebuild interceptor. Needs 50 CR, 20 Data.</span>"); }
             }
 
             deployAwayTeam() {
                 if (this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'CREW') {
                     this.playSound('alert'); this.log("<span class='log-alert'>COMMAND REFUSED: Security Team is currently on a dispatch!</span>"); return;
                 }
-
                 const available = this.crew.filter(c => c.hp > 50 && !c.deployed);
                 if (available.length === 0) { this.log("No fit crew available for deployment."); return; }
-
-                this.playSound('teleport');
-                this.crewMissionActive = true;
-                available.forEach(c => c.deployed = true);
+                this.playSound('teleport'); this.crewMissionActive = true; available.forEach(c => c.deployed = true);
                 this.log(`Away team deployed to local surface. Gathering supplies. Monitor vitals carefully.`);
                 this.renderUI_Lists();
             }
@@ -1154,13 +896,8 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
             beamUpMember(id) {
                 const member = this.crew.find(c => c.id === id);
                 if(member && member.deployed) {
-                    this.playSound('teleport');
-                    member.deployed = false;
-                    this.log(`Emergency Transport: ${member.name} recalled to infirmary.`);
-                    
-                    if (!this.crew.some(c => c.deployed && c.hp > 0)) {
-                        this.crewMissionActive = false;
-                    }
+                    this.playSound('teleport'); member.deployed = false; this.log(`Emergency Transport: ${member.name} recalled to infirmary.`);
+                    if (!this.crew.some(c => c.deployed && c.hp > 0)) this.crewMissionActive = false;
                     this.renderUI_Lists();
                 }
             }
@@ -1170,39 +907,25 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                 if (fList) {
                     fList.innerHTML = '';
                     const fOnMission = this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'SQUAD';
-                    
                     const squadBtn = document.getElementById('btn-deploy-squad');
                     if (squadBtn) {
-                        if (fOnMission) {
-                            squadBtn.disabled = true; squadBtn.innerText = "WING ON DISPATCH"; squadBtn.className = "btn-warn";
+                        if (fOnMission) { squadBtn.disabled = true; squadBtn.innerText = "WING ON DISPATCH"; squadBtn.className = "btn-warn";
                         } else {
                             squadBtn.disabled = !this.fighters.some(f => f.alive && f.rebuilding <= 0);
                             const anyDeployed = this.fighters.some(f => f.alive && f.deployed);
-                            squadBtn.innerText = anyDeployed ? "RECALL ALL" : "LAUNCH ALL";
-                            squadBtn.className = anyDeployed ? "btn-warn" : "btn-white";
+                            squadBtn.innerText = anyDeployed ? "RECALL ALL" : "LAUNCH ALL"; squadBtn.className = anyDeployed ? "btn-warn" : "btn-white";
                         }
                     }
-
                     this.fighters.forEach(f => {
-                        let color = '#ffffff'; 
-                        if (f.hp < 30) color = '#ff3333';
-                        else if (f.hp < 60) color = '#ffaa00';
-
-                        const isBuilding = f.rebuilding > 0;
-                        let statusTxt = isBuilding ? `BLD ${f.rebuilding}s` : (!f.alive ? 'DEST' : (fOnMission ? 'MSN' : (f.deployed ? 'PATROL' : 'DOCK')));
+                        let color = '#ffffff'; if (f.hp < 30) color = '#ff3333'; else if (f.hp < 60) color = '#ffaa00';
+                        const isBuilding = f.rebuilding > 0; let statusTxt = isBuilding ? `BLD ${f.rebuilding}s` : (!f.alive ? 'DEST' : (fOnMission ? 'MSN' : (f.deployed ? 'PATROL' : 'DOCK')));
                         const opacity = (!f.alive || isBuilding || fOnMission) ? '0.4' : '1.0';
-                        
                         let btnHtml = '';
-                        if (!f.alive && !isBuilding && !fOnMission) {
-                            btnHtml = `<button class="btn-info" style="padding: 2px 4px; font-size: 0.6em;" onclick="game.rebuildFighter(${f.id})">REBUILD</button>`;
+                        if (!f.alive && !isBuilding && !fOnMission) { btnHtml = `<button class="btn-info" style="padding: 2px 4px; font-size: 0.6em;" onclick="game.rebuildFighter(${f.id})">REBUILD</button>`;
                         } else if (f.alive && !fOnMission && !isBuilding) {
-                            if (f.deployed) {
-                                btnHtml = `<button class="btn-warn" style="padding: 2px 4px; font-size: 0.6em;" onclick="game.toggleFighter(${f.id})">RECALL</button>`;
-                            } else {
-                                btnHtml = `<button class="btn-white" style="padding: 2px 4px; font-size: 0.6em;" onclick="game.toggleFighter(${f.id})">LAUNCH</button>`;
-                            }
+                            if (f.deployed) btnHtml = `<button class="btn-warn" style="padding: 2px 4px; font-size: 0.6em;" onclick="game.toggleFighter(${f.id})">RECALL</button>`;
+                            else btnHtml = `<button class="btn-white" style="padding: 2px 4px; font-size: 0.6em;" onclick="game.toggleFighter(${f.id})">LAUNCH</button>`;
                         }
-
                         fList.innerHTML += `
                             <div class="list-item" style="opacity: ${opacity}; border-left-color: ${color};">
                                 <div style="flex-grow: 1;">
@@ -1210,36 +933,24 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                                         <span>${f.callsign}</span> <span style="font-size:0.8em; color:${!f.alive && !isBuilding ?'#ff3333':color}">${statusTxt}</span>
                                     </div>
                                     <div class="health-bar" style="width: calc(100% - 5px);"><div class="health-fill" style="width: ${f.hp}%; background-color: ${color};"></div></div>
-                                </div>
-                                ${btnHtml ? `<div style="margin-left: 5px;">${btnHtml}</div>` : ''}
+                                </div>${btnHtml ? `<div style="margin-left: 5px;">${btnHtml}</div>` : ''}
                             </div>`;
                     });
                 }
-
                 const cList = document.getElementById('crew-list');
                 if (cList) {
                     cList.innerHTML = '';
                     const cOnMission = this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'CREW';
-                    
                     const crewBtn = document.getElementById('btn-deploy-crew');
                     if (crewBtn) {
-                        if (cOnMission) {
-                            crewBtn.disabled = true; crewBtn.innerText = "TEAM ON DISPATCH"; crewBtn.className = "btn-warn";
-                        } else {
-                            crewBtn.disabled = this.crewMissionActive;
-                            if (!this.crewMissionActive) { crewBtn.innerText = "FORAGE PLANET"; crewBtn.className = ""; }
-                        }
+                        if (cOnMission) { crewBtn.disabled = true; crewBtn.innerText = "TEAM ON DISPATCH"; crewBtn.className = "btn-warn";
+                        } else { crewBtn.disabled = this.crewMissionActive; if (!this.crewMissionActive) { crewBtn.innerText = "FORAGE PLANET"; crewBtn.className = ""; } }
                     }
-
                     this.crew.forEach(c => {
-                        let color = '#39ff14';
-                        if (c.hp < 30) color = '#ff3333';
-                        else if (c.hp < 60) color = '#ffaa00';
-
+                        let color = '#39ff14'; if (c.hp < 30) color = '#ff3333'; else if (c.hp < 60) color = '#ffaa00';
                         const statusTxt = c.hp <= 0 ? 'KIA' : (cOnMission ? 'MSN' : (c.deployed ? 'AWAY' : 'BASE'));
                         const btnHtml = (c.deployed && c.hp > 0 && !cOnMission) ? `<button class="btn-warn" style="padding: 2px 4px; font-size: 0.6em;" onclick="game.beamUpMember(${c.id})">EVAC</button>` : '';
                         const opacity = (c.hp <= 0 || cOnMission) ? '0.3' : '1.0';
-
                         cList.innerHTML += `
                             <div class="list-item" style="opacity: ${opacity}; border-left-color: ${color};">
                                 <div style="flex-grow: 1;">
@@ -1250,8 +961,7 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                                         <span style="font-size: 0.7em; color:#888; width: 20px;">${c.role}</span>
                                         <div class="health-bar" style="width: calc(100% - 25px);"><div class="health-fill" style="width: ${c.hp}%; background-color: ${color};"></div></div>
                                     </div>
-                                </div>
-                                ${btnHtml ? `<div style="margin-left: 5px;">${btnHtml}</div>` : ''}
+                                </div>${btnHtml ? `<div style="margin-left: 5px;">${btnHtml}</div>` : ''}
                             </div>`;
                     });
                 }
@@ -1260,264 +970,136 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
             engageTractorBeam() {
                 const tgt = this.lockedTargets.find(t => t.faction === 'mystery');
                 if (tgt && !this.analyzingTarget) {
-                    this.playSound('tractor');
-                    tgt.frozen = true;
-                    this.analyzingTarget = tgt;
-                    this.analyzingTarget.scanStart = Date.now();
+                    this.playSound('tractor'); tgt.frozen = true; this.analyzingTarget = tgt; this.analyzingTarget.scanStart = Date.now();
                     this.log(`Tractor beam engaged on ${tgt.id}. Initiating deep scan...`);
-                    
-                    document.getElementById('btn-tractor').disabled = true;
-                    document.getElementById('btn-tractor').innerText = "SCANNING...";
+                    document.getElementById('btn-tractor').disabled = true; document.getElementById('btn-tractor').innerText = "SCANNING...";
                 }
             }
 
             resolveScan() {
-                const tgt = this.analyzingTarget;
-                this.analyzingTarget = null; 
-                
+                const tgt = this.analyzingTarget; this.analyzingTarget = null; 
                 if (!tgt || !tgt.alive) { this.resetOpsPanel(); return; }
-
                 const roll = Math.random();
-                
-                const panel = document.getElementById('ops-panel');
-                const pDef = document.getElementById('ops-default');
-                const pAct = document.getElementById('ops-action');
-                const pUnid = document.getElementById('ops-unidentified');
-                
+                const panel = document.getElementById('ops-panel'); const pDef = document.getElementById('ops-default'); const pAct = document.getElementById('ops-action'); const pUnid = document.getElementById('ops-unidentified');
                 if (roll < 0.3) {
-                    tgt.faction = 'mystery'; tgt.color = '#ffaa00'; 
-                    this.playSound('alert');
-                    this.log(`<span class="log-warn">WARNING: Scan blocked! ${tgt.id} shielding resists deep scan.</span>`);
-                    
-                    this.pendingDecisionTarget = tgt;
-                    if (pDef) pDef.style.display = 'none';
-                    if (pAct) pAct.style.display = 'none';
-                    if (pUnid) pUnid.style.display = 'flex';
-                    if (panel) panel.classList.add('flash-warn');
+                    tgt.faction = 'mystery'; tgt.color = '#ffaa00'; this.playSound('alert'); this.log(`<span class="log-warn">WARNING: Scan blocked! ${tgt.id} shielding resists deep scan.</span>`);
+                    this.pendingDecisionTarget = tgt; if (pDef) pDef.style.display = 'none'; if (pAct) pAct.style.display = 'none'; if (pUnid) pUnid.style.display = 'flex'; if (panel) panel.classList.add('flash-warn');
                 } else if (roll < 0.6) {
-                    tgt.faction = 'enemy'; tgt.color = '#ff3333'; 
-                    this.playSound('alert');
-                    this.log(`<span class="log-alert">CRITICAL: ${tgt.id} is hostile! Contraband detected!</span>`);
-                    
-                    this.pendingDecisionTarget = tgt;
-                    if (pDef) pDef.style.display = 'none';
-                    if (pUnid) pUnid.style.display = 'none';
-                    if (pAct) pAct.style.display = 'flex';
-                    if (panel) panel.classList.add('flash-red');
+                    tgt.faction = 'enemy'; tgt.class = 'fighter'; tgt.color = '#ff3333'; this.playSound('alert'); this.log(`<span class="log-alert">CRITICAL: ${tgt.id} is hostile! Contraband detected!</span>`);
+                    this.pendingDecisionTarget = tgt; if (pDef) pDef.style.display = 'none'; if (pUnid) pUnid.style.display = 'none'; if (pAct) pAct.style.display = 'flex'; if (panel) panel.classList.add('flash-red');
                 } else {
-                    tgt.frozen = false; 
-                    tgt.faction = 'friendly'; tgt.color = '#39ff14'; 
-                    this.log(`Scan complete. ${tgt.id} cleared for commerce.`);
-                    const btn = document.getElementById('btn-tractor');
-                    if (btn) { btn.disabled = false; btn.innerText = "TRACTOR & ANALYZE"; }
+                    tgt.frozen = false; tgt.faction = 'friendly'; tgt.class = 'transport'; tgt.color = '#39ff14'; this.log(`Scan complete. ${tgt.id} cleared for commerce.`);
+                    const btn = document.getElementById('btn-tractor'); if (btn) { btn.disabled = false; btn.innerText = "TRACTOR & ANALYZE"; }
                 }
                 this.updateTargetUI();
             }
 
             boardUnidentified() {
                 if (!this.pendingDecisionTarget) return;
-                if (this.crewMissionActive || (this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'CREW')) {
-                    this.playSound('alert'); this.log("<span class='log-alert'>COMMAND REFUSED: Security Team is currently unavailable!</span>"); return;
-                }
-
-                this.playSound('teleport');
-                const tgt = this.pendingDecisionTarget;
-                const outcome = Math.random();
-
+                if (this.crewMissionActive || (this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'CREW')) { this.playSound('alert'); this.log("<span class='log-alert'>COMMAND REFUSED: Security Team is currently unavailable!</span>"); return; }
+                this.playSound('teleport'); const tgt = this.pendingDecisionTarget; const outcome = Math.random();
                 if (outcome < 0.33) {
-                    const haul = tgt.isCapital ? 400 : 50;
-                    this.resources.data += haul; this.systems.supplies = Math.min(100, this.systems.supplies + 20);
-                    this.addScore(75, `Boarding successful. ${tgt.id} was a smuggler. Cargo secured.`);
-                    tgt.alive = false;
+                    const haul = tgt.isCapital ? 400 : 50; this.resources.data += haul; this.systems.supplies = Math.min(100, this.systems.supplies + 20); this.addScore(75, `Boarding successful. ${tgt.id} was a smuggler. Cargo secured.`); tgt.alive = false;
                 } else if (outcome < 0.66) {
-                    this.log(`<span class="log-alert">AMBUSH! ${tgt.id} crew opened fire on boarding party!</span>`);
-                    this.crew.forEach(c => { if(c.hp > 0 && !c.deployed) c.hp -= (Math.random() * 30 + 10); }); 
-                    tgt.faction = 'enemy'; tgt.color = '#ff3333'; tgt.frozen = false;
-                    if (tgt.isCapital) tgt.provoked = true;
-                    this.addScore(-20);
+                    this.log(`<span class="log-alert">AMBUSH! ${tgt.id} crew opened fire on boarding party!</span>`); this.crew.forEach(c => { if(c.hp > 0 && !c.deployed) c.hp -= (Math.random() * 30 + 10); }); 
+                    tgt.faction = 'enemy'; tgt.class = 'fighter'; tgt.color = '#ff3333'; tgt.frozen = false; if (tgt.isCapital) tgt.provoked = true; this.addScore(-20);
                 } else {
                     this.addScore(25, `Boarding complete. ${tgt.id} is civilian transport with damaged transponders. Released.`);
-                    tgt.frozen = false;
-                    tgt.alive = false;
+                    tgt.faction = 'friendly'; tgt.class = 'transport'; tgt.color = '#dddddd'; tgt.frozen = false;
                 }
                 this.resetOpsPanel();
             }
 
             attackUnidentified() {
-                if (!this.pendingDecisionTarget) return;
-                const tgt = this.pendingDecisionTarget;
-                tgt.faction = 'enemy'; tgt.color = '#ff3333'; tgt.frozen = false;
-                if (tgt.isCapital) tgt.provoked = true;
-                this.log(`Station Command explicitly marked ${tgt.id} as hostile. Weapons free.`);
-                this.resetOpsPanel();
+                if (!this.pendingDecisionTarget) return; const tgt = this.pendingDecisionTarget;
+                tgt.faction = 'enemy'; tgt.class = 'fighter'; tgt.color = '#ff3333'; tgt.frozen = false; if (tgt.isCapital) tgt.provoked = true;
+                this.log(`Station Command explicitly marked ${tgt.id} as hostile. Weapons free.`); this.resetOpsPanel();
             }
 
             releaseUnidentified() {
-                if (!this.pendingDecisionTarget) return;
-                this.log(`Station Command released unidentified vessel ${this.pendingDecisionTarget.id}.`);
-                this.pendingDecisionTarget.frozen = false;
-                this.pendingDecisionTarget.alive = false; 
-                this.resetOpsPanel();
+                if (!this.pendingDecisionTarget) return; this.log(`Station Command released unidentified vessel ${this.pendingDecisionTarget.id}.`);
+                this.pendingDecisionTarget.frozen = false; this.pendingDecisionTarget.alive = false; this.resetOpsPanel();
             }
 
             arrestShip() {
                 if (!this.pendingDecisionTarget) return;
-                if (this.crewMissionActive || (this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'CREW')) {
-                    this.playSound('alert'); this.log("<span class='log-alert'>COMMAND REFUSED: You must recall Security Team to board!</span>"); return;
-                }
-
-                this.playSound('teleport');
-                const tgt = this.pendingDecisionTarget;
-                
+                if (this.crewMissionActive || (this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'CREW')) { this.playSound('alert'); this.log("<span class='log-alert'>COMMAND REFUSED: You must recall Security Team to board!</span>"); return; }
+                this.playSound('teleport'); const tgt = this.pendingDecisionTarget;
                 if (Math.random() > 0.3) {
-                    const haul = tgt.isCapital ? 400 : 100;
-                    this.resources.data += haul; tgt.alive = false;
-                    this.addScore(100, `Security Team successfully breached ${tgt.id}. Contraband secured.`);
+                    const haul = tgt.isCapital ? 400 : 100; this.resources.data += haul; tgt.alive = false; this.addScore(100, `Security Team successfully breached ${tgt.id}. Contraband secured.`);
                 } else {
-                    this.log(`<span class="log-alert">Security Team met heavy resistance! Target destroyed in firefight.</span>`);
-                    this.crew.forEach(c => { if(c.hp > 0 && !c.deployed) c.hp -= 25; });
-                    const coords = this.getSafeCoords(tgt);
-                    this.triggerExplosion(coords.x, coords.y, tgt.isCapital); tgt.alive = false;
-                    this.addScore(100);
+                    this.log(`<span class="log-alert">Security Team met heavy resistance! Target destroyed in firefight.</span>`); this.crew.forEach(c => { if(c.hp > 0 && !c.deployed) c.hp -= 25; });
+                    const coords = this.getSafeCoords(tgt); this.triggerExplosion(coords.x, coords.y, tgt.isCapital); tgt.alive = false; this.addScore(100);
                 }
                 this.resetOpsPanel();
             }
 
             releaseShip() {
-                if (!this.pendingDecisionTarget) return;
-                this.log(`Station Command released hostile vessel ${this.pendingDecisionTarget.id}. Morale penalty applied.`);
-                this.systems.morale -= 10; 
-                this.pendingDecisionTarget.frozen = false;
-                this.pendingDecisionTarget.alive = false; 
-                this.resetOpsPanel();
-                this.updateUI();
+                if (!this.pendingDecisionTarget) return; this.log(`Station Command released hostile vessel ${this.pendingDecisionTarget.id}. Morale penalty applied.`);
+                this.systems.morale -= 10; this.pendingDecisionTarget.frozen = false; this.pendingDecisionTarget.alive = false; this.resetOpsPanel(); this.updateUI();
             }
 
             resetOpsPanel() {
-                this.pendingDecisionTarget = null;
-                const pDef = document.getElementById('ops-default');
-                const pAct = document.getElementById('ops-action');
-                const pUnid = document.getElementById('ops-unidentified');
-                const panel = document.getElementById('ops-panel');
-                const btn = document.getElementById('btn-tractor');
-
-                if (pDef) pDef.style.display = 'flex';
-                if (pAct) pAct.style.display = 'none';
-                if (pUnid) pUnid.style.display = 'none';
-                if (panel) {
-                    panel.classList.remove('flash-red');
-                    panel.classList.remove('flash-warn');
-                }
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerText = "TRACTOR & ANALYZE";
-                }
-                
-                this.updateTargetUI();
-                this.renderUI_Lists(); 
+                this.pendingDecisionTarget = null; const pDef = document.getElementById('ops-default'); const pAct = document.getElementById('ops-action'); const pUnid = document.getElementById('ops-unidentified'); const panel = document.getElementById('ops-panel'); const btn = document.getElementById('btn-tractor');
+                if (pDef) pDef.style.display = 'flex'; if (pAct) pAct.style.display = 'none'; if (pUnid) pUnid.style.display = 'none';
+                if (panel) { panel.classList.remove('flash-red'); panel.classList.remove('flash-warn'); }
+                if (btn) { btn.disabled = false; btn.innerText = "TRACTOR & ANALYZE"; }
+                this.updateTargetUI(); this.renderUI_Lists(); 
             }
 
             attemptLock() {
-                this.initAudio();
-                let hit = null; let minDist = 30;
-
+                this.initAudio(); let hit = null; let minDist = 30;
                 this.targets.forEach(tgt => {
                     if (tgt.alive && tgt.screenX !== undefined && tgt.screenY !== undefined && !isNaN(tgt.screenX) && !isNaN(tgt.screenY)) {
                         const dist = Math.hypot(tgt.screenX - this.mouseX, tgt.screenY - this.mouseY);
                         if (dist < minDist) { minDist = dist; hit = tgt; }
                     }
                 });
-
                 if (hit) {
-                    this.playSound('lock');
-                    const idx = this.lockedTargets.indexOf(hit);
-                    if (idx > -1) {
-                        this.lockedTargets.splice(idx, 1); 
-                    } else if (this.lockedTargets.length < 2) {
-                        this.lockedTargets.push(hit); 
-                    }
-                    
+                    this.playSound('lock'); const idx = this.lockedTargets.indexOf(hit);
+                    if (idx > -1) { this.lockedTargets.splice(idx, 1); 
+                    } else if (this.lockedTargets.length < 2) { this.lockedTargets.push(hit); }
                     const statusEl = document.getElementById('sensor-readings');
                     if (statusEl && idx === -1) {
-                        statusEl.innerHTML = `TARGET LOCKED: ${hit.id}`;
-                        setTimeout(() => { if (document.getElementById('sensor-readings')) document.getElementById('sensor-readings').innerHTML = 'SCANNING LOCAL SECTOR'; }, 2000);
+                        statusEl.innerHTML = `TARGET LOCKED: ${hit.id}`; setTimeout(() => { if (document.getElementById('sensor-readings')) document.getElementById('sensor-readings').innerHTML = 'SCANNING LOCAL SECTOR'; }, 2000);
                     }
                 } else {
-                    this.lockedTargets = []; 
-                    const statusEl = document.getElementById('sensor-readings');
-                    if (statusEl) statusEl.innerHTML = 'NO TARGETS ACQUIRED';
+                    this.lockedTargets = []; const statusEl = document.getElementById('sensor-readings'); if (statusEl) statusEl.innerHTML = 'NO TARGETS ACQUIRED';
                 }
                 this.updateTargetUI();
             }
 
             updateTargetUI() {
-                this.lockedTargets = this.lockedTargets.filter(t => t.alive);
-                const container = document.getElementById('target-locks');
-                if (!container) return;
-
+                this.lockedTargets = this.lockedTargets.filter(t => t.alive); const container = document.getElementById('target-locks'); if (!container) return;
                 if (this.lockedTargets.length === 0) {
-                    container.innerHTML = '<div style="color: #555; text-align: center; margin-top: 15px;">NO TARGETS LOCKED</div>';
-                    this.setWeaponButtons(false, false, false);
-                    const btn = document.getElementById('btn-tractor');
-                    if (btn) btn.disabled = true;
-                    return;
+                    container.innerHTML = '<div style="color: #555; text-align: center; margin-top: 15px;">NO TARGETS LOCKED</div>'; this.setWeaponButtons(false, false, false);
+                    const btn = document.getElementById('btn-tractor'); if (btn) btn.disabled = true; return;
                 }
-
                 let html = ''; let hasMystery = false; let hasEnemy = false;
-
                 this.lockedTargets.forEach((t, i) => {
                     const statusText = t.faction === 'mystery' ? 'ANALYSIS REQ' : 'LOCKED';
-                    html += `<div style="display:flex; justify-content:space-between; margin-bottom:8px; border-bottom:1px dashed #1a2b3c; padding-bottom:4px;">
-                                <span style="color:#fff; font-weight: bold;">TRK-${i+1} [${t.id}]</span>
-                                <span style="color:${t.color}; font-weight:bold; animation: pulse 1s infinite;">${statusText}</span>
-                             </div>`;
-                    if (t.faction === 'mystery') hasMystery = true;
-                    if (t.faction === 'enemy' || t.faction === 'friendly') hasEnemy = true; 
+                    html += `<div style="display:flex; justify-content:space-between; margin-bottom:8px; border-bottom:1px dashed #1a2b3c; padding-bottom:4px;"><span style="color:#fff; font-weight: bold;">TRK-${i+1} [${t.id}]</span><span style="color:${t.color}; font-weight:bold; animation: pulse 1s infinite;">${statusText}</span></div>`;
+                    if (t.faction === 'mystery') hasMystery = true; if (t.faction === 'enemy' || t.faction === 'pirate' || t.faction === 'friendly') hasEnemy = true; 
                 });
-                container.innerHTML = html;
-
-                const canShoot = hasEnemy;
-                this.setWeaponButtons(
-                    canShoot && this.systems.energy >= 10,
-                    canShoot && this.ammo.torpedoes > 0 && this.systems.energy >= 20,
-                    this.ammo.pulsars > 0 && this.systems.energy >= 50 
-                );
-
+                container.innerHTML = html; const canShoot = hasEnemy;
+                this.setWeaponButtons(canShoot && this.systems.energy >= 10, canShoot && this.ammo.torpedoes > 0 && this.systems.energy >= 20, this.ammo.pulsars > 0 && this.systems.energy >= 50);
                 const btn = document.getElementById('btn-tractor');
-                if (btn) {
-                    if (hasMystery && !this.analyzingTarget && !this.pendingDecisionTarget) btn.disabled = false;
-                    else if (!this.analyzingTarget) btn.disabled = true;
-                }
+                if (btn) { if (hasMystery && !this.analyzingTarget && !this.pendingDecisionTarget) btn.disabled = false; else if (!this.analyzingTarget) btn.disabled = true; }
             }
 
             setWeaponButtons(phaser, torpedo, pulsar) {
-                const pBtn = document.getElementById('fire-phaser');
-                const tBtn = document.getElementById('fire-torpedo');
-                const uBtn = document.getElementById('fire-pulsar');
-                if (pBtn) pBtn.disabled = !phaser;
-                if (tBtn) tBtn.disabled = !torpedo;
-                if (uBtn) uBtn.disabled = !pulsar;
+                const pBtn = document.getElementById('fire-phaser'); const tBtn = document.getElementById('fire-torpedo'); const uBtn = document.getElementById('fire-pulsar');
+                if (pBtn) pBtn.disabled = !phaser; if (tBtn) tBtn.disabled = !torpedo; if (uBtn) uBtn.disabled = !pulsar;
             }
 
             fireWeapon(type) {
                 if (this.lockedTargets.length === 0 && type !== 'pulsar') return;
-
                 if (type === 'phaser' && this.systems.energy >= 10) {
-                    this.playSound('phaser');
-                    this.systems.energy -= 10;
-                    
-                    const chargeBar = document.createElement('div');
-                    chargeBar.style.position = 'absolute'; chargeBar.style.bottom = '10px'; chargeBar.style.left = '50%';
-                    chargeBar.style.width = '0px'; chargeBar.style.height = '4px';
-                    chargeBar.style.backgroundColor = '#ff3333'; chargeBar.style.transform = 'translateX(-50%)';
-                    chargeBar.style.transition = 'width 0.1s linear';
-                    document.getElementById('main-view').appendChild(chargeBar);
-                    
+                    this.playSound('phaser'); this.systems.energy -= 10;
+                    const chargeBar = document.createElement('div'); chargeBar.style.position = 'absolute'; chargeBar.style.bottom = '10px'; chargeBar.style.left = '50%'; chargeBar.style.width = '0px'; chargeBar.style.height = '4px'; chargeBar.style.backgroundColor = '#ff3333'; chargeBar.style.transform = 'translateX(-50%)'; chargeBar.style.transition = 'width 0.1s linear'; document.getElementById('main-view').appendChild(chargeBar);
                     setTimeout(() => { chargeBar.style.width = '100px'; }, 10);
-                    
                     setTimeout(() => {
-                        chargeBar.remove();
-                        this.triggerShake(3, 100);
+                        chargeBar.remove(); this.triggerShake(3, 100);
                         this.lockedTargets.forEach((tgt, i) => {
                             setTimeout(() => { 
                                 if(tgt && tgt.alive) {
@@ -1527,20 +1109,12 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                             }, i * 100);
                         });
                     }, 110);
-
                 } else if (type === 'torpedo' && this.ammo.torpedoes > 0 && this.systems.energy >= 20) {
-                    this.playSound('torpedo');
-                    this.ammo.torpedoes--; 
-                    const torpEl = document.getElementById('torpedo-count');
-                    if (torpEl) torpEl.innerText = this.ammo.torpedoes;
-                    this.systems.energy -= 20;
-                    this.triggerShake(5, 200);
-                    
+                    this.playSound('torpedo'); this.ammo.torpedoes--; const torpEl = document.getElementById('torpedo-count'); if (torpEl) torpEl.innerText = this.ammo.torpedoes; this.systems.energy -= 20; this.triggerShake(5, 200);
                     this.lockedTargets.forEach((tgt, i) => {
                         setTimeout(() => {
                             if(tgt && tgt.alive && tgt.screenX !== undefined && !isNaN(tgt.screenX)) {
-                                const tgtX = tgt.screenX; const tgtY = tgt.screenY;
-                                const angle = Math.atan2(tgtY - this.shipY, tgtX - this.shipX);
+                                const angle = Math.atan2(tgt.screenY - this.shipY, tgt.screenX - this.shipX);
                                 if (!isNaN(angle)) {
                                     this.projectiles.push({ type: 'torpedo', target: tgt, x: this.shipX, y: this.shipY, angle: angle, speed: 10 });
                                     if (tgt.isCapital) { tgt.faction = 'enemy'; tgt.color = '#ff3333'; tgt.provoked = true; }
@@ -1549,127 +1123,79 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                         }, i * 400);
                     });
                 } else if (type === 'pulsar' && this.ammo.pulsars > 0 && this.systems.energy >= 50) {
-                    this.playSound('pulsar');
-                    this.ammo.pulsars--; 
-                    const pulEl = document.getElementById('pulsar-count');
-                    if (pulEl) pulEl.innerText = this.ammo.pulsars;
-                    this.systems.energy -= 50;
-                    
-                    this.systems.shields = 0;
-                    this.shieldLockout = 10; 
-                    this.triggerShake(15, 600);
+                    this.playSound('pulsar'); this.ammo.pulsars--; const pulEl = document.getElementById('pulsar-count'); if (pulEl) pulEl.innerText = this.ammo.pulsars; this.systems.energy -= 50; this.systems.shields = 0; this.shieldLockout = 10; this.triggerShake(15, 600);
                     this.log("<span class='log-alert'>CRITICAL: Pulsar EMP feedback has collapsed main shields. Rebooting sequence initiated.</span>");
-
                     this.projectiles.push({ type: 'pulsar', radius: 0 });
-                    
                     this.targets.forEach(tgt => {
                         if (tgt.alive) {
                             setTimeout(() => { 
                                 if (!tgt.alive) return;
-                                
                                 const coords = this.getSafeCoords(tgt);
-
                                 if (tgt.isCapital) {
-                                    tgt.hull -= 200;
-                                    tgt.faction = 'enemy'; tgt.color = '#ff3333'; tgt.provoked = true;
-                                    if (tgt.hull <= 0) {
-                                        tgt.alive = false;
-                                        this.addScore(400, "CAPITAL SHIP DESTROYED BY EMP!");
-                                        this.triggerExplosion(coords.x, coords.y, true);
-                                    } else {
-                                        this.triggerExplosion(coords.x, coords.y, false); 
-                                    }
+                                    tgt.hull -= 200; tgt.faction = 'enemy'; tgt.color = '#ff3333'; tgt.provoked = true;
+                                    if (tgt.hull <= 0) { tgt.alive = false; this.addScore(400, "CAPITAL SHIP DESTROYED BY EMP!"); this.triggerExplosion(coords.x, coords.y, true); } else { this.triggerExplosion(coords.x, coords.y, false); }
                                 } else {
-                                    tgt.alive = false; 
-                                    this.triggerExplosion(coords.x, coords.y, false); 
-                                    
-                                    if (tgt.faction === 'enemy') this.addScore(100);
+                                    tgt.alive = false; this.triggerExplosion(coords.x, coords.y, false); 
+                                    if (tgt.faction === 'enemy' || tgt.faction === 'pirate') this.addScore(100);
                                     else if (tgt.faction === 'mystery') this.addScore(50);
-                                    else if (tgt.faction === 'friendly') {
-                                        this.addScore(-50, `COLLATERAL DAMAGE: Friendly vessel ${tgt.id} destroyed by Pulsar!`);
-                                        this.systems.morale -= 5;
-                                    }
+                                    else if (tgt.faction === 'friendly') { this.addScore(-50, `COLLATERAL DAMAGE: Friendly vessel ${tgt.id} destroyed by Pulsar!`); this.systems.morale -= 5; }
                                 }
                             }, Math.random() * 800 + 400); 
                         }
                     });
                     this.lockedTargets = [];
                 }
-                this.updateUI();
-                this.updateTargetUI();
+                this.updateUI(); this.updateTargetUI();
             }
 
             getSafeCoords(tgt) {
-                if (tgt && tgt.screenX !== undefined && !isNaN(tgt.screenX) && !isNaN(tgt.screenY)) {
-                    return { x: tgt.screenX, y: tgt.screenY };
-                }
-                const w = this.canvas.width || 800;
-                const h = this.canvas.height || 600;
-                return { x: w/2, y: h/2 };
+                if (tgt && tgt.screenX !== undefined && !isNaN(tgt.screenX) && !isNaN(tgt.screenY)) return { x: tgt.screenX, y: tgt.screenY };
+                return { x: this.canvas.width/2 || 400, y: this.canvas.height/2 || 300 };
             }
 
             updateUI() {
-                const sldVal = document.getElementById('val-shields');
-                const sldBar = document.getElementById('bar-shields');
-                const hullVal = document.getElementById('val-hull');
-                const hullBar = document.getElementById('bar-hull');
-                const morVal = document.getElementById('val-morale');
-                const morBar = document.getElementById('bar-morale');
-                const supVal = document.getElementById('val-supplies');
+                const map = { 'val-shields': this.systems.shields, 'bar-shields': this.systems.shields, 'val-hull': this.systems.hull, 'bar-hull': this.systems.hull, 'val-morale': this.systems.morale, 'bar-morale': this.systems.morale, 'val-supplies': this.systems.supplies, 'bar-supplies': this.systems.supplies, 'val-energy': this.systems.energy, 'bar-energy': this.systems.energy };
+                for (const [id, val] of Object.entries(map)) {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        if (id.startsWith('val-')) el.innerText = Math.floor(val) + '%';
+                        if (id.startsWith('bar-')) el.style.width = Math.max(0, val) + '%';
+                    }
+                }
                 const supBar = document.getElementById('bar-supplies');
-                const engVal = document.getElementById('val-energy');
-                const engBar = document.getElementById('bar-energy');
-                const credVal = document.getElementById('res-credits');
-                const dataVal = document.getElementById('res-data');
-
-                if (hullVal) hullVal.innerText = Math.floor(this.systems.hull) + '%';
-                if (hullBar) hullBar.style.width = Math.max(0, this.systems.hull) + '%';
-                if (morVal) morVal.innerText = Math.floor(this.systems.morale) + '%';
-                if (morBar) morBar.style.width = Math.max(0, this.systems.morale) + '%';
-                
-                if (supVal) supVal.innerText = Math.floor(this.systems.supplies) + '%';
                 if (supBar) {
-                    supBar.style.width = Math.max(0, this.systems.supplies) + '%';
                     if (this.systems.supplies < 25) supBar.style.backgroundColor = '#ff3333';
                     else if (this.systems.supplies < 50) supBar.style.backgroundColor = '#ffaa00';
                     else supBar.style.backgroundColor = 'var(--warn-color)'; 
                 }
-
-                if (engVal) engVal.innerText = Math.floor(this.systems.energy) + '%';
+                const engBar = document.getElementById('bar-energy');
                 if (engBar) {
-                    engBar.style.width = Math.max(0, this.systems.energy) + '%';
                     if (this.powerMode === 'WEAPONS') engBar.style.backgroundColor = '#ff3333';
                     else if (this.powerMode === 'SHIELDS') engBar.style.backgroundColor = '#33ccff';
                     else engBar.style.backgroundColor = '#ffffff';
                 }
-
+                const sldVal = document.getElementById('val-shields'); const sldBar = document.getElementById('bar-shields');
                 if (this.shieldLockout > 0) {
                     if (sldVal) { sldVal.innerText = `OFFLINE (${this.shieldLockout}s)`; sldVal.style.color = 'var(--alert-color)'; }
                     if (sldBar) { sldBar.style.width = `0%`; sldBar.style.backgroundColor = 'var(--alert-color)'; }
                 } else {
-                    if (sldVal) { sldVal.innerText = Math.floor(this.systems.shields) + '%'; sldVal.style.color = 'var(--info-color)'; }
-                    if (sldBar) { sldBar.style.width = Math.max(0, this.systems.shields) + '%'; sldBar.style.backgroundColor = 'var(--info-color)'; }
+                    if (sldVal) { sldVal.style.color = 'var(--info-color)'; }
+                    if (sldBar) { sldBar.style.backgroundColor = 'var(--info-color)'; }
                 }
-
-                if (credVal) credVal.innerText = this.resources.credits + ' CR';
-                if (dataVal) dataVal.innerText = this.resources.data + ' units';
+                const credVal = document.getElementById('res-credits'); const dataVal = document.getElementById('res-data');
+                if (credVal) credVal.innerText = this.resources.credits + ' CR'; if (dataVal) dataVal.innerText = this.resources.data + ' units';
 
                 if (this.systems.hull <= 0 || this.systems.supplies <= 0) {
                     let reason = this.systems.hull <= 0 ? "STATION DESTROYED" : "SUPPLIES DEPLETED. CREW STARVED";
-                    alert(`${reason}. SIMULATION OVER.`);
-                    location.reload();
+                    alert(`${reason}. SIMULATION OVER.`); location.reload();
                 }
             }
 
             project3D(x, y, z, cx, cy, cosX, sinX, cosY, sinY) {
                 let x1 = x * cosY - z * sinY; let z1 = z * cosY + x * sinY;
                 let y2 = y * cosX - z1 * sinX; let z2 = z1 * cosX + y * sinX;
-                
                 if (z2 <= -240) z2 = -240; 
-                
-                const denom = Math.max(10, 250 + z2);
-                const scale = 250 / denom;
-                
+                const denom = Math.max(10, 250 + z2); const scale = 250 / denom;
                 return { px: cx + x1 * scale, py: cy + y2 * scale, scale: scale, depth: z2 };
             }
 
@@ -1682,19 +1208,16 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                 const cx = w / 2; const cy = h / 2;
 
                 this.ctx.clearRect(0, 0, w, h); 
-
                 this.ctx.globalCompositeOperation = 'lighter';
                 this.angleY += 0.003; 
                 const cosX = Math.cos(this.angleX), sinX = Math.sin(this.angleX);
                 const cosY = Math.cos(this.angleY), sinY = Math.sin(this.angleY);
 
-                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; 
-                this.ctx.lineWidth = 1;
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; this.ctx.lineWidth = 1;
                 for (let r = this.globeRadius + 50; r <= 350; r += 50) {
                     this.ctx.beginPath();
                     for (let angle = 0; angle <= Math.PI * 2; angle += 0.1) {
-                        const tx = r * Math.cos(angle); const tz = r * Math.sin(angle);
-                        const p = this.project3D(tx, 0, tz, cx, cy, cosX, sinX, cosY, sinY);
+                        const p = this.project3D(r * Math.cos(angle), 0, r * Math.sin(angle), cx, cy, cosX, sinX, cosY, sinY);
                         if(angle === 0) this.ctx.moveTo(p.px, p.py); else this.ctx.lineTo(p.px, p.py);
                     }
                     this.ctx.closePath(); this.ctx.stroke();
@@ -1702,52 +1225,32 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
 
                 const sweepAngle = (Date.now() / 800) % (Math.PI * 2);
                 const radarRadius = Math.max(w, h, 100); 
-                
-                this.ctx.globalAlpha = 0.15;
-                this.ctx.fillStyle = 'rgba(51, 204, 255, 0.4)';
-                this.ctx.beginPath();
-                this.ctx.moveTo(cx, cy);
-                this.ctx.arc(cx, cy, radarRadius, sweepAngle - 0.4, sweepAngle);
-                this.ctx.closePath();
-                this.ctx.fill();
+                this.ctx.globalAlpha = 0.15; this.ctx.fillStyle = 'rgba(51, 204, 255, 0.4)';
+                this.ctx.beginPath(); this.ctx.moveTo(cx, cy); this.ctx.arc(cx, cy, radarRadius, sweepAngle - 0.4, sweepAngle); this.ctx.closePath(); this.ctx.fill();
+                this.ctx.globalAlpha = 0.5; this.ctx.strokeStyle = 'rgba(51, 204, 255, 0.8)'; this.ctx.lineWidth = 2;
+                this.ctx.beginPath(); this.ctx.moveTo(cx, cy); this.ctx.lineTo(cx + Math.cos(sweepAngle) * radarRadius, cy + Math.sin(sweepAngle) * radarRadius); this.ctx.stroke();
 
-                this.ctx.globalAlpha = 0.5;
-                this.ctx.strokeStyle = 'rgba(51, 204, 255, 0.8)';
-                this.ctx.lineWidth = 2;
-                this.ctx.beginPath();
-                this.ctx.moveTo(cx, cy);
-                this.ctx.lineTo(cx + Math.cos(sweepAngle) * radarRadius, cy + Math.sin(sweepAngle) * radarRadius);
-                this.ctx.stroke();
-
-                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-                this.ctx.lineWidth = 1.5;
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; this.ctx.lineWidth = 1.5;
                 this.globeNodes.forEach(n => {
                     const p = this.project3D(n.x, n.y, n.z, cx, cy, cosX, sinX, cosY, sinY);
-                    this.ctx.globalAlpha = p.depth > 0 ? 0.3 : 0.8;
-                    this.ctx.fillStyle = '#ffffff';
-                    this.ctx.fillRect(p.px, p.py, 2, 2);
+                    this.ctx.globalAlpha = p.depth > 0 ? 0.3 : 0.8; this.ctx.fillStyle = '#ffffff'; this.ctx.fillRect(p.px, p.py, 2, 2);
                 });
 
                 const coreGlow = this.ctx.createRadialGradient(cx, cy, 0, cx, cy, this.globeRadius);
-                coreGlow.addColorStop(0, 'rgba(255,255,255,0.15)'); 
-                coreGlow.addColorStop(1, 'rgba(255,255,255,0)');
-                this.ctx.fillStyle = coreGlow;
-                this.ctx.beginPath(); this.ctx.arc(cx, cy, this.globeRadius, 0, Math.PI*2); this.ctx.fill();
+                coreGlow.addColorStop(0, 'rgba(255,255,255,0.15)'); coreGlow.addColorStop(1, 'rgba(255,255,255,0)');
+                this.ctx.fillStyle = coreGlow; this.ctx.beginPath(); this.ctx.arc(cx, cy, this.globeRadius, 0, Math.PI*2); this.ctx.fill();
 
                 if (this.analyzingTarget && this.analyzingTarget.screenX !== undefined && !isNaN(this.analyzingTarget.screenX)) {
-                    this.ctx.strokeStyle = 'rgba(51, 204, 255, 0.6)';
-                    this.ctx.lineWidth = 5;
+                    this.ctx.strokeStyle = 'rgba(51, 204, 255, 0.6)'; this.ctx.lineWidth = 5;
                     this.ctx.beginPath(); this.ctx.moveTo(this.shipX, this.shipY); this.ctx.lineTo(this.analyzingTarget.screenX, this.analyzingTarget.screenY); this.ctx.stroke();
                 }
 
                 this.ctx.globalCompositeOperation = 'source-over';
 
                 for (let i = this.warpStreaks.length - 1; i >= 0; i--) {
-                    let wStreak = this.warpStreaks[i];
-                    wStreak.x += wStreak.vx; wStreak.y += wStreak.vy; wStreak.z += wStreak.vz;
+                    let wStreak = this.warpStreaks[i]; wStreak.x += wStreak.vx; wStreak.y += wStreak.vy; wStreak.z += wStreak.vz;
                     const p1 = this.project3D(wStreak.x, wStreak.y, wStreak.z, cx, cy, cosX, sinX, cosY, sinY);
                     const p2 = this.project3D(wStreak.x - wStreak.vx, wStreak.y - wStreak.vy, wStreak.z - wStreak.vz, cx, cy, cosX, sinX, cosY, sinY);
-                    
                     if (!isNaN(p1.px) && !isNaN(p2.px)) {
                         this.ctx.strokeStyle = wStreak.color; this.ctx.lineWidth = 3;
                         this.ctx.beginPath(); this.ctx.moveTo(p1.px, p1.py); this.ctx.lineTo(p2.px, p2.py); this.ctx.stroke();
@@ -1760,130 +1263,86 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                     if (f.alive && f.rebuilding <= 0 && f.deployed && !(this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'SQUAD')) {
                         let tx = 0, ty = 0, tz = 0;
                         if (f.target && f.target.alive) {
-                            let c = this.get3DCoords(f.target);
-                            tx = c.x; ty = c.y; tz = c.z;
+                            let c = this.get3DCoords(f.target); tx = c.x; ty = c.y; tz = c.z;
                         } else {
                             f.idleAngle += 0.02;
-                            tx = (this.globeRadius + 80) * Math.cos(f.idleAngle + f.id);
-                            ty = Math.sin(f.idleAngle * 2 + f.id) * 40;
-                            tz = (this.globeRadius + 80) * Math.sin(f.idleAngle + f.id);
+                            tx = (this.globeRadius + 80) * Math.cos(f.idleAngle + f.id); ty = Math.sin(f.idleAngle * 2 + f.id) * 40; tz = (this.globeRadius + 80) * Math.sin(f.idleAngle + f.id);
                         }
-
-                        if (!isNaN(tx) && !isNaN(ty) && !isNaN(tz)) {
-                            f.x += (tx - f.x) * f.speed;
-                            f.y += (ty - f.y) * f.speed;
-                            f.z += (tz - f.z) * f.speed;
-                        }
-
-                        const p = this.project3D(f.x, f.y, f.z, cx, cy, cosX, sinX, cosY, sinY);
-                        const anchor = this.project3D(f.x, 0, f.z, cx, cy, cosX, sinX, cosY, sinY);
-
+                        if (!isNaN(tx) && !isNaN(ty) && !isNaN(tz)) { f.x += (tx - f.x) * f.speed; f.y += (ty - f.y) * f.speed; f.z += (tz - f.z) * f.speed; }
+                        const p = this.project3D(f.x, f.y, f.z, cx, cy, cosX, sinX, cosY, sinY); const anchor = this.project3D(f.x, 0, f.z, cx, cy, cosX, sinX, cosY, sinY);
                         if (!isNaN(p.px) && !isNaN(p.py)) {
                             f.screenX = p.px; f.screenY = p.py;
-
-                            const isOccluded = (p.depth > 0 && Math.hypot(p.px - cx, p.py - cy) < this.globeRadius * 0.8);
-                            this.ctx.globalAlpha = isOccluded ? 0.2 : 1.0;
-
+                            const isOccluded = (p.depth > 0 && Math.hypot(p.px - cx, p.py - cy) < this.globeRadius * 0.8); this.ctx.globalAlpha = isOccluded ? 0.2 : 1.0;
                             this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; this.ctx.lineWidth = 1; this.ctx.setLineDash([2, 4]);
-                            this.ctx.beginPath(); this.ctx.moveTo(anchor.px, anchor.py); this.ctx.lineTo(p.px, p.py); this.ctx.stroke();
-                            this.ctx.setLineDash([]);
-
-                            this.ctx.fillStyle = '#ffffff'; this.ctx.strokeStyle = '#ffffff';
-                            this.ctx.lineWidth = 1;
-                            this.ctx.beginPath();
-                            this.ctx.moveTo(p.px, p.py - 6); this.ctx.lineTo(p.px + 5, p.py + 5); this.ctx.lineTo(p.px - 5, p.py + 5);
-                            this.ctx.closePath(); 
-                            this.ctx.fill(); this.ctx.stroke();
-                            this.ctx.font = "bold 9px Courier"; 
-                            this.ctx.fillText("V" + (f.id+1), p.px + 7, p.py + 3);
+                            this.ctx.beginPath(); this.ctx.moveTo(anchor.px, anchor.py); this.ctx.lineTo(p.px, p.py); this.ctx.stroke(); this.ctx.setLineDash([]);
+                            this.ctx.fillStyle = '#ffffff'; this.ctx.strokeStyle = '#ffffff'; this.ctx.lineWidth = 1;
+                            this.ctx.beginPath(); this.ctx.moveTo(p.px, p.py - 6); this.ctx.lineTo(p.px + 5, p.py + 5); this.ctx.lineTo(p.px - 5, p.py + 5); this.ctx.closePath(); this.ctx.fill(); this.ctx.stroke();
+                            this.ctx.font = "bold 9px Courier"; this.ctx.fillText("V" + (f.id+1), p.px + 7, p.py + 3);
                         }
                     }
                 });
 
                 for (let i = this.targets.length - 1; i >= 0; i--) {
-                    let tgt = this.targets[i];
-                    if(!tgt.alive) { this.targets.splice(i, 1); continue; }
-                    
+                    let tgt = this.targets[i]; if(!tgt.alive) { this.targets.splice(i, 1); continue; }
                     let tx, ty, tz, p, anchor;
-
                     if (tgt.isCapital || tgt.isLinear) {
                         if(!tgt.frozen) { tgt.cx += tgt.vx; tgt.cy += tgt.vy; tgt.cz += tgt.vz; }
+                        if (tgt.cx > 800) tgt.vx = -Math.abs(tgt.vx); if (tgt.cx < -800) tgt.vx = Math.abs(tgt.vx);
                         tx = tgt.cx; ty = tgt.cy; tz = tgt.cz;
-                        p = this.project3D(tx, ty, tz, cx, cy, cosX, sinX, cosY, sinY);
-                        anchor = this.project3D(tx, 0, tz, cx, cy, cosX, sinX, cosY, sinY);
-                        if (tgt.cx > 800 || tgt.cx < -800 || tgt.cy > 800 || tgt.cy < -800) tgt.alive = false;
-                        tgt.isOccluded = tgt.isCapital ? false : (p.depth > 0 && Math.hypot(p.px - cx, p.py - cy) < this.globeRadius * 0.8);
+                        p = this.project3D(tx, ty, tz, cx, cy, cosX, sinX, cosY, sinY); anchor = this.project3D(tx, 0, tz, cx, cy, cosX, sinX, cosY, sinY);
+                        tgt.isOccluded = false; 
                     } else {
                         if(!tgt.frozen) tgt.angle += tgt.speed;
-                        tx = tgt.orbitRadius * Math.cos(tgt.angle);
-                        ty = tgt.yOffset; 
-                        tz = tgt.orbitRadius * Math.sin(tgt.angle);
-                        p = this.project3D(tx, ty, tz, cx, cy, cosX, sinX, cosY, sinY);
-                        anchor = this.project3D(tx, 0, tz, cx, cy, cosX, sinX, cosY, sinY);
+                        tx = tgt.orbitRadius * Math.cos(tgt.angle); ty = tgt.yOffset; tz = tgt.orbitRadius * Math.sin(tgt.angle);
+                        p = this.project3D(tx, ty, tz, cx, cy, cosX, sinX, cosY, sinY); anchor = this.project3D(tx, 0, tz, cx, cy, cosX, sinX, cosY, sinY);
                         tgt.isOccluded = (p.depth > 0 && Math.hypot(p.px - cx, p.py - cy) < this.globeRadius * 0.8);
                     }
-
                     if (isNaN(p.px) || isNaN(p.py)) continue;
-
-                    tgt.screenX = p.px; tgt.screenY = p.py; tgt.depth = p.depth;
-                    this.ctx.globalAlpha = tgt.isOccluded ? 0.2 : 1.0;
-
+                    tgt.screenX = p.px; tgt.screenY = p.py; tgt.depth = p.depth; this.ctx.globalAlpha = tgt.isOccluded ? 0.2 : 1.0;
                     this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; this.ctx.lineWidth = 1; this.ctx.setLineDash([2, 4]);
-                    this.ctx.beginPath(); this.ctx.moveTo(anchor.px, anchor.py); this.ctx.lineTo(p.px, p.py); this.ctx.stroke();
-                    this.ctx.setLineDash([]);
-                    
-                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; 
-                    this.ctx.beginPath(); this.ctx.arc(anchor.px, anchor.py, 2, 0, Math.PI*2); this.ctx.fill();
+                    this.ctx.beginPath(); this.ctx.moveTo(anchor.px, anchor.py); this.ctx.lineTo(p.px, p.py); this.ctx.stroke(); this.ctx.setLineDash([]);
+                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; this.ctx.beginPath(); this.ctx.arc(anchor.px, anchor.py, 2, 0, Math.PI*2); this.ctx.fill();
 
                     this.ctx.strokeStyle = tgt.color; this.ctx.fillStyle = tgt.color; this.ctx.lineWidth = 2;
                     const s = tgt.isCapital ? 14 * p.scale : 6 * p.scale;
                     
                     this.ctx.beginPath();
                     if (tgt.isCapital) {
-                        this.ctx.moveTo(p.px - s*2, p.py);
-                        this.ctx.lineTo(p.px - s, p.py - s);
-                        this.ctx.lineTo(p.px + s, p.py - s);
-                        this.ctx.lineTo(p.px + s*2, p.py);
-                        this.ctx.lineTo(p.px + s, p.py + s);
-                        this.ctx.lineTo(p.px - s, p.py + s);
-                    } else if (tgt.faction === 'enemy') { 
-                        this.ctx.moveTo(p.px, p.py - s*1.5); this.ctx.lineTo(p.px + s, p.py + s); this.ctx.lineTo(p.px - s, p.py + s); 
-                    } else if (tgt.faction === 'friendly') { 
-                        this.ctx.arc(p.px, p.py, s, 0, Math.PI*2); 
+                        this.ctx.moveTo(p.px - s*2, p.py); this.ctx.lineTo(p.px - s, p.py - s); this.ctx.lineTo(p.px + s, p.py - s);
+                        this.ctx.lineTo(p.px + s*2, p.py); this.ctx.lineTo(p.px + s, p.py + s); this.ctx.lineTo(p.px - s, p.py + s);
+                    } else if (tgt.class === 'fighter') { 
+                        this.ctx.moveTo(p.px, p.py - s*1.5); this.ctx.lineTo(p.px + s, p.py + s); this.ctx.lineTo(p.px, p.py + s*0.4); this.ctx.lineTo(p.px - s, p.py + s); 
+                    } else if (tgt.class === 'pirate') {
+                        this.ctx.moveTo(p.px, p.py - s*1.5); this.ctx.lineTo(p.px + s*1.8, p.py + s*0.5); this.ctx.lineTo(p.px + s*0.5, p.py + s*0.5);
+                        this.ctx.lineTo(p.px, p.py + s*1.5); this.ctx.lineTo(p.px - s*0.5, p.py + s*0.5); this.ctx.lineTo(p.px - s*1.8, p.py + s*0.5);
+                    } else if (tgt.class === 'transport') { 
+                        this.ctx.moveTo(p.px - s*1.2, p.py - s*0.8); this.ctx.lineTo(p.px + s*1.2, p.py - s*0.8); this.ctx.lineTo(p.px + s*1.2, p.py + s*0.8); this.ctx.lineTo(p.px - s*1.2, p.py + s*0.8);
                     } else { 
                         this.ctx.moveTo(p.px, p.py - s*1.2); this.ctx.lineTo(p.px + s*1.2, p.py); this.ctx.lineTo(p.px, p.py + s*1.2); this.ctx.lineTo(p.px - s*1.2, p.py); 
                     }
-                    this.ctx.closePath(); 
-                    this.ctx.fill(); 
-                    this.ctx.stroke();
+                    if (tgt.class !== 'transport') { this.ctx.closePath(); }
+                    this.ctx.fill(); this.ctx.stroke();
                     
                     this.ctx.fillStyle = tgt.color; this.ctx.font = "10px Courier"; this.ctx.fillText(tgt.id, p.px + s*1.5 + 4, p.py);
-
-                    if (tgt.isCapital) {
-                        const hpPct = Math.max(0, tgt.hull / tgt.maxHull);
-                        const barW = 40;
+                    if (tgt.isCapital || tgt.class === 'transport') {
+                        const hpPct = Math.max(0, tgt.hull / tgt.maxHull); const barW = 40;
                         this.ctx.fillStyle = '#f00'; this.ctx.fillRect(p.px - barW/2, p.py + s + 5, barW, 3);
                         this.ctx.fillStyle = '#0f0'; this.ctx.fillRect(p.px - barW/2, p.py + s + 5, barW * hpPct, 3);
                     }
 
                     if (this.lockedTargets.includes(tgt)) {
-                        this.ctx.strokeStyle = 'rgba(255,255,255,0.8)'; 
-                        const box = (tgt.isCapital ? 25 : 15) * p.scale;
-                        const pulseSize = Math.sin(Date.now() / 150) * 5; 
+                        this.ctx.strokeStyle = 'rgba(255,255,255,0.8)'; const box = (tgt.isCapital ? 25 : 15) * p.scale; const pulseSize = Math.sin(Date.now() / 150) * 5; 
                         this.ctx.strokeRect(p.px - box - pulseSize, p.py - box - pulseSize, (box*2) + pulseSize*2, (box*2) + pulseSize*2);
                     }
 
                     if (this.analyzingTarget === tgt) {
-                        const elapsed = Date.now() - tgt.scanStart;
-                        const pct = Math.min(1.0, Math.max(0, elapsed / 3000));
-                        this.ctx.strokeStyle = '#33ccff'; this.ctx.strokeRect(p.px - 20, p.py - 25, 40, 4);
-                        this.ctx.fillStyle = '#33ccff'; this.ctx.fillRect(p.px - 20, p.py - 25, 40 * pct, 4);
+                        const elapsed = Date.now() - tgt.scanStart; const pct = Math.min(1.0, Math.max(0, elapsed / 3000));
+                        this.ctx.strokeStyle = '#33ccff'; this.ctx.strokeRect(p.px - 20, p.py - 25, 40, 4); this.ctx.fillStyle = '#33ccff'; this.ctx.fillRect(p.px - 20, p.py - 25, 40 * pct, 4);
                     }
                 }
 
                 for (let pIdx = this.projectiles.length - 1; pIdx >= 0; pIdx--) {
                     let proj = this.projectiles[pIdx];
-                    
                     if (proj.type === 'beam') {
                         proj.progress += 0.15;
                         if (proj.progress >= 1) {
@@ -1892,18 +1351,16 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                                 if (proj.target.hull <= 0 && proj.target.alive) {
                                     proj.target.alive = false;
                                     if (proj.target.isCapital) this.addScore(400, "CAPITAL SHIP DESTROYED!");
-                                    else if (proj.target.faction === 'enemy') this.addScore(100);
+                                    else if (proj.target.faction === 'enemy' || proj.target.faction === 'pirate') this.addScore(100);
                                     else if (proj.target.faction === 'mystery') this.addScore(50);
                                     else if (proj.target.faction === 'friendly') this.addScore(-50, `FRIENDLY FIRE! Target ${proj.target.id} destroyed.`);
                                 }
-                                const coords = this.getSafeCoords(proj.target);
-                                this.triggerExplosion(coords.x, coords.y, proj.target.isCapital);
+                                const coords = this.getSafeCoords(proj.target); this.triggerExplosion(coords.x, coords.y, proj.target.isCapital);
                             }
                             this.projectiles.splice(pIdx, 1); continue;
                         }
                         if (proj.target.screenX === undefined || isNaN(proj.target.screenX)) { this.projectiles.splice(pIdx, 1); continue; }
-                        const bx = this.shipX + (proj.target.screenX - this.shipX) * proj.progress; 
-                        const by = this.shipY + (proj.target.screenY - this.shipY) * proj.progress;
+                        const bx = this.shipX + (proj.target.screenX - this.shipX) * proj.progress; const by = this.shipY + (proj.target.screenY - this.shipY) * proj.progress;
                         this.ctx.strokeStyle = '#ffffff'; this.ctx.lineWidth = 4; this.ctx.shadowBlur = 15; this.ctx.shadowColor = proj.color;
                         this.ctx.beginPath(); this.ctx.moveTo(this.shipX, this.shipY); this.ctx.lineTo(bx, by); this.ctx.stroke(); this.ctx.shadowBlur = 0;
                     
@@ -1917,14 +1374,12 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                                     if (proj.target.isCapital) this.addScore(400, "SQUADRON KILLED CAPITAL SHIP!");
                                     else this.addScore(100, `Squadron confirmed kill on ${proj.target.id}.`);
                                 }
-                                const coords = this.getSafeCoords(proj.target);
-                                this.triggerExplosion(coords.x, coords.y, proj.target.isCapital);
+                                const coords = this.getSafeCoords(proj.target); this.triggerExplosion(coords.x, coords.y, proj.target.isCapital);
                             }
                             this.projectiles.splice(pIdx, 1); continue;
                         }
                         if (proj.origin.screenX !== undefined && proj.target.screenX !== undefined && !isNaN(proj.origin.screenX) && !isNaN(proj.target.screenX)) {
-                            const bx = proj.origin.screenX + (proj.target.screenX - proj.origin.screenX) * proj.progress; 
-                            const by = proj.origin.screenY + (proj.target.screenY - proj.origin.screenY) * proj.progress;
+                            const bx = proj.origin.screenX + (proj.target.screenX - proj.origin.screenX) * proj.progress; const by = proj.origin.screenY + (proj.target.screenY - proj.origin.screenY) * proj.progress;
                             this.ctx.strokeStyle = '#ffffff'; this.ctx.lineWidth = 2; this.ctx.shadowBlur = 10; this.ctx.shadowColor = '#ffffff';
                             this.ctx.beginPath(); this.ctx.moveTo(proj.origin.screenX, proj.origin.screenY); this.ctx.lineTo(bx, by); this.ctx.stroke(); this.ctx.shadowBlur = 0;
                         } else { this.projectiles.splice(pIdx, 1); }
@@ -1936,9 +1391,7 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                             if (!isNaN(aDiff)) proj.angle += aDiff * 0.1;
                         }
                         proj.x += Math.cos(proj.angle) * proj.speed; proj.y += Math.sin(proj.angle) * proj.speed;
-
                         if (isNaN(proj.x) || isNaN(proj.y)) { this.projectiles.splice(pIdx, 1); continue; }
-
                         this.ctx.fillStyle = '#ffffff'; this.ctx.shadowBlur = 20; this.ctx.shadowColor = '#33ccff';
                         this.ctx.beginPath(); this.ctx.arc(proj.x, proj.y, 6, 0, Math.PI*2); this.ctx.fill(); this.ctx.shadowBlur = 0;
 
@@ -1947,137 +1400,92 @@ Here is the fully corrected file. The `updateUI()` method has been restored and 
                             if (proj.target.hull <= 0 && proj.target.alive) {
                                 proj.target.alive = false;
                                 if (proj.target.isCapital) this.addScore(400, "CAPITAL SHIP DESTROYED!");
-                                else if (proj.target.faction === 'enemy') this.addScore(100);
+                                else if (proj.target.faction === 'enemy' || proj.target.faction === 'pirate') this.addScore(100);
                                 else if (proj.target.faction === 'mystery') this.addScore(50);
                                 else if (proj.target.faction === 'friendly') this.addScore(-50, `FRIENDLY FIRE! Target ${proj.target.id} destroyed.`);
                             }
-                            const coords = this.getSafeCoords(proj.target);
-                            this.triggerExplosion(coords.x, coords.y, proj.target.isCapital);
-                            this.projectiles.splice(pIdx, 1);
-                        } else if (proj.y < -50 || proj.y > h+50 || proj.x < -50 || proj.x > w+50) {
-                            this.projectiles.splice(pIdx, 1);
-                        }
+                            const coords = this.getSafeCoords(proj.target); this.triggerExplosion(coords.x, coords.y, proj.target.isCapital); this.projectiles.splice(pIdx, 1);
+                        } else if (proj.y < -50 || proj.y > h+50 || proj.x < -50 || proj.x > w+50) { this.projectiles.splice(pIdx, 1); }
                     
                     } else if (proj.type === 'enemy_beam') {
                         proj.progress += 0.15;
-                        
                         if (proj.progress >= 1) {
                             if (proj.isFighterTarget && proj.target && proj.target.alive) {
-                                proj.target.hp -= 20;
-                                this.playSound('explosion');
+                                proj.target.hp -= 20; this.playSound('explosion');
                                 if (proj.target.hp <= 0) {
                                     proj.target.hp = 0; proj.target.alive = false; proj.target.deployed = false;
-                                    this.log(`<span class="log-alert">SQUADRON LEADER: ${proj.target.callsign} lost!</span>`);
-                                    this.systems.morale -= 5;
-                                    this.renderUI_Lists();
+                                    this.log(`<span class="log-alert">SQUADRON LEADER: ${proj.target.callsign} lost!</span>`); this.systems.morale -= 5; this.renderUI_Lists();
                                 }
                             } else if (proj.isShipToShip && proj.target && proj.target.alive) {
-                                proj.target.hull -= 25;
-                                this.playSound('explosion');
+                                proj.target.hull -= 25; this.playSound('explosion');
                                 if (proj.target.hull <= 0) {
-                                    proj.target.alive = false;
-                                    this.log(`<span class="log-alert">Distress Signal Lost. Cargo ship ${proj.target.id} destroyed by pirates.</span>`);
-                                    this.systems.morale -= 5;
+                                    proj.target.alive = false; this.log(`<span class="log-alert">Distress Signal Lost. Transport ${proj.target.id} destroyed by pirates.</span>`); this.systems.morale -= 10;
                                 }
                             } else if (!proj.isShipToShip && !proj.isFighterTarget) {
-                                this.triggerShake(5, 200);
-                                this.systems.hull -= (this.systems.shields > 0) ? 0 : 5;
-                                this.systems.shields = Math.max(0, this.systems.shields - 10);
-                                this.playSound('explosion');
+                                this.triggerShake(5, 200); this.systems.hull -= (this.systems.shields > 0) ? 0 : 5; this.systems.shields = Math.max(0, this.systems.shields - 10); this.playSound('explosion');
                             }
                             this.projectiles.splice(pIdx, 1); continue;
                         }
-                        
-                        if(proj.origin.screenX === undefined || proj.target.screenX === undefined || isNaN(proj.origin.screenX) || isNaN(proj.target.screenX)) { 
-                            this.projectiles.splice(pIdx, 1); continue; 
-                        }
-                        const bx = proj.origin.screenX + (proj.target.screenX - proj.origin.screenX) * proj.progress; 
-                        const by = proj.origin.screenY + (proj.target.screenY - proj.origin.screenY) * proj.progress;
-                        
+                        if(proj.origin.screenX === undefined || proj.target.screenX === undefined || isNaN(proj.origin.screenX) || isNaN(proj.target.screenX)) { this.projectiles.splice(pIdx, 1); continue; }
+                        const bx = proj.origin.screenX + (proj.target.screenX - proj.origin.screenX) * proj.progress; const by = proj.origin.screenY + (proj.target.screenY - proj.origin.screenY) * proj.progress;
                         this.ctx.strokeStyle = '#ffffff'; this.ctx.lineWidth = 4; this.ctx.shadowBlur = 15; this.ctx.shadowColor = '#ff3333';
                         this.ctx.beginPath(); this.ctx.moveTo(proj.origin.screenX, proj.origin.screenY); this.ctx.lineTo(bx, by); this.ctx.stroke(); this.ctx.shadowBlur = 0;
                     
                     } else if (proj.type === 'bombardment') {
                         proj.progress += 0.15;
                         if (proj.progress >= 1) {
-                            this.playSound('heavy_explosion');
-                            this.triggerShake(10, 300);
+                            this.playSound('heavy_explosion'); this.triggerShake(10, 300);
                             if (this.crewMissionActive) {
                                 this.log("<span class='log-alert'>ORBITAL BOMBARDMENT! Away team caught in blast radius!</span>");
                                 this.crew.forEach(c => { if(c.deployed && c.hp > 0) c.hp -= (Math.random() * 20 + 10); });
                             }
                             this.projectiles.splice(pIdx, 1); continue;
                         }
-
                         if(proj.origin.screenX === undefined || proj.target.screenX === undefined || isNaN(proj.origin.screenX) || isNaN(proj.target.screenX)) continue;
-                        const bx = proj.origin.screenX + (proj.target.screenX - proj.origin.screenX) * proj.progress; 
-                        const by = proj.origin.screenY + (proj.target.screenY - proj.origin.screenY) * proj.progress;
-                        
+                        const bx = proj.origin.screenX + (proj.target.screenX - proj.origin.screenX) * proj.progress; const by = proj.origin.screenY + (proj.target.screenY - proj.origin.screenY) * proj.progress;
                         this.ctx.strokeStyle = '#ffaa00'; this.ctx.lineWidth = 6; this.ctx.shadowBlur = 20; this.ctx.shadowColor = '#ffaa00';
                         this.ctx.beginPath(); this.ctx.moveTo(proj.origin.screenX, proj.origin.screenY); this.ctx.lineTo(bx, by); this.ctx.stroke(); this.ctx.shadowBlur = 0;
 
                     } else if (proj.type === 'pulsar') {
-                        proj.radius += 15;
-                        if (proj.radius > w) { this.projectiles.splice(pIdx, 1); continue; }
-                        this.ctx.strokeStyle = `rgba(255, 170, 0, ${Math.max(0, 1 - proj.radius/w)})`;
-                        this.ctx.lineWidth = 30; this.ctx.shadowBlur = 20; this.ctx.shadowColor = '#ffaa00';
+                        proj.radius += 15; if (proj.radius > w) { this.projectiles.splice(pIdx, 1); continue; }
+                        this.ctx.strokeStyle = `rgba(255, 170, 0, ${Math.max(0, 1 - proj.radius/w)})`; this.ctx.lineWidth = 30; this.ctx.shadowBlur = 20; this.ctx.shadowColor = '#ffaa00';
                         this.ctx.beginPath(); this.ctx.arc(this.shipX, this.shipY, proj.radius, 0, Math.PI*2); this.ctx.stroke(); this.ctx.shadowBlur = 0;
                     }
                 }
 
                 this.ctx.globalAlpha = 1.0;
                 for (let idx = this.particles.length - 1; idx >= 0; idx--) {
-                    let pt = this.particles[idx];
-                    pt.x += pt.vx; pt.y += pt.vy; pt.life -= 0.03;
+                    let pt = this.particles[idx]; pt.x += pt.vx; pt.y += pt.vy; pt.life -= 0.03;
                     if (pt.life <= 0) { this.particles.splice(idx, 1); continue; }
                     this.ctx.fillStyle = pt.color; this.ctx.globalAlpha = pt.life;
-                    this.ctx.beginPath(); 
-                    this.ctx.arc(pt.x, pt.y, pt.size * Math.max(0.1, (2 - pt.life)), 0, Math.PI*2); 
-                    this.ctx.fill();
+                    this.ctx.beginPath(); this.ctx.arc(pt.x, pt.y, pt.size * Math.max(0.1, (2 - pt.life)), 0, Math.PI*2); this.ctx.fill();
                 }
 
-                this.ctx.globalCompositeOperation = 'source-over';
-                this.ctx.globalAlpha = 1.0;
-
+                this.ctx.globalCompositeOperation = 'source-over'; this.ctx.globalAlpha = 1.0;
                 if (this.mouseX > 0 && this.mouseY > 0) {
-                    let drawX = this.mouseX; let drawY = this.mouseY;
-                    let targetColor = 'rgba(255, 255, 255, 0.8)';
-                    
+                    let drawX = this.mouseX; let drawY = this.mouseY; let targetColor = 'rgba(255, 255, 255, 0.8)';
                     this.targets.forEach(tgt => {
                         const hitRadius = tgt.isCapital ? 50 : 30;
                         if(tgt.alive && !tgt.isOccluded && tgt.screenX !== undefined && !isNaN(tgt.screenX) && Math.hypot(tgt.screenX - this.mouseX, tgt.screenY - this.mouseY) < hitRadius) {
-                            drawX += (tgt.screenX - drawX) * 0.4; drawY += (tgt.screenY - drawY) * 0.4; 
-                            targetColor = tgt.color;
+                            drawX += (tgt.screenX - drawX) * 0.4; drawY += (tgt.screenY - drawY) * 0.4; targetColor = tgt.color;
                         }
                     });
-
                     this.ctx.strokeStyle = targetColor; this.ctx.lineWidth = 1.5;
                     this.ctx.beginPath(); this.ctx.arc(drawX, drawY, 2, 0, Math.PI * 2); this.ctx.stroke();
                     this.ctx.beginPath(); this.ctx.arc(drawX, drawY, 18, 0, Math.PI * 2); this.ctx.stroke();
-                    
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(drawX - 25, drawY); this.ctx.lineTo(drawX - 8, drawY);
-                    this.ctx.moveTo(drawX + 8, drawY); this.ctx.lineTo(drawX + 25, drawY);
-                    this.ctx.moveTo(drawX, drawY - 25); this.ctx.lineTo(drawX, drawY - 8);
-                    this.ctx.moveTo(drawX, drawY + 8); this.ctx.lineTo(drawX, drawY + 25);
-                    this.ctx.stroke();
+                    this.ctx.beginPath(); this.ctx.moveTo(drawX - 25, drawY); this.ctx.lineTo(drawX - 8, drawY); this.ctx.moveTo(drawX + 8, drawY); this.ctx.lineTo(drawX + 25, drawY);
+                    this.ctx.moveTo(drawX, drawY - 25); this.ctx.lineTo(drawX, drawY - 8); this.ctx.moveTo(drawX, drawY + 8); this.ctx.lineTo(drawX, drawY + 25); this.ctx.stroke();
                 }
 
                 requestAnimationFrame(() => this.renderLoop());
             }
 
             log(msg) {
-                const logDiv = document.getElementById('comms-log');
-                const d = new Date(); const ts = `${d.getHours()}${d.getMinutes().toString().padStart(2,'0')} hrs`;
-                const el = document.createElement('div'); el.className = 'log-entry';
-                el.innerHTML = `<span class="log-time">${ts}</span> ${msg}`;
-                logDiv.prepend(el);
+                const logDiv = document.getElementById('comms-log'); const d = new Date(); const ts = `${d.getHours()}${d.getMinutes().toString().padStart(2,'0')} hrs`;
+                const el = document.createElement('div'); el.className = 'log-entry'; el.innerHTML = `<span class="log-time">${ts}</span> ${msg}`; logDiv.prepend(el);
             }
         }
-
         window.onload = () => { window.game = new USSAtlasGame(); };
     </script>
 </body>
 </html>
-
-```
