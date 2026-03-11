@@ -1,1208 +1,469 @@
+Here is the first draft of the ATLAS Economic Simulator chassis.
+
+I have stripped the physical survival narrative and re-engineered the logic loop to process macroeconomic trade-offs, public choice theory, and the progressive disclosure architecture we designed.
+
+### Architectural Updates:
+
+1. **The HUD:** Variables are now `PP` (Purchasing Power), `POL` (Political Capital), `VEL` (Capital Velocity), and `FRIC` (Systemic Friction).
+2. **The Lexicon Engine:** CSS logic specifically designed to handle `<u class="lexicon-term">` tags, rendering unvarnished institutional definitions on hover.
+3. **Progressive Disclosure:** A dynamic `[+] DECRYPT SECOND-ORDER PHYSICS` button that expands hidden structural audits without breaking the terminal's typewriter effect.
+4. **The Capitulation Engine:** Node 1 (Rent Stabilization) includes the legislative blockade mechanism.
+
+Save this as an `.html` file and run it locally.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tactical Radar Sweep Demo — Enhanced Naval Ops with Track Management (FIXED)</title>
-  <!-- ... all existing CSS remains unchanged ... -->
+    <meta charset="UTF-8">
+    <title>ATLAS Protocol - Executive Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #010409;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'VT323', monospace;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #chassis {
+            background-color: #16191e;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(255,255,255,0.03) 0%, transparent 70%),
+                url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.06"/%3E%3C/svg%3E');
+            width: 96vw;
+            height: 96vh;
+            padding: 50px 40px 80px 40px; 
+            border-radius: 32px;
+            box-sizing: border-box;
+            box-shadow: inset 0 0 30px #000, 0 0 50px rgba(255, 176, 0, 0.05), 0 20px 50px rgba(0,0,0,0.8);
+            border: 8px solid #080a0c;
+            border-top: 8px solid #11141a;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.05s, border-color 0.3s;
+        }
+
+        .rivet {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #111;
+            border-radius: 50%;
+            box-shadow: inset 2px 2px 4px #333, inset -2px -2px 4px #000, 1px 1px 2px rgba(255,255,255,0.05);
+        }
+        .r-tl { top: 20px; left: 20px; }
+        .r-tr { top: 20px; right: 20px; }
+        .r-bl { bottom: 20px; left: 20px; }
+        .r-br { bottom: 20px; right: 20px; }
+
+        #bezel-stamp {
+            position: absolute;
+            top: 18px;
+            left: 50px;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.08);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.9), -1px -1px 1px rgba(255,255,255,0.03);
+            pointer-events: none;
+        }
+
+        #bezel-warning {
+            position: absolute;
+            top: 18px;
+            right: 50px;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 0.6rem;
+            font-weight: bold;
+            color: rgba(255, 170, 0, 0.15);
+            text-align: right;
+            letter-spacing: 1px;
+            pointer-events: none;
+        }
+
+        #screen {
+            background: #0d0901;
+            width: 100%;
+            height: 100%;
+            border-radius: 24px;
+            padding: 35px;
+            box-sizing: border-box;
+            border: 2px solid rgba(255, 176, 0, 0.3);
+            box-shadow: inset 0 0 80px rgba(0,0,0,1), 0 0 10px rgba(255, 176, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            color: #ffb000; 
+            text-shadow: 0 0 3px #ffb000, 0 0 8px rgba(255, 176, 0, 0.4); 
+            font-size: 1.9rem;
+            letter-spacing: 1px;
+            line-height: 1.35;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.98; }
+            50% { opacity: 1; }
+            100% { opacity: 0.99; }
+        }
+
+        #screen::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
+            z-index: 5;
+            background-size: 100% 3px;
+            pointer-events: none;
+        }
+
+        #output {
+            flex-grow: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-bottom: 10px;
+            padding-right: 15px;
+            z-index: 3;
+            word-wrap: break-word;
+        }
+
+        #input-line {
+            display: flex; 
+            align-items: center;
+            font-weight: bold;
+            z-index: 3;
+            margin-bottom: 10px;
+        }
+
+        #prompt { margin-right: 15px; }
+
+        input[type="text"] {
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-family: 'VT323', monospace;
+            font-size: 1em;
+            flex-grow: 1;
+            outline: none;
+            text-transform: uppercase;
+            text-shadow: inherit;
+            letter-spacing: 2px;
+        }
+
+        #hud-bar {
+            border-top: 2px solid #664f1c;
+            padding-top: 10px;
+            margin-top: auto;
+            font-size: 1.6rem;
+            color: #ffb000;
+            z-index: 3;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .hud-stat { font-weight: bold; }
+        .stat-critical { color: #ff3333 !important; text-shadow: 0 0 5px #ff3333 !important; animation: blinker 1s infinite; }
+        @keyframes blinker { 50% { opacity: 0.4; } }
+
+        /* THE LEXICON ENGINE */
+        .lexicon-term {
+            color: #58a6ff;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            cursor: help;
+            position: relative;
+            text-shadow: 0 0 5px rgba(88, 166, 255, 0.6);
+        }
+
+        @media (hover) {
+            .lexicon-term::after {
+                content: attr(data-definition);
+                position: absolute;
+                bottom: 120%;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 400px;
+                background: #080a0c;
+                border: 1px solid #ff3333;
+                color: #e0e0e0;
+                padding: 15px;
+                font-family: 'VT323', monospace;
+                font-size: 1.3rem;
+                line-height: 1.2;
+                text-align: left;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.2s;
+                z-index: 10;
+                white-space: normal;
+                text-shadow: none;
+            }
+            .lexicon-term:hover::after { opacity: 1; }
+        }
+
+        /* PROGRESSIVE DISCLOSURE ACCORDION */
+        .decrypt-btn {
+            display: inline-block;
+            background: #2a0a0a;
+            border: 1px solid #ff3333;
+            color: #ff3333;
+            padding: 2px 8px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1em;
+            text-shadow: 0 0 5px #ff3333;
+            transition: all 0.2s;
+        }
+        .decrypt-btn:hover {
+            background: #ff3333;
+            color: #000;
+            box-shadow: 0 0 15px #ff3333;
+        }
+        .decrypt-content {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.4s ease-out, opacity 0.4s ease-out;
+            color: #e0e0e0;
+            border-left: 2px solid #ff3333;
+            padding-left: 15px;
+            margin-top: 5px;
+            text-shadow: none;
+        }
+        .decrypt-content.expanded {
+            max-height: 1000px;
+            opacity: 1;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .voice-cos { color: #a8b2c1; }
+        .voice-friedman { color: #58a6ff; }
+        .highlight-directive { color: #ffb000; opacity: 0.8; }
+
+    </style>
 </head>
 <body>
-  <!-- ... all existing HTML structure remains unchanged ... -->
+
+<div id="chassis">
+    <div class="rivet r-tl"></div>
+    <div class="rivet r-tr"></div>
+    <div class="rivet r-bl"></div>
+    <div class="rivet r-br"></div>
+    
+    <div id="bezel-stamp">ATLAS // MACRO-SIM // v1.0</div>
+    <div id="bezel-warning">UNAUTHORIZED ACCESS RESTRICTED</div>
+
+    <div id="screen">
+        <div id="output"></div>
+        <div id="input-line">
+            <span id="prompt">EXEC_CMD></span>
+            <input type="text" id="cmd" autocomplete="off" autofocus>
+        </div>
+        <div id="hud-bar">
+            <span id="hud-pp" class="hud-stat">PP: 100%</span>
+            <span id="hud-pol" class="hud-stat">POL: 50%</span>
+            <span id="hud-vel" class="hud-stat">VEL: 100%</span>
+            <span id="hud-fric" class="hud-stat">FRIC: 0%</span>
+        </div>
+    </div>
+</div>
+
 <script>
-// ============================================================================= 
-// 🔊 AUDIO SYSTEM - FIXED: Reliable ping and bleep implementation
-// =============================================================================
+    const outputDiv = document.getElementById('output');
+    const inputField = document.getElementById('cmd');
 
-const AudioSystem = {
-  ctx: null,
-  lastBleepTime: 0,
-  pingsPlayedThisRevolution: new Set(), // Track which contacts had pings this revolution
-  
-  init() {
-    if (!this.ctx) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AudioContext();
-      
-      // Update UI to show audio is enabled
-      const statusEl = document.getElementById('audioStatus');
-      if (statusEl) {
-        statusEl.textContent = 'AUDIO ACTIVE';
-        statusEl.classList.add('audio-enabled');
-      }
-    }
-    
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
-      
-      // Update UI to show audio is enabled
-      const statusEl = document.getElementById('audioStatus');
-      if (statusEl) {
-        statusEl.textContent = 'AUDIO ACTIVE';
-        statusEl.classList.add('audio-enabled');
-      }
-    }
-    
-    return this.ctx !== null && this.ctx.state === 'running';
-  },
-
-  // Play radar sweep "bleep" - short high-pitched beep every revolution
-  playRadarBleep() {
-    if (!this.init()) return;
-    
-    // Ensure we don't play too many bleeps in quick succession (debounce)
-    const currentTime = this.ctx.currentTime;
-    if (currentTime - this.lastBleepTime < 0.5) return; // Minimum 0.5s between bleeps
-    
-    this.lastBleepTime = currentTime;
-    
-    const osc = this.ctx.createOscillator();
-    const gainNode = this.ctx.createGain();
-    
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(1200, this.ctx.currentTime); // High pitch bleep
-    
-    gainNode.gain.setValueAtTime(0.15, this.ctx.currentTime); // Subtle volume
-    gainNode.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
-    
-    osc.connect(gainNode);
-    gainNode.connect(this.ctx.destination);
-    
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.1);
-  },
-
-  // Play realistic sonar ping with Doppler shift and spatial audio
-  playPing(bearingAngle, contactSpeed) {
-    this.init();
-    
-    const osc = this.ctx.createOscillator();
-    const gainNode = this.ctx.createGain();
-    
-    osc.type = 'sine';
-    
-    // Calculate base frequency (200Hz standard sonar ping)
-    let baseFreq = 200;
-    
-    // Doppler shift based on relative speed
-    if (typeof contactSpeed !== 'undefined' && contactSpeed > 0) {
-      const dopplerFactor = 1 + (contactSpeed * 0.05); // ±5% pitch shift max
-      baseFreq *= dopplerFactor;
-    }
-    
-    osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.3);
-    
-    // Create spatial audio effect using stereo panner
-    const panner = this.ctx.createStereoPanner();
-    
-    if (typeof bearingAngle !== 'undefined') {
-      // Map bearing to pan: North=0°, East=90°, South=180°, West=270°
-      // Pan value: -1 (left) to +1 (right), 0 = center
-      panner.pan.value = Math.sin(bearingAngle);
-    } else {
-      // Random direction for manual ping button
-      panner.pan.value = Math.random() * 2 - 1;
-    }
-    
-    osc.connect(panner);
-    panner.connect(gainNode);
-    gainNode.connect(this.ctx.destination);
-    
-    gainNode.gain.setValueAtTime(0.3, this.ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
-    
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.6);
-    
-    return {
-      baseFreq,
-      dopplerShift: panner.pan.value > 0 ? 'higher' : 'lower'
+    // MACROECONOMIC METRICS
+    let metrics = {
+        pp: 100,      // Purchasing Power (True wealth)
+        pol: 50,      // Political Capital (Legislative power)
+        vel: 100,     // Capital Velocity (Market efficiency)
+        friction: 0   // Systemic Friction (Regulatory capture/deadweight loss)
     };
-  },
-  
-  // Play ping for contact detection (NEW: Reliable transition-based detection)
-  playContactPing(contact, sweepAngle) {
-    this.init();
-    
-    // Calculate bearing from center to contact
-    const { width, height } = DrawingSystem.canvas;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    
-    const dx = contact.x - centerX;
-    const dy = contact.y - centerY;
-    let angleFromCenter = Math.atan2(dy, dx);
-    if (angleFromCenter < 0) angleFromCenter += Math.PI * 2;
-    
-    // Calculate bearing for spatial audio
-    this.playPing(angleFromCenter, contact.speed);
-    
-    // Add visual echo ring for feedback
-    SonarEffects.createEchoRing(sweepAngle);
-  },
 
-  // Play different sound for contact selection
-  playSelectSound() {
-    this.init();
-    const osc = this.ctx.createOscillator();
-    const gainNode = this.ctx.createGain();
-    
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.15);
-    
-    gainNode.gain.setValueAtTime(0.2, this.ctx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.15);
-    
-    osc.connect(gainNode);
-    gainNode.connect(this.ctx.destination);
-    
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.2);
-  },
+    let currentNodeId = 'INIT';
+    let isTyping = false;
 
-  // Play alarm sound for high-threat contacts
-  playAlarmSound() {
-    this.init();
-    const osc = this.ctx.createOscillator();
-    const gainNode = this.ctx.createGain();
-    
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(400, this.ctx.currentTime);
-    osc.frequency.linearRampToValueAtTime(600, this.ctx.currentTime + 0.1);
-    osc.frequency.linearRampToValueAtTime(400, this.ctx.currentTime + 0.2);
-    
-    gainNode.gain.setValueAtTime(0.3, this.ctx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.4);
-    
-    osc.connect(gainNode);
-    gainNode.connect(this.ctx.destination);
-    
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.5);
-  }
-};
+    // THE NARRATIVE MATRIX
+    const storyNodes = {
+        'INIT': {
+            text: `> SYSTEM ALERT: CRISIS PROTOCOL INITIATED\n
+<span class="voice-cos">[CHIEF OF STAFF]:</span> "Mr. President, housing costs in major metros are up 18% YoY. The press is demanding action. Congress has the 'Emergency Rent Stabilization Act' ready. It caps rent increases at 2% nationally. We need a signature, or we hemorrhage seats in the midterms."\n
+> INITIATE_FRIEDMAN_PROTOCOL...\n
+<span class="voice-friedman">[FRIEDMAN_AI]:</span> "The political instinct is to treat the symptom. We must treat the incentive. If you dictate that a builder cannot charge the market clearing rate, capital will instantly reallocate away from housing. A price ceiling creates a visual illusion of affordability while mathematically guaranteeing a physical shortage."\n
+<div class="decrypt-btn" onclick="toggleDecrypt(this)">[+] DECRYPT SECOND-ORDER PHYSICS</div>
+<div class="decrypt-content">
 
-// ============================================================================= 
-// 🎯 TRACK MANAGER - NATO designations and track tracking system
-// =============================================================================
+[Image of supply and demand curve with a price ceiling]
 
-const TrackManager = {
-  tracks: [],
-  nextTrackNumber: 1,
-  
-  // NATO Designation Conventions
-  DESIGNATIONS: {
-    SUBSURFACE: 'GOBLIN',  // Subsurface contacts (depth > 50m)
-    SURFACE: 'SKUNK',      // Surface contacts (depth <= 50m)
-    UNKNOWN: 'WRAITH'      // Unknown status
-  },
-  
-  // Initialize track system
-  init() {
-    this.tracks = [];
-    this.nextTrackNumber = 1;
-  },
-  
-  // Assign a new track designation to a contact
-  assignTrack(contact) {
-    // Determine if subsurface or surface based on depth
-    const isSubsurface = (contact.depth > 50);
-    const designation = isSubsurface ? 
-      this.DESIGNATIONS.SUBSURFACE : 
-      this.DESIGNATIONS.SURFACE;
-    
-    // Create track object
-    const track = {
-      number: this.nextTrackNumber++,
-      designation: designation,
-      fullDesignation: `${designation}-${String(contact.trackNumber).padStart(2, '0')}`,
-      contactRef: contact,  // Reference to actual contact object
-      status: 'UNKNOWN',
-      detectedFrames: 1,
-      lastSweepAngle: null,
-      isLocked: false,
-      assignedName: null
+<br><br>The bill contains a <u class="lexicon-term" data-definition="A legal mechanism where developers pay zero property taxes for decades if they designate a fraction of units as 'affordable'. True incentive: Forfeits municipal revenue, shifting the tax burden to the existing middle class to subsidize institutional profit margins.">421-a Tax Abatement</u>. By suppressing the legal price of a commodity, the cost does not disappear; it is transferred to the political sphere. Incumbent developers will use the abatement to monopolize new builds, while existing housing stock rots as landlords slash maintenance to preserve margins.</div>\n
+SYSTEM AWAITING EXECUTIVE DIRECTIVE:
+<span class="highlight-directive">:: SIGN_STABILIZATION_ACT</span> (The Political Play: Buy time today, burn the future.)
+<span class="highlight-directive">:: VETO_AND_SUBSIDIZE</span> (The Compromise: Federal vouchers.)
+<span class="highlight-directive">:: VETO_AND_DEREGULATE</span> (The Structural Fix: Withhold federal highway funds to break local zoning.)`,
+            choices: { 'SIGN_STABILIZATION_ACT': 'SIGN_ACT', 'VETO_AND_SUBSIDIZE': 'SUBSIDIZE', 'VETO_AND_DEREGULATE': 'CAPITULATION_ENGINE' }
+        },
+        
+        'CAPITULATION_ENGINE': {
+            effect: (m) => { m.pol -= 10; },
+            text: `> COMMAND ENTERED: VETO_AND_DEREGULATE
+> EXECUTING...
+> <span style="color:#ff3333">ERROR: LEGISLATIVE BLOCKADE DETECTED.</span>\n
+<span class="voice-cos">[CHIEF OF STAFF]:</span> "We are dead on arrival. The Senate Whip reports we have 47 votes. We need 51 to push the deregulation mandate past the committee. The farm lobby controls the missing four senators. They will not vote for your housing fix unless you pay the toll."\n
+SYSTEM AWAITING CAPITULATION DIRECTIVE:
+<span class="highlight-directive">:: APPEND_RIDER_AG_SUBSIDY</span> (Inject $50B in printed liquidity to domestic corn producers. Secures +4 Votes.)
+<span class="highlight-directive">:: APPEND_RIDER_TARIFF</span> (Place a 20% tariff on imported steel to appease domestic manufacturers. Secures +4 Votes.)
+<span class="highlight-directive">:: BURN_POLITICAL_CAPITAL</span> (Rely on executive orders. Bypasses the Senate. -40 POL.)`,
+            choices: { 'APPEND_RIDER_AG_SUBSIDY': 'AG_SUBSIDY', 'APPEND_RIDER_TARIFF': 'TARIFF', 'BURN_POLITICAL_CAPITAL': 'BURN_POL' }
+        },
+
+        'AG_SUBSIDY': {
+            effect: (m) => { m.vel += 15; m.friction -= 10; m.pp -= 8; },
+            text: `> RIDER APPENDED. DEREGULATION PASSED.\n
+<span class="voice-friedman">[FRIEDMAN_AI]:</span> "Structural fix achieved. Local zoning is broken. Capital will flood the housing market, lowering costs over the next 36 months.\n
+However, the $50B injection triggers localized inflation via the <u class="lexicon-term" data-definition="The observation that newly created fiat money does not enter the economy evenly. It benefits those closest to the creation point (asset holders, subsidized industries) before filtering down to wages, structurally reducing the purchasing power of the working class.">Cantillon Effect</u>. Absolute Purchasing Power (PP) has dropped by 8%. You fixed housing, but you debased the currency to do it."\n
+> NEXT QUARTER DATA LOADING...`,
+            choices: { 'NEXT': 'INIT' } // Loops for draft purposes
+        }
     };
-    
-    // Assign track number to contact for reference
-    contact.trackNumber = track.number;
-    contact.designation = track.fullDesignation;
-    contact.status = 'UNKNOWN';
-    
-    this.tracks.push(track);
-    return track;
-  },
-  
-  // Update track status based on detection
-  updateTrackStatus(track, isCurrentlyInSweep) {
-    if (isCurrentlyInSweep) {
-      track.detectedFrames++;
-      track.lastSweepAngle = null; // Reset lost track timer
-      if (track.status === 'LOST_TRACK') {
-        track.status = 'CONFIRMED';
-      }
-    } else {
-      // Contact not currently in sweep arc
-      if (!track.lastSweepAngle) {
-        track.lastSweepAngle = 0;
-      }
-      track.lastSweepAngle += 1; // Count sweeps since last detection
-      
-      // Mark as LOST_TRACK after 5 undetected sweeps
-      if (track.lastSweepAngle > 5 && track.status !== 'LOST_TRACK') {
-        track.status = 'LOST_TRACK';
-      }
-    }
-    
-    return track;
-  },
-  
-  // Toggle track lock status
-  toggleTrackLock(track) {
-    track.isLocked = !track.isLocked;
-    if (track.contactRef) {
-      track.contactRef.isLocked = track.isLocked;
-    }
-    return track.isLocked;
-  },
-  
-  // Get all active tracks (not LOST_TRACK)
-  getActiveTracks() {
-    return this.tracks.filter(track => track.status !== 'LOST_TRACK');
-  },
-  
-  // Get lost tracks
-  getLostTracks() {
-    return this.tracks.filter(track => track.status === 'LOST_TRACK');
-  },
-  
-  // Remove a track (when it's been lost too long)
-  removeTrack(track) {
-    const index = this.tracks.indexOf(track);
-    if (index > -1) {
-      this.tracks.splice(index, 1);
-    }
-  },
-  
-  // Clear all tracks
-  clearTracks() {
-    this.tracks = [];
-    this.nextTrackNumber = 1;
-  },
-  
-  // Get track by contact reference
-  getTrackByContact(contact) {
-    return this.tracks.find(track => track.contactRef === contact);
-  }
-};
 
-// ============================================================================= 
-// 🎯 FILTERING SYSTEM - Fixed range and depth filtering logic
-// =============================================================================
-
-const FilterSystem = {
-  minRange: 10,   // nm (5px = 1nm scale)
-  maxRange: 300,  // nm
-  minDepth: 0,    // meters
-  maxDepth: 300,  // meters
-  
-  // Convert pixel distance to nautical miles
-  pxToNm(px) {
-    return px / 5; // Scale: 5px = 1nm
-  },
-  
-  // Check if contact is within range filter
-  inRange(contact, centerX, centerY) {
-    const dx = contact.x - centerX;
-    const dy = contact.y - centerY;
-    const distPx = Math.hypot(dx, dy);
-    const distNm = this.pxToNm(distPx);
-    
-    return distNm >= this.minRange && distNm <= this.maxRange;
-  },
-  
-  // Check if contact is within depth filter
-  inDepth(contact) {
-    const depth = contact.depth || 150; // Default depth if not set
-    return depth >= this.minDepth && depth <= this.maxDepth;
-  },
-  
-  // Combined visibility check
-  isVisible(contact, centerX, centerY) {
-    return this.inRange(contact, centerX, centerY) && this.inDepth(contact);
-  }
-};
-
-// ============================================================================= 
-// 🎨 DRAWING SYSTEM - Optimized rendering with precomputed values
-// =============================================================================
-
-const DrawingSystem = {
-  canvas: null,
-  ctx: null,
-  
-  // Precomputed colors and styles for better performance
-  colors: {
-    friendly: 'rgba(0,255,64,',
-    hostile: 'rgba(255,0,0,',
-    grid: 'rgba(0, 255, 64, 0.1)',
-    depthRing: 'rgba(0, 255, 64, ',
-    crosshair: 'rgba(0, 255, 64, 0.3)',
-    locked: 'rgba(255, 165, 0,', // Orange for locked targets
-    reticle: 'rgba(255, 165, 0,'  // Bright orange for targeting reticle
-  },
-  
-  init(canvas) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d', { alpha: false });
-  },
-  
-  // Draw ocean background with depth illusion
-  drawBackground() {
-    const { width, height } = this.canvas;
-    
-    // Deep ocean gradient
-    const bgGradient = this.ctx.createRadialGradient(
-      width/2, height/2, 0,
-      width/2, height/2, Math.max(width, height)/1.5
-    );
-    bgGradient.addColorStop(0, "#0a1a2a");
-    bgGradient.addColorStop(1, "#000000");
-    
-    this.ctx.fillStyle = bgGradient;
-    this.ctx.fillRect(0, 0, width, height);
-    
-    // Subtle seabed noise
-    const noiseSize = Math.floor(width * height / 500);
-    for (let i = 0; i < noiseSize; i++) {
-      if (i % 3 === 0) { // Only draw ~1/3 of potential dots
-        this.ctx.fillStyle = `rgba(0, 30, 60, ${Math.random() * 0.1})`;
-        const x = Math.random() * width;
-        const y = Math.random() * height;
-        this.ctx.fillRect(x, y, 2, 2);
-      }
-    }
-    
-    // Grid lines
-    this.drawGrid();
-    
-    // Depth rings (only visible ones)
-    this.drawDepthRings();
-    
-    // Center crosshair
-    this.drawCrosshair();
-  },
-  
-  drawGrid() {
-    const { width, height } = this.canvas;
-    const gridSize = 100;
-    
-    this.ctx.strokeStyle = this.colors.grid;
-    this.ctx.lineWidth = 1;
-    
-    this.ctx.beginPath();
-    for (let x = 0; x <= width; x += gridSize) {
-      this.ctx.moveTo(x, 0);
-      this.ctx.lineTo(x, height);
-    }
-    for (let y = 0; y <= height; y += gridSize) {
-      this.ctx.moveTo(0, y);
-      this.ctx.lineTo(width, y);
-    }
-    this.ctx.stroke();
-  },
-  
-  drawDepthRings() {
-    const { width, height } = this.canvas;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const maxRadius = Math.hypot(centerX, centerY);
-    const depthScale = maxRadius / 500; // 500m maps to max radius
-    
-    for (let depth = 100; depth <= 400; depth += 100) {
-      if (depth >= FilterSystem.minDepth && depth <= FilterSystem.maxDepth) {
-        const r = depth * depthScale;
+    function updateHUD() {
+        document.getElementById('hud-pp').innerText = `PP: ${metrics.pp}%`;
+        document.getElementById('hud-pol').innerText = `POL: ${metrics.pol}%`;
+        document.getElementById('hud-vel').innerText = `VEL: ${metrics.vel}%`;
+        document.getElementById('hud-fric').innerText = `FRIC: ${metrics.friction}%`;
         
-        this.ctx.strokeStyle = `${this.colors.depthRing}${0.1 + (depth/1000)})`;
-        this.ctx.beginPath();
-        this.ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
-        this.ctx.stroke();
+        if(metrics.pp < 50) document.getElementById('hud-pp').classList.add('stat-critical');
+        if(metrics.pol < 20) document.getElementById('hud-pol').classList.add('stat-critical');
+    }
+
+    // A robust DOM-based typewriter to handle complex nested HTML (like accordions and tooltips)
+    function printText(htmlString, speed = 10, callback) {
+        isTyping = true;
+        inputField.disabled = true;
         
-        // Depth label
-        this.ctx.fillStyle = `rgba(0, 255, 64, 0.3)`;
-        this.ctx.font = "10px monospace";
-        this.ctx.textAlign = "center";
-        this.ctx.fillText(`${depth}m`, centerX + r - 15, centerY);
-      }
-    }
-  },
-  
-  drawCrosshair() {
-    const { width, height } = this.canvas;
-    
-    this.ctx.strokeStyle = this.colors.crosshair;
-    this.ctx.beginPath();
-    this.ctx.arc(width/2, height/2, 100, 0, Math.PI * 2);
-    this.ctx.stroke();
-  },
-  
-  // Draw targeting reticle around locked contacts
-  drawTargetingReticle(contact) {
-    const { width, height } = this.canvas;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    
-    // Calculate offset from center for reticle positioning
-    const dx = contact.x - centerX;
-    const dy = contact.y - centerY;
-    const distPx = Math.hypot(dx, dy);
-    
-    // Only draw reticle if contact is in reasonable range
-    if (distPx > 50 && distPx < width/1.2) {
-      this.ctx.strokeStyle = `${this.colors.reticle}0.8)`;
-      this.ctx.lineWidth = 2;
-      
-      // Outer circle
-      this.ctx.beginPath();
-      this.ctx.arc(contact.x, contact.y, 15, 0, Math.PI * 2);
-      this.ctx.stroke();
-      
-      // Crosshairs
-      this.ctx.beginPath();
-      this.ctx.moveTo(contact.x - 20, contact.y);
-      this.ctx.lineTo(contact.x + 20, contact.y);
-      this.ctx.moveTo(contact.x, contact.y - 20);
-      this.ctx.lineTo(contact.x, contact.y + 20);
-      this.ctx.stroke();
-      
-      // Diamond marker
-      this.ctx.beginPath();
-      this.ctx.moveTo(contact.x - 10, contact.y);
-      this.ctx.lineTo(contact.x, contact.y - 10);
-      this.ctx.lineTo(contact.x + 10, contact.y);
-      this.ctx.lineTo(contact.x, contact.y + 10);
-      this.ctx.closePath();
-      this.ctx.stroke();
-    }
-  },
-  
-  // Draw radar sweep with optimized gradient
-  drawRadarSweep(sweepAngle) {
-    const { width, height } = this.canvas;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const radius = Math.hypot(centerX, centerY);
-    
-    this.ctx.globalCompositeOperation = 'lighter';
-    
-    // Single sweep wedge with shorter trail for sharper look
-    const trailLength = Math.PI / 6; // 30° trail (was 60°)
-    let startAngle = sweepAngle - trailLength;
-    const endAngle = sweepAngle;
-    
-    if (startAngle < 0) {
-      // Arc crosses top — draw in two parts
-      this.ctx.beginPath();
-      this.ctx.moveTo(centerX, centerY);
-      this.ctx.arc(centerX, centerY, radius, startAngle + Math.PI * 2, Math.PI * 2);
-      this.ctx.arc(centerX, centerY, radius, 0, endAngle);
-    } else if (endAngle > Math.PI * 2) {
-      // Arc crosses bottom — draw in two parts
-      this.ctx.beginPath();
-      this.ctx.moveTo(centerX, centerY);
-      this.ctx.arc(centerX, centerY, radius, startAngle, Math.PI * 2);
-      this.ctx.arc(centerX, centerY, radius, 0, endAngle - Math.PI * 2);
-    } else {
-      // Normal arc (no wrap)
-      this.ctx.beginPath();
-      this.ctx.moveTo(centerX, centerY);
-      this.ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-    }
-    
-    this.ctx.closePath();
-    
-    // Radial gradient for glow falloff
-    const grad = this.ctx.createRadialGradient(
-      centerX, centerY, 0,
-      centerX, centerY, radius
-    );
-    grad.addColorStop(0, 'rgba(0, 255, 64, 0)');     // transparent at center
-    grad.addColorStop(0.3, 'rgba(0, 255, 64, 0.15)'); // mid-fade
-    grad.addColorStop(1, 'rgba(0, 255, 64, 0.25)');   // faint edge
-    
-    this.ctx.fillStyle = grad;
-    this.ctx.fill();
-    
-    // Bright leading edge line with optimized glow
-    this.ctx.beginPath();
-    this.ctx.moveTo(centerX, centerY);
-    this.ctx.lineTo(
-      centerX + Math.cos(sweepAngle) * radius,
-      centerY + Math.sin(sweepAngle) * radius
-    );
-    this.ctx.strokeStyle = 'rgba(0, 255, 64, 1.0)';
-    this.ctx.lineWidth = 2;
-    this.ctx.shadowBlur = 8; // Reduced from 12 for tighter glow
-    this.ctx.shadowColor = '#0f0';
-    this.ctx.stroke();
-    this.ctx.shadowBlur = 0;
-    
-    this.ctx.globalCompositeOperation = 'source-over';
-  },
-  
-  // Draw contacts with trails and optimized rendering - FIXED PING LOGIC
-  drawContacts(contacts, sweepAngle) {
-    const { width, height } = this.canvas;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    
-    // Sweep bounds for this frame
-    const trailLength = Math.PI / 6; // 30° trail
-    
-    contacts.forEach((contact, i) => {
-      // Initialize properties if not present
-      contact.lastInSweep = (typeof contact.lastInSweep === 'undefined') ? false : contact.lastInSweep;
-      contact.undetectedFrames = (typeof contact.undetectedFrames === 'undefined') ? 0 : contact.undetectedFrames;
-      contact.depth = (typeof contact.depth === 'undefined') ? 150 : contact.depth;
-      
-      // Skip if outside filters
-      if (!FilterSystem.isVisible(contact, centerX, centerY)) {
-        return;
-      }
-      
-      // Calculate distance from center
-      const dx = contact.x - centerX;
-      const dy = contact.y - centerY;
-      const distPx = Math.sqrt(dx*dx + dy*dy);
-      const distNm = FilterSystem.pxToNm(distPx);
-      
-      // Calculate bearing (angle from center)
-      let angleFromCenter = Math.atan2(dy, dx);
-      if (angleFromCenter < 0) angleFromCenter += Math.PI * 2;
-      
-      // Normalize sweep angles to [0, 2π)
-      let sweepStartAngle = sweepAngle - trailLength;
-      while (sweepStartAngle < 0) sweepStartAngle += Math.PI * 2;
-      let sweepEndAngle = sweepAngle;
-      while (sweepEndAngle > Math.PI * 2) sweepEndAngle -= Math.PI * 2;
-      
-      // Determine if contact is within current sweep arc
-      let inSweep = false;
-      if (sweepStartAngle <= sweepEndAngle) {
-        inSweep = angleFromCenter >= sweepStartAngle && angleFromCenter <= sweepEndAngle;
-      } else {
-        inSweep = angleFromCenter >= sweepStartAngle || angleFromCenter <= sweepEndAngle;
-      }
-      
-      // Calculate signal strength based on proximity to sweep center
-      const angleDiff1 = Math.abs(angleFromCenter - sweepAngle);
-      const angleDiff2 = Math.abs(angleFromCenter - (sweepAngle + Math.PI * 2));
-      const angleDiff3 = Math.abs((angleFromCenter + Math.PI * 2) - sweepAngle);
-      const minAngleDiff = Math.min(angleDiff1, angleDiff2, angleDiff3);
-      
-      // Normalize: 0 at center of sweep, 1 at edges
-      const signalStrength = Math.min(minAngleDiff / (trailLength/2), 1);
-      
-      // Update undetected frames counter
-      if (!inSweep) {
-        contact.undetectedFrames++;
-      } else {
-        contact.undetectedFrames = 0;
-      }
-      
-      // FIXED: Detect transition from not-in-sweep to in-sweep (NEW CONTACT DETECTION)
-      const isFirstDetectionInRevolution = !contact.lastInSweep && inSweep;
-      
-      if (isFirstDetectionInRevolution) {
-        // Play ping sound only once per contact per revolution
-        AudioSystem.playContactPing(contact, sweepAngle);
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlString;
+        const nodes = Array.from(tempDiv.childNodes);
         
-        // Mark this contact as having had its ping played this revolution
-        contact.hasHadPingThisRevolution = true;
-      }
-      
-      // Calculate fade based on detection status and signal strength
-      let contactAlpha = 1;
-      if (contact.undetectedFrames > 5) {
-        contactAlpha = Math.max(0, 1 - (contact.undetectedFrames - 5) * 0.2);
-      }
-      
-      // Draw targeting reticle for locked contacts FIRST (behind blip)
-      if (contact.isLocked) {
-        this.drawTargetingReticle(contact);
-      }
-      
-      // Determine base color based on whether this is selected
-      let isSelected = GameState.selectedContact === contact;
-      const baseColor = i === 0 || isSelected ? 
-        `rgba(0,255,64,` : `rgba(255,0,0,`;
-      
-      // Draw contact blip with optimized rendering
-      this.ctx.shadowBlur = inSweep || isSelected ? 8 : 0;
-      this.ctx.shadowColor = i === 0 || isSelected ? "#0f0" : "#f00";
-      
-      const alphaValue = contactAlpha * (1 - signalStrength * 0.3);
-      
-      // Larger size for selected/locked contacts
-      const blipSize = (isSelected || contact.isLocked) ? 6 : (inSweep ? 4 : Math.max(2, 3 - signalStrength));
-      
-      this.ctx.fillStyle = baseColor + alphaValue + ")";
-      this.ctx.beginPath();
-      this.ctx.arc(contact.x, contact.y, blipSize, 0, Math.PI * 2);
-      this.ctx.fill();
-      
-      // Draw selection ring for highlighted contacts
-      if (isSelected || contact.isLocked) {
-        this.ctx.strokeStyle = "rgba(255,165,0,0.8)";
-        this.ctx.lineWidth = 2;
-        this.ctx.beginPath();
-        this.ctx.arc(contact.x, contact.y, blipSize + 3, 0, Math.PI * 2);
-        this.ctx.stroke();
-      }
-      
-      // Label (distance and bearing) — only show when under sweep or friendly
-      if (inSweep || i === 0 || isSelected || contact.isLocked) {
-        const rangeNm = Math.round(distPx / 5);
-        const bearingDeg = Math.round(angleFromCenter * (180/Math.PI));
-        const depthInfo = contact.depth > 0 ? ` D:${contact.depth}m` : '';
+        let currentNodeIndex = 0;
+        let currentCharIndex = 0;
+
+        function typeLoop() {
+            if (currentNodeIndex >= nodes.length) {
+                isTyping = false;
+                inputField.disabled = false;
+                inputField.focus();
+                if (callback) callback();
+                return;
+            }
+
+            const node = nodes[currentNodeIndex];
+
+            if (node.nodeType === Node.TEXT_NODE) {
+                if (currentCharIndex < node.textContent.length) {
+                    outputDiv.appendChild(document.createTextNode(node.textContent[currentCharIndex]));
+                    currentCharIndex++;
+                    outputDiv.scrollTop = outputDiv.scrollHeight;
+                    setTimeout(typeLoop, speed);
+                } else {
+                    currentCharIndex = 0;
+                    currentNodeIndex++;
+                    typeLoop();
+                }
+            } else {
+                // Instantly append HTML elements (buttons, divs, spans) to preserve structure
+                outputDiv.appendChild(node.cloneNode(true));
+                currentNodeIndex++;
+                outputDiv.scrollTop = outputDiv.scrollHeight;
+                setTimeout(typeLoop, speed); 
+            }
+        }
+        typeLoop();
+    }
+
+    function toggleDecrypt(btn) {
+        const content = btn.nextElementSibling;
+        if (content && content.classList.contains('decrypt-content')) {
+            content.classList.toggle('expanded');
+            btn.innerText = content.classList.contains('expanded') 
+                ? '[-] COLLAPSE STRUCTURAL AUDIT' 
+                : '[+] DECRYPT SECOND-ORDER PHYSICS';
+            setTimeout(() => outputDiv.scrollTop = outputDiv.scrollHeight, 100);
+        }
+    }
+
+    function renderNode(nodeId) {
+        currentNodeId = nodeId;
+        const nodeRaw = storyNodes[nodeId];
         
-        // Show track designation if available
-        const trackDesignation = contact.designation || `CONTACT-${i+1}`;
+        if (typeof nodeRaw.effect === 'function') {
+            nodeRaw.effect(metrics);
+            updateHUD();
+        }
+
+        outputDiv.innerHTML += '<br><br>';
+        printText(nodeRaw.text);
+    }
+
+    function handleInput(rawCmd) {
+        if (isTyping) return;
         
-        this.ctx.fillStyle = `rgba(207, 255, 207, ${alphaValue})`;
-        this.ctx.font = "10px monospace";
-        this.ctx.fillText(`${trackDesignation} R:${rangeNm}nm B:${bearingDeg}${depthInfo}`, 
-                         contact.x + 10, contact.y - 8);
-      }
-      
-      this.ctx.shadowBlur = 0;
+        const cmd = rawCmd.trim().toUpperCase().replace(/\s+/g, '_');
+        if (cmd === '') return;
+
+        outputDiv.innerHTML += `<br><span style="color:#e0e0e0">> ${cmd}</span><br>`;
+        inputField.value = '';
+
+        const node = storyNodes[currentNodeId];
+        let nextNodeId = null;
+
+        if (node.choices) {
+            for (const [key, val] of Object.entries(node.choices)) {
+                if (cmd === key.toUpperCase()) {
+                    nextNodeId = val;
+                    break;
+                }
+            }
+            
+            if (nextNodeId && storyNodes[nextNodeId]) {
+                renderNode(nextNodeId);
+            } else {
+                printText(`> UNRECOGNIZED COMMAND. VALIDATE INPUT.`, 5);
+            }
+        }
+    }
+
+    inputField.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleInput(inputField.value);
+        }
     });
-    
-    // FIXED: Reset ping flag for all contacts at the start of each revolution
-    if (sweepAngle < Math.PI / 320) { // Very beginning of new revolution
-      GameState.contacts.forEach(c => c.hasHadPingThisRevolution = false);
-    }
-    
-    // Update lastInSweep state for next frame detection
-    contacts.forEach(contact => {
-      contact.lastInSweep = inSweep; // This needs to be per-contact, not global
-    });
-    
-    // Draw ghost blips if enabled
-    GhostSystem.drawGhosts(this.ctx);
-    
-    // Draw sonar waveforms and echo rings
-    SonarEffects.draw(this.ctx);
-  },
-  
-  // Draw range rings with labels
-  drawRangeRings() {
-    const { width, height } = this.canvas;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    
-    let radius = Math.hypot(centerX, centerY);
-    
-    for (let r = 150; r < radius; r += 150) {
-      const nm = Math.round(r / 5); // Scale: 5px = 1nm
-      
-      this.ctx.strokeStyle = "rgba(0, 255, 64, 0.15)";
-      this.ctx.beginPath();
-      this.ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
-      this.ctx.stroke();
-      
-      // Label on the ring
-      this.ctx.fillStyle = "#afa";
-      this.ctx.font = "bold 12px monospace";
-      this.ctx.textAlign = "center";
-      this.ctx.fillText(`${nm}nm`, centerX + r - 15, centerY - 3);
-    }
-    
-    // Direction indicator (N)
-    this.ctx.fillStyle = "#afa";
-    this.ctx.font = "bold 14px monospace";
-    this.ctx.textAlign = "left";
-    this.ctx.fillText("N", centerX + 5, centerY - radius + 15);
-  },
-  
-  // Draw center hub
-  drawCenterHub() {
-    const { width, height } = this.canvas;
-    
-    this.ctx.fillStyle = "#0a3a0a";
-    this.ctx.beginPath();
-    this.ctx.arc(width/2, height/2, 25, 0, Math.PI * 2);
-    this.ctx.fill();
-    
-    // Crosshair lines
-    this.ctx.strokeStyle = "rgba(0, 255, 64, 0.3)";
-    this.ctx.lineWidth = 1;
-    this.ctx.beginPath();
-    this.ctx.moveTo(width/2 - 30, height/2);
-    this.ctx.lineTo(width/2 + 30, height/2);
-    this.ctx.moveTo(width/2, height/2 - 30);
-    this.ctx.lineTo(width/2, height/2 + 30);
-    this.ctx.stroke();
-  }
-};
 
-// ============================================================================= 
-// 🌊 SONAR EFFECTS SYSTEM - Visual effects for sonar pings and contacts
-// =============================================================================
+    // Boot
+    setTimeout(() => {
+        updateHUD();
+        renderNode('INIT');
+    }, 500);
 
-const SonarEffects = {
-  // Old-style concentric rings (from manual ping)
-  sonarWaves: [],
-  
-  // Directional echo rings from contact detections
-  echoRings: [],
-  
-  // Create expanding sonar wave for manual ping
-  createSonarWaveform() {
-    const { width, height } = DrawingSystem.canvas;
-    
-    this.sonarWaves.push({
-      x: width / 2,
-      y: height / 2,
-      radius: 10,
-      opacity: 0.8
-    });
-  },
-  
-  // Create echo ring for contact detection
-  createEchoRing(sweepAngle) {
-    const { width, height } = DrawingSystem.canvas;
-    
-    this.echoRings.push({
-      x: width/2 + Math.cos(sweepAngle) * (width/1.8),
-      y: height/2 + Math.sin(sweepAngle) * (width/1.8),
-      radius: 5,
-      opacity: 0.6,
-      maxRadius: width / 1.2
-    });
-  },
-  
-  // Draw all sonar effects (called from drawContacts)
-  draw(ctx) {
-    const centerX = DrawingSystem.canvas.width / 2;
-    const centerY = DrawingSystem.canvas.height / 2;
-    
-    // Draw old-style sonar waveforms if active
-    for (let i = this.sonarWaves.length - 1; i >= 0; i--) {
-      const wave = this.sonarWaves[i];
-      
-      // Expand and fade
-      wave.radius += 3;
-      wave.opacity -= 0.02;
-      
-      if (wave.opacity <= 0) {
-        this.sonarWaves.splice(i, 1);
-        continue;
-      }
-      
-      ctx.beginPath();
-      ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(0, 255, 64, ${wave.opacity})`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      
-      // Add "ping" text at interval
-      if (Math.floor(Date.now() / 100) % 3 === 0) {
-        ctx.fillStyle = `rgba(255, 255, 255, ${wave.opacity})`;
-        ctx.font = "bold 14px monospace";
-        ctx.fillText("PING!", wave.x - 18, wave.y + 4);
-      }
-    }
-    
-    // Draw echo rings from contact detections
-    for (let i = this.echoRings.length - 1; i >= 0; i--) {
-      const ring = this.echoRings[i];
-      
-      // Expand and fade
-      ring.radius += 8;
-      ring.opacity -= 0.05;
-      
-      if (ring.opacity <= 0 || ring.radius > ring.maxRadius) {
-        this.echoRings.splice(i, 1);
-        continue;
-      }
-      
-      ctx.beginPath();
-      ctx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(0, 255, 64, ${ring.opacity})`;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      
-      // Add echo indicator text
-      if (Math.floor(Date.now() / 50) % 4 === 0) {
-        ctx.fillStyle = `rgba(255, 255, 255, ${ring.opacity})`;
-        ctx.font = "10px monospace";
-        const rangeNm = Math.round(ring.radius / 8);
-        ctx.fillText(`ECHO ${rangeNm}nm`, ring.x - 15, ring.y + 3);
-      }
-    }
-    
-    // Draw center hub
-    DrawingSystem.drawCenterHub();
-    
-    // Draw range rings
-    DrawingSystem.drawRangeRings();
-  }
-};
+</script>
+</body>
+</html>
 
-// ============================================================================= 
-// 👻 GHOST BLIP SYSTEM - Fixed position tracking for delayed echoes
-// =============================================================================
-
-const GhostSystem = {
-  ghosts: [],
-  enabled: true,
-  
-  // Add ghost blip for contact that just passed under sweep
-  addGhost(contact, angleFromCenter, distPx) {
-    if (!this.enabled) return;
-    
-    const { width, height } = DrawingSystem.canvas;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    
-    // Calculate ghost position based on movement vector
-    // Ghost appears slightly closer than actual contact (delayed echo effect)
-    const ghostDist = Math.max(50, distPx - (contact.speed * 3));
-    const ghostX = centerX + Math.cos(angleFromCenter) * ghostDist;
-    const ghostY = centerY + Math.sin(angleFromCenter) * ghostDist;
-    
-    this.ghosts.push({
-      actualX: contact.x,
-      actualY: contact.y,
-      ghostX: ghostX,
-      ghostY: ghostY,
-      opacity: 0.8, // Increased visibility!
-      age: 0,
-      maxAge: 15 // Fade out after ~15 frames
-    });
-  },
-  
-  // Draw all ghost blips
-  drawGhosts(ctx) {
-    for (let i = this.ghosts.length - 1; i >= 0; i--) {
-      const ghost = this.ghosts[i];
-      
-      ghost.age++;
-      ghost.opacity -= 0.04;
-      
-      if (ghost.opacity <= 0 || ghost.age > ghost.maxAge) {
-        this.ghosts.splice(i, 1);
-        continue;
-      }
-      
-      // Draw ghost blip at previous position
-      ctx.fillStyle = `rgba(255, 255, 255, ${ghost.opacity})`;
-      ctx.beginPath();
-      ctx.arc(ghost.actualX, ghost.actualY, 4, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Draw line connecting to calculated position
-      ctx.strokeStyle = `rgba(255, 255, 255, ${ghost.opacity})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(ghost.actualX, ghost.actualY);
-      ctx.lineTo(ghost.ghostX, ghost.ghostY);
-      ctx.stroke();
-    }
-  },
-  
-  // Toggle ghosts on/off
-  toggle() {
-    this.enabled = !this.enabled;
-    
-    if (!this.enabled) {
-      this.ghosts = []; // Clear existing ghosts
-    }
-    
-    return this.enabled;
-  }
-};
-
-// ============================================================================= 
-// 🎮 GAME STATE & LOGIC - Contact management and movement with realistic speeds
-// =============================================================================
-
-const GameState = {
-  contacts: [
-    { x: 400, y: 150, speed: 0.75, angle: Math.PI / 4, depth: 50 }, // Friendly sub (green)
-    { x: 600, y: 400, speed: 0.6, angle: -Math.PI / 3, depth: 200 }   // Enemy contact (red)
-  ],
-  
-  sweepAngle: 0,
-  selectedContact: null,
-  
-  SWEEP_SPEED: Math.PI / 320, // Rotation speed (~5.3s/cycle)
-  
-  // Initialize with test contacts
-  init() {
-    // Add more test contacts for better demo
-    this.addRandomContact(0); // Friendly
-    this.addRandomContact(1); // Hostile
-    this.addRandomContact(1); // Hostile
-    
-    console.log("✅ Radar system initialized");
-  },
-  
-  // Add random contact at position (or random if not specified) with realistic speeds
-  addRandomContact(contactType, x = null, y = null) {
-    const { width, height } = DrawingSystem.canvas;
-    
-    if (x === null || y === null) {
-      x = Math.random() * (width - 100) + 50;
-      y = Math.random() * (height - 100) + 50;
-    }
-    
-    const angle = Math.random() * Math.PI * 2;
-    const depth = Math.floor(Math.random() * 400) + 50; // 50-450m
-    
-    // REALISTIC SPEEDS BY TARGET TYPE:
-    // Subsurface (GOBLIN): depth > 50m → slow movement (2-15 knots)
-    // Surface (SKUNK): depth ≤ 50m → medium movement (5-30 knots)
-    
-    let speed;
-    if (depth > 50) {
-      // Subsurface contacts move slowly (like real submarines)
-      // 0.3-2.0 px/frame = ~6-40 knots
-      speed = 0.3 + Math.random() * 1.7; 
-    } else {
-      // Surface contacts move at ship speeds
-      // 0.8-4.0 px/frame = ~16-80 knots  
-      speed = 0.8 + Math.random() * 3.2;
-    }
-    
-    this.contacts.push({
-      x,
-      y,
-      speed: speed, // Realistic variable speed based on type
-      angle,
-      depth,
-      lastInSweep: false,
-      undetectedFrames: 0,
-      trackNumber: null,    // Will be assigned by TrackManager
-      designation: null,    // Will be assigned by TrackManager
-      status: 'UNKNOWN',
-      isLocked: false,
-      hasHadPingThisRevolution: false // FIXED: Track ping state per contact
-    });
-    
-    return this.contacts[this.contacts.length - 1];
-  },
-  
-  // Update all contacts (movement and wrapping)
-  updateContacts() {
-    const { width, height } = DrawingSystem.canvas;
-    
-    this.contacts.forEach(contact => {
-      // Move contact
-      contact.x += Math.cos(contact.angle) * contact.speed;
-      contact.y += Math.sin(contact.angle) * contact.speed;
-      
-      // Wrap around screen edges (toroidal space)
-      if (contact.x < 0) contact.x = width;
-      if (contact.x > width) contact.x = 0;
-      if (contact.y < 0) contact.y = height;
-      if (contact.y > height) contact.y = 0;
-    });
-    
-    // Update sweep angle
-    this.sweepAngle += this.SWEEP_SPEED;
-    if (this.sweepAngle >= Math.PI * 2) {
-      // FIXED: Use modulo arithmetic to ensure bleep plays consistently
-      this.sweepAngle = this.sweepAngle % (Math.PI * 2);
-      
-      // Play radar bleep when sweep completes a revolution (with debounce)
-      AudioSystem.playRadarBleep();
-    }
-  },
-  
-  // Select a contact by clicking on it
-  selectContact(x, y) {
-    const { width, height } = DrawingSystem.canvas;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    
-    let closestDist = Infinity;
-    let selected = null;
-    
-    this.contacts.forEach(contact => {
-      // Only check visible contacts
-      if (!FilterSystem.isVisible(contact, centerX, centerY)) return;
-      
-      const dx = contact.x - x;
-      const dy = contact.y - y;
-      const dist = Math.hypot(dx, dy);
-      
-      // Check if click is within 15px radius of contact
-      if (dist < 15 && dist < closestDist) {
-        closestDist = dist;
-        selected = contact;
-      }
-    });
-    
-    this.selectedContact = selected;
-    
-    if (selected) {
-      AudioSystem.playSelectSound();
-      this.updateContactInfoUI(selected);
-    } else {
-      // Deselect if clicking on empty space
-      this.selectedContact = null;
-      document.getElementById('contactInfo').classList.remove('active');
-    }
-    
-    return selected !== null; // Return true if contact was selected
-  },
-  
-  // Toggle track lock on a contact
-  toggleTrackLock(contact) {
-    const track = TrackManager.getTrackByContact(contact);
-    if (track) {
-      const isLocked = TrackManager.toggleTrackLock(track);
-      
-      // Also update the contact's locked state directly for drawing
-      contact.isLocked = isLocked;
-      
-      return isLocked;
-    }
-    
-    return false;
-  },
-  
-  // Update the contact info display UI
-  updateContactInfoUI(contact) {
-    const { width, height } = DrawingSystem.canvas;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    
-    const dx = contact.x - centerX;
-    const dy = contact.y - centerY;
-    const distPx = Math.hypot(dx, dy);
-    const distNm = FilterSystem.pxToNm(distPx);
-    
-    let angleFromCenter = Math.atan2(dy, dx);
-    if (angleFromCenter < 0) angleFromCenter += Math.PI * 2;
-    const bearingDeg = Math.round(angleFromCenter * (180/Math.PI));
-    
-    // Get track info
-    const track = TrackManager.getTrackByContact(contact);
-    const designation = contact.designation || 'UNKNOWN';
-    const status = contact.status || 'UNKNOWN';
-    
-    // Update UI elements
-    document.getElementById('contactLabel').textContent = 
-      `SELECTED: ${track ? track.fullDesignation : designation}`;
-    document.getElementById('contactRange').textContent = `Range: ${Math.round(distNm)} nm`;
-    document.getElementById('contactBearing').textContent = `Bearing: ${bearingDeg}°`;
-    document.getElementById('contactDepth').textContent = `Depth: ${contact.depth || 150} m`;
-    // Calculate speed in knots (px/frame * 2 for approximate conversion)
-    const speedKnots = (contact.speed * 2).toFixed(1);
-    document.getElementById('contactSpeed').textContent = `Speed: ${speedKnots} kn`;
-    document.getElementById('contactStatus').textContent = status;
-    
-    // Show the contact info panel
-    document.getElementById('contactInfo').classList.add('active');
-  },
-  
-  // Toggle scenario mode
-  toggleMode() {
-    const currentMode = document.getElementById('modeDisplay').textContent;
-    const newMode = currentMode === 'PATROL' ? 'BATTLE' : 'PATROL';
-    
-    document.getElementById('modeDisplay').textContent = newMode;
-    
-    if (newMode === 'BATTLE') {
-      // Increase contact speed and add more contacts
-      this.contacts.forEach(c => c.speed *= 1.5);
-      
-      // Play alarm sound
-      AudioSystem.playAlarmSound();
-    } else {
-      // Return to normal speeds
-      this.contacts.forEach(c => c.speed = Math.max(0.3, c.speed / 1.5));
-    }
-    
-    return newMode;
-  },
-  
-  // Save current scenario
-  saveScenario() {
-    const scenarioData = {
-      contacts: this.contacts.map(c => ({
-        x: c.x,
-        y: c.y,
-        speed: c.speed,
-        angle: c.angle,
-        depth: c.depth,
-        trackNumber: c.trackNumber,
-        isLocked: c.isLocked
-      })),
-      timestamp: Date.now()
-    };
-    
-    localStorage.setItem('radarScenario', JSON.stringify(scenarioData));
-    
-    // Visual feedback
-    const flash = document.createElement('div');
-    flash.style.position = 'fixed';
-    flash.style.top = '50%';
-    flash.style.left = '50%';
-    flash.style.transform = 'translate(-50%, -50%)';
-    flash.style.backgroundColor = 'rgba(0, 255, 64, 0.3)';
-    flash.style.padding = '20px 40px';
-    flash.style.borderRadius = '5px';
-    
-    // ... rest of save logic
-  }
-};
-
-// ============================================================================= 
-// 🎨 INITIALIZATION & EVENT HANDLERS
-// =============================================================================
-
-// Initialize canvas and systems
-const canvas = document.getElementById('radarCanvas');
-DrawingSystem.init(canvas);
-GameState.init();
-
-// Audio initialization on first user interaction
-document.addEventListener('click', function() {
-  if (AudioSystem.ctx && AudioSystem.ctx.state === 'suspended') {
-    AudioSystem.ctx.resume();
-    
-    const statusEl = document.getElementById('audioStatus');
-    if (statusEl) {
-      statusEl.textContent = 'AUDIO ACTIVE';
-      statusEl.classList.add('audio-enabled');
-    }
-  }
-}, { once: true });
-
-// Main animation loop
-function radarLoop() {
-  // Clear canvas and draw background
-  DrawingSystem.drawBackground();
-  
-  // Update game state
-  GameState.updateContacts();
-  
-  // Draw radar sweep
-  DrawingSystem.drawRadarSweep(GameState.sweepAngle);
-  
-  // Draw contacts (with FIXED ping logic)
-  DrawingSystem.drawContacts(GameState.contacts, GameState.sweepAngle);
-  
-  // Request next frame
-  requestAnimationFrame(radarLoop);
-}
-
-// Start the animation loop
-radarLoop();
-
-console.log("🚀 Tactical Radar Sweep - FIXED version loaded");
+```
