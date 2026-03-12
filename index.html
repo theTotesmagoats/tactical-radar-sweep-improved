@@ -7,10 +7,10 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap');
         :root{--bg-color:#020408;--screen-bg:#060b12;--primary-color:#ffffff;--enemy-color:#ff3333;--friendly-color:#39ff14;--mystery-color:#33ccff;--viper-color:#ffffff;--warn-color:#ffaa00;--info-color:#33ccff;--alert-color:#ff3333;--panel-border:2px solid #1a2b3c;}
-        *{box-sizing:border-box;} body{margin:0;padding:0;background-color:var(--bg-color);color:var(--primary-color);font-family:'Courier New',Courier,monospace;height:100vh;overflow:hidden;user-select:none;}
+        *{box-sizing:border-box;} body{margin:0;padding:0;background-color:var(--bg-color);color:var(--primary-color);font-family:'Courier New',Courier,monospace;height:100vh;overflow:hidden;user-select:none; transition: filter 0.05s, transform 0.05s;}
         #bridge{display:grid;grid-template-columns:310px 1fr 280px;grid-template-rows:70px 1fr 240px;gap:12px;padding:15px;height:100vh;}
         .panel{background-color:var(--screen-bg);border:var(--panel-border);border-radius:8px;padding:12px;box-shadow:inset 0 0 30px rgba(0,0,0,0.8),0 5px 15px rgba(0,0,0,0.5);display:flex;flex-direction:column;position:relative;overflow:hidden;transition:border-color 0.3s;}
-        .header-bar{background-color:#0d1a26;border-bottom:1px solid var(--info-color);padding:4px;text-align:center;font-weight:bold;letter-spacing:3px;margin-bottom:8px;flex-shrink:0;text-transform:uppercase;font-size:0.9em;transition:border-color 0.3s;}
+        .header-bar{background-color:#0d1a26;border-bottom:1px solid var(--info-color);padding:4px;text-align:center;font-weight:bold;letter-spacing:3px;margin-bottom:8px;flex-shrink:0;text-transform:uppercase;font-size:0.9em;}
         .top-left{grid-column:1;grid-row:1 / span 2;display:flex;flex-direction:column;gap:10px;} .main-view-container{grid-column:2;grid-row:1 / span 3;display:flex;flex-direction:column;gap:12px;} .top-right{grid-column:3;grid-row:1 / span 2;}
         
         #main-view{
@@ -30,12 +30,7 @@
         .health-bar{width:100%;height:4px;background-color:#1a2b3c;border-radius:2px;overflow:hidden;margin-top:4px;} .health-fill{height:100%;transition:width 0.2s,background-color 0.5s;}
         #comms-log{font-size:0.8em;line-height:1.4;overflow-y:auto;flex-grow:1;padding-right:5px;color:#ccc;} .log-entry{margin-bottom:6px;border-bottom:1px dashed rgba(255,255,255,0.15);padding-bottom:4px;} .log-time{color:var(--mystery-color);font-size:0.85em;margin-right:8px;} .log-sci{color:#d066ff;font-weight:bold;margin-right:4px;} .log-warn{color:var(--warn-color);font-weight:bold;} .log-alert{color:var(--enemy-color);font-weight:bold;} .log-info{color:var(--info-color);font-style:italic;}
         
-        .tactical-btn {
-            background: linear-gradient(180deg, #2a3b4c 0%, #111e2b 100%);
-            border: 1px solid #000; border-top: 1px solid #4a5b6c; border-radius: 4px;
-            box-shadow: 0 4px 5px rgba(0,0,0,0.6); color: #ccc; font-weight: bold; text-transform: uppercase;
-            padding: 8px; cursor: pointer; transition: all 0.1s; font-family: inherit; font-size: 0.85em;
-        }
+        .tactical-btn { background: linear-gradient(180deg, #2a3b4c 0%, #111e2b 100%); border: 1px solid #000; border-top: 1px solid #4a5b6c; border-radius: 4px; box-shadow: 0 4px 5px rgba(0,0,0,0.6); color: #ccc; font-weight: bold; text-transform: uppercase; padding: 8px; cursor: pointer; transition: all 0.1s; font-family: inherit; font-size: 0.85em; }
         .tactical-btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 2px rgba(0,0,0,0.8); border-top-color: #2a3b4c; }
         .tactical-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: translateY(2px); border-bottom-color:#333 !important;}
         .tactical-btn.btn-alert { border-bottom: 3px solid var(--enemy-color); color: #ff8888; }
@@ -54,19 +49,12 @@
         .pulsar-toggle:checked { background:var(--alert-color); border-color:#ffaaaa; box-shadow:0 0 10px var(--alert-color); }
         .pulsar-toggle:checked::after { left:17px; background:#fff; }
 
+        .scale-marker { position:absolute; top:0; bottom:0; border-left:1px solid rgba(255,255,255,0.5); z-index:2; }
+        .scale-label { position:absolute; top:-12px; font-size:9px; color:#aaa; transform:translateX(-50%); font-weight:bold;}
+
         ::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#1a2b3c;border-radius:2px;}
         .flash-red{animation:flashRed 1s infinite;} .flash-warn{animation:flashWarn 1s infinite;} 
         @keyframes flashRed{0%,100%{background-color:rgba(255,51,51,0.1);}50%{background-color:rgba(255,51,51,0.4);}} @keyframes flashWarn{0%,100%{background-color:rgba(255,170,0,0.1);}50%{background-color:rgba(255,170,0,0.4);}}
-
-        @keyframes structuralFailure {
-            0% { transform: translate(0) skew(0deg); filter: hue-rotate(0deg); }
-            20% { transform: translate(-2px, 2px) skew(-1deg); filter: hue-rotate(-15deg) saturate(1.5); }
-            40% { transform: translate(3px, -2px) skew(1deg); opacity: 0.85; }
-            60% { transform: translate(-3px, 0) skew(0deg); filter: hue-rotate(10deg); }
-            80% { transform: translate(2px, 3px) skew(-1deg); opacity: 0.95; }
-            100% { transform: translate(0) skew(0deg); filter: hue-rotate(0deg); }
-        }
-        .system-failure { animation: structuralFailure infinite; }
     </style>
 </head>
 <body>
@@ -130,7 +118,13 @@
                                 <input type="checkbox" id="pulsar-tgl-2" class="pulsar-toggle">
                             </div>
                         </div>
-                        <div class="health-bar" style="height: 4px; margin-top:0px; background:#000;"><div id="pulsar-charge-fill" class="health-fill" style="width:100%; background-color:var(--alert-color);"></div></div>
+                        <div style="position:relative; width:100%; height:12px; background:#000; border: 1px solid #1a2b3c; border-radius:2px; margin-top:10px;">
+                            <div id="pulsar-charge-fill" style="width:0%; height:100%; background-color:var(--alert-color); box-shadow:0 0 10px var(--alert-color); transition: width 0.05s linear;"></div>
+                            <div class="scale-marker" style="left:25%;"><span class="scale-label">25</span></div>
+                            <div class="scale-marker" style="left:50%;"><span class="scale-label">50</span></div>
+                            <div class="scale-marker" style="left:75%;"><span class="scale-label">75</span></div>
+                            <div class="scale-marker" style="left:100%;"><span class="scale-label" style="right:0; transform:translateX(-100%);">MAX</span></div>
+                        </div>
                         <button class="tactical-btn btn-alert" id="fire-pulsar" disabled>DISCHARGE EMP</button>
                     </div>
                 </div>
@@ -224,7 +218,9 @@
                 this.systems = { hull: 100, shields: 100, morale: 100, supplies: 100, energy: 100 };
                 this.resources = { credits: 0, data: 0 };
                 this.ammo = { torpedoes: 12 };
-                this.pulsarCooldown = 0; 
+                
+                this.pulsarCharge = 0; // 0 to 100 scale
+
                 this.powerMode = 'SYSTEMS'; 
                 this.shieldLockout = 0; 
                 this.alertLevel = 'GREEN'; 
@@ -324,8 +320,8 @@
                 document.getElementById('fire-torpedo').addEventListener('click', () => this.fireWeapon('torpedo'));
                 document.getElementById('fire-pulsar').addEventListener('click', () => this.fireWeapon('pulsar'));
                 
-                document.getElementById('pulsar-tgl-1').addEventListener('change', () => { this.playSound('lock'); this.updateTargetUI(); });
-                document.getElementById('pulsar-tgl-2').addEventListener('change', () => { this.playSound('lock'); this.updateTargetUI(); });
+                document.getElementById('pulsar-tgl-1').addEventListener('change', () => { this.playSound('lock'); });
+                document.getElementById('pulsar-tgl-2').addEventListener('change', () => { this.playSound('lock'); });
 
                 document.getElementById('val-highscore').innerText = this.highScore;
 
@@ -626,11 +622,6 @@
                         this.log("<span class='log-info'>Missed dispatch window. Signal lost.</span>");
                         this.updateMissionUI();
                     } else { this.updateMissionUI(); }
-                }
-
-                if (this.pulsarCooldown > 0) {
-                    this.pulsarCooldown--;
-                    this.updateTargetUI(); 
                 }
 
                 let enemiesRemaining = this.targets.filter(t => t.faction === 'enemy' || t.faction === 'pirate').length;
@@ -1160,20 +1151,11 @@
                 });
                 container.innerHTML = html; const canShoot = hasEnemy;
                 
-                const pTgl1 = document.getElementById('pulsar-tgl-1').checked;
-                const pTgl2 = document.getElementById('pulsar-tgl-2').checked;
-                
                 this.setWeaponButtons(
                     canShoot && this.systems.energy >= 10, 
                     canShoot && this.ammo.torpedoes > 0 && this.systems.energy >= 20, 
-                    this.pulsarCooldown <= 0 && this.systems.energy >= 50 && pTgl1 && pTgl2
+                    this.pulsarCharge > 10 && this.systems.energy >= Math.floor(this.pulsarCharge / 2)
                 );
-                
-                const pFill = document.getElementById('pulsar-charge-fill');
-                if (pFill) {
-                    if (this.pulsarCooldown > 0) { pFill.style.width = ((30 - this.pulsarCooldown) / 30) * 100 + '%'; pFill.style.backgroundColor = 'var(--warn-color)'; }
-                    else { pFill.style.width = '100%'; pFill.style.backgroundColor = 'var(--alert-color)'; }
-                }
 
                 const btn = document.getElementById('btn-tractor');
                 if (btn) { if (hasMystery && !this.analyzingTarget && !this.pendingDecisionTarget) btn.disabled = false; else if (!this.analyzingTarget) btn.disabled = true; }
@@ -1214,26 +1196,44 @@
                             }
                         }, i * 400);
                     });
-                } else if (type === 'pulsar' && this.pulsarCooldown <= 0 && this.systems.energy >= 50) {
-                    this.playSound('pulsar'); this.pulsarCooldown = 30; this.systems.energy -= 50; this.systems.shields = 0; this.shieldLockout = 10; this.triggerShake(15, 600);
+                } else if (type === 'pulsar' && this.pulsarCharge > 10) {
+                    let cost = Math.floor(this.pulsarCharge / 2);
+                    if (this.systems.energy < cost) {
+                        this.log("<span class='log-warn'>Insufficient energy for requested charge yield!</span>");
+                        return;
+                    }
+                    this.systems.energy -= cost;
+                    let dmgYield = this.pulsarCharge * 2;
+                    let chargeLevel = this.pulsarCharge;
+                    
+                    this.playSound('pulsar'); this.systems.shields = 0; this.shieldLockout = 10; this.triggerShake(5 + (chargeLevel/10), 600);
                     
                     document.getElementById('pulsar-tgl-1').checked = false; document.getElementById('pulsar-tgl-2').checked = false;
+                    this.pulsarCharge = 0;
                     
-                    this.log("<span class='log-alert'>CRITICAL: Pulsar EMP feedback has collapsed main shields. Rebooting sequence initiated.</span>");
-                    this.projectiles.push({ type: 'pulsar', radius: 0 });
+                    this.log(`<span class='log-alert'>EMP DISCHARGED AT ${Math.floor(chargeLevel)}% YIELD. Feedback has collapsed main shields.</span>`);
+                    this.projectiles.push({ type: 'pulsar', radius: 0, charge: chargeLevel });
                     this.targets.forEach(tgt => {
                         if (tgt.alive) {
                             setTimeout(() => { 
                                 if (!tgt.alive) return;
                                 const coords = this.getSafeCoords(tgt);
-                                if (tgt.isCapital) {
-                                    tgt.hull -= 200; tgt.faction = 'enemy'; tgt.color = '#ff3333'; tgt.provoked = true;
-                                    if (tgt.hull <= 0) { tgt.alive = false; this.addScore(400, "CAPITAL SHIP DESTROYED BY EMP!"); this.triggerExplosion(coords.x, coords.y, true); } else { this.triggerExplosion(coords.x, coords.y, false); }
-                                } else {
-                                    tgt.alive = false; this.triggerExplosion(coords.x, coords.y, false); 
-                                    if (tgt.faction === 'enemy' || tgt.faction === 'pirate') this.addScore(100);
+                                tgt.hull -= dmgYield; 
+                                
+                                if (tgt.isCapital) tgt.provoked = true;
+                                
+                                if (tgt.hull <= 0) { 
+                                    tgt.alive = false; this.triggerExplosion(coords.x, coords.y, tgt.isCapital);
+                                    if (tgt.isCapital) this.addScore(400, "CAPITAL SHIP DESTROYED BY EMP!"); 
+                                    else if (tgt.faction === 'enemy' || tgt.faction === 'pirate') this.addScore(100);
                                     else if (tgt.faction === 'mystery') this.addScore(50);
-                                    else if (tgt.faction === 'friendly') { this.addScore(-50, `COLLATERAL DAMAGE: Friendly vessel ${tgt.id} destroyed by Pulsar!`); this.systems.morale -= 5; }
+                                    else if (tgt.faction === 'friendly') { this.addScore(-50, `COLLATERAL DAMAGE: Friendly vessel ${tgt.id} destroyed by EMP!`); this.systems.morale -= 5; }
+                                } else { 
+                                    this.triggerExplosion(coords.x, coords.y, false); 
+                                    if (tgt.faction !== 'enemy' && tgt.faction !== 'pirate') {
+                                        tgt.faction = 'enemy'; tgt.color = '#ff3333';
+                                        this.log(`<span class="log-warn">Neutral vessel ${tgt.id} sustained EMP damage and has marked us hostile!</span>`);
+                                    }
                                 }
                             }, Math.random() * 800 + 400); 
                         }
@@ -1280,16 +1280,6 @@
                 const credVal = document.getElementById('res-credits'); const dataVal = document.getElementById('res-data');
                 if (credVal) credVal.innerText = this.resources.credits + ' CR'; if (dataVal) dataVal.innerText = this.resources.data + ' units';
 
-                const bridge = document.getElementById('bridge');
-                if (this.systems.hull < 90) {
-                    bridge.classList.add('system-failure');
-                    const errSev = Math.max(0.1, (this.systems.hull / 90) * 1.5);
-                    bridge.style.animationDuration = `${errSev}s`;
-                } else {
-                    bridge.classList.remove('system-failure');
-                    bridge.style.animationDuration = '0s';
-                }
-
                 if (this.systems.hull <= 0 || this.systems.supplies <= 0) {
                     let reason = this.systems.hull <= 0 ? "STATION DESTROYED" : "SUPPLIES DEPLETED. CREW STARVED";
                     alert(`${reason}. SIMULATION OVER.`); location.reload();
@@ -1311,6 +1301,34 @@
 
                 const w = this.canvas.width; const h = this.canvas.height;
                 const cx = w / 2; const cy = h / 2;
+                
+                if (this.systems.hull < 90) {
+                    let severity = (90 - this.systems.hull) / 90;
+                    if (Math.random() < severity * 0.3) {
+                        let dx = (Math.random() - 0.5) * severity * 20;
+                        let dy = (Math.random() - 0.5) * severity * 20;
+                        document.body.style.transform = `translate(${dx}px, ${dy}px)`;
+                        document.body.style.filter = `hue-rotate(${Math.random()*90 - 45}deg) saturate(${1 + severity})`;
+                    } else { document.body.style.transform = 'none'; document.body.style.filter = 'none'; }
+                } else { document.body.style.transform = 'none'; document.body.style.filter = 'none'; }
+
+                const tgl1 = document.getElementById('pulsar-tgl-1');
+                const tgl2 = document.getElementById('pulsar-tgl-2');
+                if (tgl1 && tgl2 && tgl1.checked && tgl2.checked) {
+                    this.pulsarCharge = Math.min(100, this.pulsarCharge + 0.5); 
+                } else {
+                    this.pulsarCharge = Math.max(0, this.pulsarCharge - 0.5); 
+                }
+                const pFill = document.getElementById('pulsar-charge-fill');
+                if (pFill) {
+                    pFill.style.width = this.pulsarCharge + '%';
+                    if (this.pulsarCharge < 50) pFill.style.backgroundColor = 'var(--info-color)';
+                    else if (this.pulsarCharge < 100) pFill.style.backgroundColor = 'var(--warn-color)';
+                    else pFill.style.backgroundColor = 'var(--alert-color)';
+                    
+                    const uBtn = document.getElementById('fire-pulsar');
+                    if(uBtn) uBtn.disabled = this.pulsarCharge < 10 || this.systems.energy < Math.floor(this.pulsarCharge/2);
+                }
 
                 this.ctx.clearRect(0, 0, w, h); 
                 this.ctx.globalCompositeOperation = 'lighter';
@@ -1404,6 +1422,19 @@
                     }
                     if (isNaN(p.px) || isNaN(p.py)) continue;
                     tgt.screenX = p.px; tgt.screenY = p.py; tgt.depth = p.depth; this.ctx.globalAlpha = tgt.isOccluded ? 0.2 : 1.0;
+                    
+                    if (!tgt.isOccluded) {
+                        let tAngle = Math.atan2(p.py - cy, p.px - cx);
+                        if (tAngle < 0) tAngle += Math.PI * 2;
+                        let aDiff = sweepAngle - tAngle;
+                        if (aDiff < 0) aDiff += Math.PI * 2;
+                        if (aDiff < 0.4) {
+                            const gInt = 1.0 - (aDiff / 0.4);
+                            this.ctx.beginPath(); this.ctx.arc(p.px, p.py, 20 * p.scale, 0, Math.PI*2);
+                            this.ctx.fillStyle = `rgba(51, 204, 255, ${gInt * 0.7})`; this.ctx.fill();
+                        }
+                    }
+                    
                     this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; this.ctx.lineWidth = 1; this.ctx.setLineDash([2, 4]);
                     this.ctx.beginPath(); this.ctx.moveTo(anchor.px, anchor.py); this.ctx.lineTo(p.px, p.py); this.ctx.stroke(); this.ctx.setLineDash([]);
                     this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; this.ctx.beginPath(); this.ctx.arc(anchor.px, anchor.py, 2, 0, Math.PI*2); this.ctx.fill();
@@ -1564,8 +1595,11 @@
                         this.ctx.beginPath(); this.ctx.moveTo(proj.origin.screenX, proj.origin.screenY); this.ctx.lineTo(bx, by); this.ctx.stroke(); this.ctx.shadowBlur = 0;
 
                     } else if (proj.type === 'pulsar') {
-                        proj.radius += 15; if (proj.radius > w) { this.projectiles.splice(pIdx, 1); continue; }
-                        this.ctx.strokeStyle = `rgba(255, 170, 0, ${Math.max(0, 1 - proj.radius/w)})`; this.ctx.lineWidth = 30; this.ctx.shadowBlur = 20; this.ctx.shadowColor = '#ffaa00';
+                        proj.radius += 15 + (proj.charge / 10); 
+                        if (proj.radius > w) { this.projectiles.splice(pIdx, 1); continue; }
+                        this.ctx.strokeStyle = `rgba(255, 170, 0, ${Math.max(0, 1 - proj.radius/w)})`; 
+                        this.ctx.lineWidth = 10 + (proj.charge / 2); 
+                        this.ctx.shadowBlur = 20; this.ctx.shadowColor = '#ffaa00';
                         this.ctx.beginPath(); this.ctx.arc(this.shipX, this.shipY, proj.radius, 0, Math.PI*2); this.ctx.stroke(); this.ctx.shadowBlur = 0;
                     }
                 }
@@ -1581,10 +1615,17 @@
                 }
 
                 for (let idx = this.particles.length - 1; idx >= 0; idx--) {
-                    let pt = this.particles[idx]; pt.x += pt.vx; pt.y += pt.vy; pt.life -= 0.03;
+                    let pt = this.particles[idx]; 
+                    pt.x += pt.vx; pt.y += pt.vy; 
+                    pt.vx *= 0.92; pt.vy *= 0.92; 
+                    pt.life -= 0.015;
                     if (pt.life <= 0) { this.particles.splice(idx, 1); continue; }
-                    this.ctx.strokeStyle = `rgba(255, ${Math.floor(Math.random()*100 + 100)}, 0, ${pt.life})`; this.ctx.lineWidth = 2;
-                    this.ctx.beginPath(); this.ctx.moveTo(pt.x, pt.y); this.ctx.lineTo(pt.x - pt.vx * 0.4, pt.y - pt.vy * 0.4); this.ctx.stroke();
+                    this.ctx.strokeStyle = `rgba(255, ${Math.floor(Math.random()*100 + 100)}, 0, ${pt.life})`; 
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath(); 
+                    this.ctx.moveTo(pt.x, pt.y); 
+                    this.ctx.lineTo(pt.x - (pt.vx * 0.5 + Math.sign(pt.vx)*1), pt.y - (pt.vy * 0.5 + Math.sign(pt.vy)*1)); 
+                    this.ctx.stroke();
                 }
 
                 this.ctx.globalCompositeOperation = 'source-over'; this.ctx.globalAlpha = 1.0;
