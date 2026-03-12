@@ -7,7 +7,18 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap');
         :root{--bg-color:#020408;--screen-bg:#060b12;--primary-color:#ffffff;--enemy-color:#ff3333;--friendly-color:#39ff14;--mystery-color:#33ccff;--viper-color:#ffffff;--warn-color:#ffaa00;--info-color:#33ccff;--alert-color:#ff3333;--panel-border:2px solid #1a2b3c;}
-        *{box-sizing:border-box;} body{margin:0;padding:0;background-color:var(--bg-color);color:var(--primary-color);font-family:'Courier New',Courier,monospace;height:100vh;overflow:hidden;user-select:none; transition: filter 0.05s, transform 0.05s;}
+        
+        /* HARDWARE RENDER TIER - NO SMOOTHING ALLOWED */
+        *{box-sizing:border-box;} 
+        body{margin:0;padding:0;background-color:var(--bg-color);color:var(--primary-color);font-family:'Courier New',Courier,monospace;height:100vh;overflow:hidden;user-select:none;}
+        
+        #damage-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; box-shadow: inset 0 0 0px rgba(255, 0, 0, 0); transition: box-shadow 0.2s; }
+        .damage-warning #damage-overlay { box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.4); animation: pulseRed 1.5s infinite; }
+        @keyframes pulseRed { 0%, 100% { box-shadow: inset 0 0 80px rgba(255, 0, 0, 0.1); } 50% { box-shadow: inset 0 0 180px rgba(255, 0, 0, 0.7); } }
+        
+        .critical-text { color: #ff3333 !important; animation: textFlash 0.4s infinite alternate; text-shadow: 0 0 10px #ff0000; }
+        @keyframes textFlash { 0% { opacity: 1; } 100% { opacity: 0.4; } }
+
         #bridge{display:grid;grid-template-columns:310px 1fr 280px;grid-template-rows:70px 1fr 240px;gap:12px;padding:15px;height:100vh;}
         .panel{background-color:var(--screen-bg);border:var(--panel-border);border-radius:8px;padding:12px;box-shadow:inset 0 0 30px rgba(0,0,0,0.8),0 5px 15px rgba(0,0,0,0.5);display:flex;flex-direction:column;position:relative;overflow:hidden;transition:border-color 0.3s;}
         .header-bar{background-color:#0d1a26;border-bottom:1px solid var(--info-color);padding:4px;text-align:center;font-weight:bold;letter-spacing:3px;margin-bottom:8px;flex-shrink:0;text-transform:uppercase;font-size:0.9em;}
@@ -25,7 +36,7 @@
         .view-overlay{position:absolute;top:20px;left:20px;font-size:1.1em;z-index:11;text-shadow:0 0 5px #000;pointer-events:none;}
         
         .bottom-left{grid-column:1;grid-row:3;} .bridge-controls{grid-column:2;grid-row:3;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding-top:0;} .bottom-right{grid-column:3;grid-row:3;}
-        .system-grid{display:flex;flex-direction:column;gap:8px;} .system-item{display:flex;flex-direction:column;gap:4px;} .system-label{font-weight:bold;color:var(--primary-color);font-size:0.8em;}
+        .system-grid{display:flex;flex-direction:column;gap:8px;} .system-item{display:flex;flex-direction:column;gap:4px;} .system-label{font-weight:bold;color:var(--primary-color);font-size:0.8em; transition: color 0.2s;}
         .scroll-list{display:flex;flex-direction:column;gap:4px;overflow-y:auto;flex-grow:1;padding-right:5px;min-height:0;} .list-item{background-color:rgba(255,255,255,0.05);padding:6px;border-radius:4px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid var(--primary-color);transition:opacity 0.3s;}
         .health-bar{width:100%;height:4px;background-color:#1a2b3c;border-radius:2px;overflow:hidden;margin-top:4px;} .health-fill{height:100%;transition:width 0.2s,background-color 0.5s;}
         #comms-log{font-size:0.8em;line-height:1.4;overflow-y:auto;flex-grow:1;padding-right:5px;color:#ccc;} .log-entry{margin-bottom:6px;border-bottom:1px dashed rgba(255,255,255,0.15);padding-bottom:4px;} .log-time{color:var(--mystery-color);font-size:0.85em;margin-right:8px;} .log-sci{color:#d066ff;font-weight:bold;margin-right:4px;} .log-warn{color:var(--warn-color);font-weight:bold;} .log-alert{color:var(--enemy-color);font-weight:bold;} .log-info{color:var(--info-color);font-style:italic;}
@@ -58,6 +69,7 @@
     </style>
 </head>
 <body>
+    <div id="damage-overlay"></div>
     <div id="bridge">
         <div class="panel top-left">
             <div style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
@@ -170,7 +182,7 @@
                     <div class="health-bar"><div class="health-fill" id="bar-shields" style="width: 100%; background-color: var(--info-color);"></div></div>
                 </div>
                 <div class="system-item">
-                    <div class="system-label">STATION HULL <span id="val-hull" style="float:right;">100%</span></div>
+                    <div class="system-label" id="label-hull">STATION HULL <span id="val-hull" style="float:right;">100%</span></div>
                     <div class="health-bar"><div class="health-fill" id="bar-hull" style="width: 100%; background-color: var(--friendly-color);"></div></div>
                 </div>
                 <div class="system-item">
@@ -271,7 +283,6 @@
                 this.shockwaves = [];
                 this.warpStreaks = []; 
 
-                // Deep Space Hub - Visually distinct from Hostiles
                 this.indStation = {
                     id: 'DEEP-SPACE-HUB', class: 'station', isStation: true, faction: 'friendly', color: '#44aaff',
                     isCapital: false, isLinear: true, cx: -300, cy: -120, cz: 200,
@@ -457,6 +468,13 @@
                         noise.connect(filter); filter.connect(gain);
                         gain.gain.setValueAtTime(type === 'heavy_explosion' ? 1.0 : 0.6, now); gain.gain.exponentialRampToValueAtTime(0.01, now + dur);
                         noise.start(now); noise.stop(now + dur);
+                    } else if (type === 'glitch') {
+                        if (!this.noiseBuffer) return;
+                        const noise = this.audioCtx.createBufferSource(); noise.buffer = this.noiseBuffer;
+                        const filter = this.audioCtx.createBiquadFilter(); filter.type = 'highpass'; filter.frequency.value = 4000;
+                        noise.connect(filter); filter.connect(gain);
+                        gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                        noise.start(now); noise.stop(now + 0.15);
                     } else if (type === 'tractor') {
                         osc.type = 'sine'; osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(250, now + 3.0);
                         gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 3.0);
@@ -797,6 +815,14 @@
                         } else if (tgt.hull <= 0) {
                             this.log(`<span class="log-alert">Tragedy: Transport ${tgt.id} destroyed by pirates.</span>`);
                             this.systems.morale -= 10; tgt.alive = false;
+                        }
+                    }
+
+                    if (tgt.class === 'freighter' && tgt.dockState === 'docking') {
+                        tgt.dockTimer--;
+                        if (tgt.dockTimer <= 0) {
+                            tgt.dockState = 'departing';
+                            tgt.vx = -2.0; tgt.vy = Math.random()*1 - 0.5; tgt.vz = Math.random()*1 - 0.5;
                         }
                     }
 
@@ -1343,6 +1369,7 @@
                     else if (this.powerMode === 'SHIELDS') engBar.style.backgroundColor = '#33ccff';
                     else engBar.style.backgroundColor = '#ffffff';
                 }
+                
                 const sldVal = document.getElementById('val-shields'); const sldBar = document.getElementById('bar-shields');
                 if (this.shieldLockout > 0) {
                     if (sldVal) { sldVal.innerText = `OFFLINE (${this.shieldLockout}s)`; sldVal.style.color = 'var(--alert-color)'; }
@@ -1353,6 +1380,15 @@
                 }
                 const credVal = document.getElementById('res-credits'); const dataVal = document.getElementById('res-data');
                 if (credVal) credVal.innerText = this.resources.credits + ' CR'; if (dataVal) dataVal.innerText = this.resources.data + ' units';
+
+                const labelHull = document.getElementById('label-hull');
+                if (this.systems.hull < 90) {
+                    document.body.classList.add('damage-warning');
+                    if(labelHull) labelHull.classList.add('critical-text');
+                } else {
+                    document.body.classList.remove('damage-warning');
+                    if(labelHull) labelHull.classList.remove('critical-text');
+                }
 
                 if (this.systems.hull <= 0 || this.systems.supplies <= 0) {
                     let reason = this.systems.hull <= 0 ? "STATION DESTROYED" : "SUPPLIES DEPLETED. CREW STARVED";
@@ -1380,9 +1416,15 @@
                     let severity = (90 - this.systems.hull) / 90;
                     if (Math.random() < severity * 0.8) {
                         let dx = (Math.random() - 0.5) * severity * 40;
-                        let dy = (Math.random() - 0.5) * severity * 40;
-                        document.body.style.transform = `translate(${dx}px, ${dy}px)`;
-                        document.body.style.filter = `hue-rotate(${Math.random()*180 - 90}deg) saturate(${1 + severity * 3})`;
+                        let dy = (Math.random() - 0.5) * severity * 15;
+                        let sk = (Math.random() - 0.5) * severity * 15;
+                        document.body.style.transform = `translate(${dx}px, ${dy}px) skewX(${sk}deg)`;
+                        document.body.style.filter = `hue-rotate(${Math.random()*180 - 90}deg) saturate(${1 + severity * 4}) contrast(${1 + severity * 2})`;
+                        
+                        this.ctx.fillStyle = `rgba(255, ${Math.random()*255}, ${Math.random()*255}, ${Math.random() * 0.3})`;
+                        this.ctx.fillRect(0, Math.random() * h, w, Math.random() * 20 + 2);
+                        
+                        if (Math.random() < 0.1) this.playSound('glitch');
                     } else { document.body.style.transform = 'none'; document.body.style.filter = 'none'; }
                 } else { document.body.style.transform = 'none'; document.body.style.filter = 'none'; }
 
