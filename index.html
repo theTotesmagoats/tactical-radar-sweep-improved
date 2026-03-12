@@ -674,7 +674,7 @@
                     } else { this.updateMissionUI(); }
                 }
 
-                let enemiesRemaining = this.targets.filter(t => t.faction === 'enemy' || t.faction === 'pirate').length;
+                let enemiesRemaining = this.targets.filter(t => t.faction === 'enemy' || t.faction === 'pirate' || t.class === 'terrorist').length;
                 if (enemiesRemaining === 0) {
                     if (this.waveDelay > 0) {
                         this.waveDelay--;
@@ -747,16 +747,6 @@
                             this.playSound('viper_laser');
                         }
                     }
-                }
-
-                if (Math.random() < 0.1 && this.targets.filter(t => t.faction === 'mystery').length < 3) {
-                    this.targets.push({
-                        id: 'UNK-' + Math.floor(Math.random()*899+100),
-                        class: 'unknown', faction: 'mystery', color: '#33ccff', isCapital: false, isEscortMission: false,
-                        hull: 100, maxHull: 100, alive: true, frozen: false, beamCooldown: 3,
-                        orbitRadius: this.globeRadius + 60 + Math.random() * 120, angle: Math.random() * Math.PI * 2, 
-                        speed: (Math.random() * 0.003 + 0.001) * (Math.random() > 0.5 ? 1 : -1), yOffset: (Math.random() - 0.5) * 120
-                    });
                 }
 
                 this.fighters.forEach(f => {
@@ -1369,7 +1359,6 @@
                     else if (this.powerMode === 'SHIELDS') engBar.style.backgroundColor = '#33ccff';
                     else engBar.style.backgroundColor = '#ffffff';
                 }
-                
                 const sldVal = document.getElementById('val-shields'); const sldBar = document.getElementById('bar-shields');
                 if (this.shieldLockout > 0) {
                     if (sldVal) { sldVal.innerText = `OFFLINE (${this.shieldLockout}s)`; sldVal.style.color = 'var(--alert-color)'; }
@@ -1412,6 +1401,7 @@
                 const w = this.canvas.width; const h = this.canvas.height;
                 const cx = w / 2; const cy = h / 2;
                 
+                // Hardware Failure Tearing / Glitch Logic
                 if (this.systems.hull < 90) {
                     let severity = (90 - this.systems.hull) / 90;
                     if (Math.random() < severity * 0.8) {
