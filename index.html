@@ -219,7 +219,7 @@
                 this.resources = { credits: 0, data: 0 };
                 this.ammo = { torpedoes: 12 };
                 
-                this.pulsarCharge = 0; // 0 to 100 scale
+                this.pulsarCharge = 0; 
 
                 this.powerMode = 'SYSTEMS'; 
                 this.shieldLockout = 0; 
@@ -270,6 +270,14 @@
                 this.particles = [];
                 this.shockwaves = [];
                 this.warpStreaks = []; 
+
+                // Industrial Station Background Asset
+                this.indStation = {
+                    id: 'IND-HUB-01', class: 'station', faction: 'friendly', color: '#ffaa00',
+                    isCapital: false, isLinear: true, cx: 300, cy: -80, cz: -100,
+                    vx: 0, vy: 0, vz: 0, hull: 2000, maxHull: 2000, alive: true, frozen: false, beamCooldown: 0
+                };
+                this.targets.push(this.indStation);
                 
                 this.analyzingTarget = null;
                 this.pendingDecisionTarget = null;
@@ -284,6 +292,8 @@
 
                 this.audioCtx = null;
                 this.noiseBuffer = null;
+                this.pulsarOsc = null;
+                this.pulsarGain = null;
                 this.audioInitialized = false;
                 this.ambientStarted = false;
                 this.timeElapsed = 0;
@@ -369,6 +379,28 @@
                 if (this.audioCtx.state === 'suspended') {
                     this.audioCtx.resume().then(() => this.startAmbientDrone()).catch(e=>{});
                 } else { this.startAmbientDrone(); }
+            }
+
+            managePulsarAudio(isCharging) {
+                if (!this.audioCtx || this.audioCtx.state !== 'running') return;
+                if (isCharging) {
+                    if (!this.pulsarOsc) {
+                        this.pulsarOsc = this.audioCtx.createOscillator();
+                        this.pulsarGain = this.audioCtx.createGain();
+                        this.pulsarOsc.type = 'sawtooth';
+                        this.pulsarOsc.connect(this.pulsarGain);
+                        this.pulsarGain.connect(this.audioCtx.destination);
+                        this.pulsarGain.gain.value = 0.05;
+                        this.pulsarOsc.start();
+                    }
+                    this.pulsarOsc.frequency.value = 100 + (this.pulsarCharge * 5);
+                } else {
+                    if (this.pulsarOsc) {
+                        this.pulsarOsc.stop();
+                        this.pulsarOsc.disconnect();
+                        this.pulsarOsc = null;
+                    }
+                }
             }
 
             startAmbientDrone() {
@@ -663,13 +695,46 @@
                     this.log(`<span class="log-sci">[SCIENCE OFF.]</span> ${fact}`);
                 }
 
-                if (Math.random() < 0.1 && this.targets.filter(t => t.faction === 'mystery' || t.faction === 'friendly').length < 3) {
-                    let classType = Math.random() > 0.5 ? 'transport' : 'unknown';
-                    let faction = classType === 'unknown' ? 'mystery' : 'friendly';
-                    let color = classType === 'unknown' ? '#33ccff' : '#39ff14';
+                // Industrial Station Docking Runs
+                if (Math.random() < 0.04 && !this.targets.some(t => t.class === 'freighter')) {
+                    let fid = 'HVY-' + Math.floor(Math.random()*899+100);
                     this.targets.push({
-                        id: (classType === 'unknown' ? 'UNK-' : 'FRT-') + Math.floor(Math.random()*899+100),
-                        class: classType, faction: faction, color: color, isCapital: false, isEscortMission: false,
+                        id: fid, class: 'freighter', faction: 'friendly', color: '#aaddff',
+                        isLinear: true, cx: 800, cy: Math.random()*200-100, cz: Math.random()*200-100,
+                        vx: 0, vy: 0, vz: 0, speed: 1.5, hull: 2000, maxHull: 2000, alive: true, frozen: false,
+                        dockState: 'approaching', dockTimer: 0, beamCooldown: 0
+                    });
+                    
+                    if (Math.random() < 0.6) {
+                        this.log("<span class='log-warn'>TAC-ALERT: Terrorist interceptors tracking inbound freighter! Defend logistics hub!</span>");
+                        this.playSound('telegram');
+                        for(let i=0; i<2 + Math.floor(this.currentWave/2); i++) {
+                            this.targets.push({
+                                id: 'TRX-' + Math.floor(Math.random()*899+100), class: 'terrorist', faction: 'enemy', color: '#ff0055',
+                                hunting: fid, isLinear: true, cx: 800 + (Math.random()*100-50), cy: Math.random()*300-150, cz: Math.random()*300-150,
+                                vx: 0, vy: 0, vz: 0, speed: 2.0, hull: 60, maxHull: 60, alive: true, frozen: false, beamCooldown: 2
+                            });
+                        }
+                    }
+                }
+
+                // Station Defenses
+                if (this.indStation && this.indStation.alive) {
+                    if (this.indStation.beamCooldown > 0) this.indStation.beamCooldown--;
+                    else {
+                        let hostile = this.targets.find(t => t.class === 'terrorist' && t.alive && Math.hypot(t.cx - this.indStation.cx, t.cy - this.indStation.cy, t.cz - this.indStation.cz) < 250);
+                        if (hostile) {
+                            this.projectiles.push({ type: 'ind_beam', target: hostile, origin: this.indStation, progress: 0 });
+                            this.indStation.beamCooldown = 2;
+                            this.playSound('viper_laser');
+                        }
+                    }
+                }
+
+                if (Math.random() < 0.1 && this.targets.filter(t => t.faction === 'mystery').length < 3) {
+                    this.targets.push({
+                        id: 'UNK-' + Math.floor(Math.random()*899+100),
+                        class: 'unknown', faction: 'mystery', color: '#33ccff', isCapital: false, isEscortMission: false,
                         hull: 100, maxHull: 100, alive: true, frozen: false, beamCooldown: 3,
                         orbitRadius: this.globeRadius + 60 + Math.random() * 120, angle: Math.random() * Math.PI * 2, 
                         speed: (Math.random() * 0.003 + 0.001) * (Math.random() > 0.5 ? 1 : -1), yOffset: (Math.random() - 0.5) * 120
@@ -719,7 +784,7 @@
 
                     if (tgt.beamCooldown > 0) tgt.beamCooldown--;
 
-                    if (tgt.faction === 'friendly' && !tgt.isEscortMission && !tgt.isCapital && Math.random() < 0.03) {
+                    if (tgt.faction === 'friendly' && tgt.class === 'transport' && !tgt.isEscortMission && !tgt.isCapital && Math.random() < 0.03) {
                         this.resources.credits += 10; tgt.alive = false; 
                     }
 
@@ -735,15 +800,27 @@
                         }
                     }
 
+                    if (tgt.class === 'freighter' && tgt.dockState === 'docking') {
+                        tgt.dockTimer--;
+                        if (tgt.dockTimer <= 0) {
+                            tgt.dockState = 'departing';
+                            tgt.vx = -2.0; tgt.vy = Math.random()*1 - 0.5; tgt.vz = Math.random()*1 - 0.5;
+                        }
+                    }
+
                     if (tgt.hunting) {
                         let prey = this.targets.find(t => t.id === tgt.hunting);
+                        if (!prey || !prey.alive) prey = this.indStation;
                         if (prey && prey.alive && !tgt.frozen) {
                             if (tgt.beamCooldown <= 0 && Math.random() < 0.2) {
-                                this.projectiles.push({ type: 'enemy_beam', target: prey, origin: tgt, progress: 0, isShipToShip: true });
-                                tgt.beamCooldown = 3; this.playSound('enemy_laser');
+                                let dist = Math.hypot(prey.cx ? prey.cx - tgt.cx : 0, prey.cy ? prey.cy - tgt.cy : 0); // rough
+                                if (dist < 150) {
+                                    this.projectiles.push({ type: 'enemy_beam', target: prey, origin: tgt, progress: 0, isShipToShip: true });
+                                    tgt.beamCooldown = 3; this.playSound('enemy_laser');
+                                }
                             }
                         } else { tgt.hunting = null; }
-                    } else if ((tgt.faction === 'enemy' || tgt.faction === 'pirate') && tgt.beamCooldown <= 0 && !tgt.frozen && !tgt.isCapital) {
+                    } else if ((tgt.faction === 'enemy' || tgt.faction === 'pirate') && tgt.beamCooldown <= 0 && !tgt.frozen && !tgt.isCapital && tgt.class !== 'terrorist') {
                         let availVipers = this.fighters.filter(f => f.alive && f.deployed && !(this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'SQUAD'));
                         if (availVipers.length > 0 && Math.random() < 0.4) {
                             let prey = availVipers[Math.floor(Math.random() * availVipers.length)];
@@ -1126,7 +1203,7 @@
                 if (hit) {
                     this.playSound('lock'); const idx = this.lockedTargets.indexOf(hit);
                     if (idx > -1) { this.lockedTargets.splice(idx, 1); 
-                    } else if (this.lockedTargets.length < 2) { this.lockedTargets.push(hit); }
+                    } else if (this.lockedTargets.length < 3) { this.lockedTargets.push(hit); } // MAX TARGETS CHANGED TO 3
                     const statusEl = document.getElementById('sensor-readings');
                     if (statusEl && idx === -1) {
                         statusEl.innerHTML = `TARGET LOCKED: ${hit.id}`; setTimeout(() => { if (document.getElementById('sensor-readings')) document.getElementById('sensor-readings').innerHTML = 'SCANNING LOCAL SECTOR'; }, 2000);
@@ -1203,7 +1280,7 @@
                         return;
                     }
                     this.systems.energy -= cost;
-                    let dmgYield = this.pulsarCharge * 2;
+                    let dmgYield = this.pulsarCharge * 2.5; 
                     let chargeLevel = this.pulsarCharge;
                     
                     this.playSound('pulsar'); this.systems.shields = 0; this.shieldLockout = 10; this.triggerShake(5 + (chargeLevel/10), 600);
@@ -1216,7 +1293,7 @@
                     this.targets.forEach(tgt => {
                         if (tgt.alive) {
                             setTimeout(() => { 
-                                if (!tgt.alive) return;
+                                if (!tgt.alive || tgt.class === 'station') return; 
                                 const coords = this.getSafeCoords(tgt);
                                 tgt.hull -= dmgYield; 
                                 
@@ -1304,21 +1381,30 @@
                 
                 if (this.systems.hull < 90) {
                     let severity = (90 - this.systems.hull) / 90;
-                    if (Math.random() < severity * 0.3) {
-                        let dx = (Math.random() - 0.5) * severity * 20;
-                        let dy = (Math.random() - 0.5) * severity * 20;
+                    if (Math.random() < severity * 0.5) {
+                        let dx = (Math.random() - 0.5) * severity * 30;
+                        let dy = (Math.random() - 0.5) * severity * 30;
                         document.body.style.transform = `translate(${dx}px, ${dy}px)`;
-                        document.body.style.filter = `hue-rotate(${Math.random()*90 - 45}deg) saturate(${1 + severity})`;
+                        document.body.style.filter = `hue-rotate(${Math.random()*180 - 90}deg) saturate(${1 + severity * 2})`;
                     } else { document.body.style.transform = 'none'; document.body.style.filter = 'none'; }
                 } else { document.body.style.transform = 'none'; document.body.style.filter = 'none'; }
 
                 const tgl1 = document.getElementById('pulsar-tgl-1');
                 const tgl2 = document.getElementById('pulsar-tgl-2');
+                let isCharging = false;
+                
                 if (tgl1 && tgl2 && tgl1.checked && tgl2.checked) {
-                    this.pulsarCharge = Math.min(100, this.pulsarCharge + 0.5); 
+                    if (this.systems.energy > 0.05) { 
+                        this.pulsarCharge = Math.min(100, this.pulsarCharge + 0.5); 
+                        this.systems.energy -= 0.05; 
+                        isCharging = true;
+                    } else { tgl1.checked = false; tgl2.checked = false; }
                 } else {
-                    this.pulsarCharge = Math.max(0, this.pulsarCharge - 0.5); 
+                    this.pulsarCharge = Math.max(0, this.pulsarCharge - 1.0); 
                 }
+                
+                this.managePulsarAudio(isCharging);
+
                 const pFill = document.getElementById('pulsar-charge-fill');
                 if (pFill) {
                     pFill.style.width = this.pulsarCharge + '%';
@@ -1408,12 +1494,42 @@
                 for (let i = this.targets.length - 1; i >= 0; i--) {
                     let tgt = this.targets[i]; if(!tgt.alive) { this.targets.splice(i, 1); continue; }
                     let tx, ty, tz, p, anchor;
+                    
+                    if (tgt.class === 'freighter') {
+                        if (tgt.dockState === 'approaching') {
+                            let dx = this.indStation.cx - tgt.cx; let dy = this.indStation.cy - tgt.cy; let dz = this.indStation.cz - tgt.cz;
+                            let dist = Math.hypot(dx, dy, dz);
+                            if (dist < 5) {
+                                tgt.dockState = 'docking'; tgt.dockTimer = 10;
+                            } else {
+                                tgt.cx += (dx/dist) * tgt.speed; tgt.cy += (dy/dist) * tgt.speed; tgt.cz += (dz/dist) * tgt.speed;
+                            }
+                        } else if (tgt.dockState === 'departing') {
+                            tgt.cx += tgt.vx; tgt.cy += tgt.vy; tgt.cz += tgt.vz;
+                            if (Math.abs(tgt.cx) > 1000 || Math.abs(tgt.cy) > 1000) {
+                                tgt.alive = false;
+                                this.resources.credits += 300; this.addScore(150, `Logistics Freighter ${tgt.id} completed run.`);
+                                this.systems.supplies = Math.min(100, this.systems.supplies + 15);
+                            }
+                        }
+                    } else if (tgt.class === 'terrorist') {
+                        let prey = this.targets.find(t => t.id === tgt.hunting);
+                        if (!prey || !prey.alive) prey = this.indStation; 
+                        if (prey && prey.alive && !tgt.frozen) {
+                            let dx = prey.cx - tgt.cx; let dy = prey.cy - tgt.cy; let dz = prey.cz - tgt.cz;
+                            let dist = Math.hypot(dx, dy, dz);
+                            if (dist > 60) { tgt.cx += (dx/dist) * tgt.speed; tgt.cy += (dy/dist) * tgt.speed; tgt.cz += (dz/dist) * tgt.speed; }
+                        }
+                    }
+                    
                     if (tgt.isCapital || tgt.isLinear) {
-                        if(!tgt.frozen) { tgt.cx += tgt.vx; tgt.cy += tgt.vy; tgt.cz += tgt.vz; }
-                        if (tgt.cx > 800) tgt.vx = -Math.abs(tgt.vx); if (tgt.cx < -800) tgt.vx = Math.abs(tgt.vx);
+                        if(!tgt.frozen && tgt.class !== 'freighter' && tgt.class !== 'terrorist' && tgt.class !== 'station') { 
+                            tgt.cx += tgt.vx; tgt.cy += tgt.vy; tgt.cz += tgt.vz; 
+                            if (tgt.cx > 800) tgt.vx = -Math.abs(tgt.vx); if (tgt.cx < -800) tgt.vx = Math.abs(tgt.vx);
+                        }
                         tx = tgt.cx; ty = tgt.cy; tz = tgt.cz;
                         p = this.project3D(tx, ty, tz, cx, cy, cosX, sinX, cosY, sinY); anchor = this.project3D(tx, 0, tz, cx, cy, cosX, sinX, cosY, sinY);
-                        tgt.isOccluded = false; 
+                        tgt.isOccluded = (p.depth > 0 && Math.hypot(p.px - cx, p.py - cy) < this.globeRadius * 0.8); 
                     } else {
                         if(!tgt.frozen) tgt.angle += tgt.speed;
                         tx = tgt.orbitRadius * Math.cos(tgt.angle); ty = tgt.yOffset; tz = tgt.orbitRadius * Math.sin(tgt.angle);
@@ -1446,6 +1562,18 @@
                     if (tgt.isCapital) {
                         this.ctx.moveTo(p.px - s*2, p.py); this.ctx.lineTo(p.px - s, p.py - s); this.ctx.lineTo(p.px + s, p.py - s);
                         this.ctx.lineTo(p.px + s*2, p.py); this.ctx.lineTo(p.px + s, p.py + s); this.ctx.lineTo(p.px - s, p.py + s);
+                    } else if (tgt.class === 'station') {
+                        this.ctx.moveTo(p.px - s*2, p.py - s*1.5); this.ctx.lineTo(p.px + s*2, p.py - s*1.5);
+                        this.ctx.lineTo(p.px + s*1.5, p.py + s*1.5); this.ctx.lineTo(p.px - s*1.5, p.py + s*1.5);
+                        this.ctx.closePath(); this.ctx.fill(); this.ctx.stroke();
+                        this.ctx.strokeRect(p.px - s, p.py - s, s*2, s*2);
+                    } else if (tgt.class === 'freighter') {
+                        this.ctx.moveTo(p.px - s*1.5, p.py - s); this.ctx.lineTo(p.px + s*1.5, p.py - s);
+                        this.ctx.lineTo(p.px + s*1.5, p.py + s); this.ctx.lineTo(p.px - s*1.5, p.py + s);
+                        this.ctx.fillStyle = '#113344'; this.ctx.closePath(); this.ctx.fill(); this.ctx.stroke();
+                    } else if (tgt.class === 'terrorist') {
+                        this.ctx.moveTo(p.px, p.py - s*1.2); this.ctx.lineTo(p.px + s*0.8, p.py + s*0.8);
+                        this.ctx.lineTo(p.px, p.py + s*0.4); this.ctx.lineTo(p.px - s*0.8, p.py + s*0.8);
                     } else if (tgt.class === 'fighter') { 
                         this.ctx.moveTo(p.px, p.py - s*1.5); this.ctx.lineTo(p.px + s, p.py + s); this.ctx.lineTo(p.px, p.py + s*0.4); this.ctx.lineTo(p.px - s, p.py + s); 
                     } else if (tgt.class === 'pirate') {
@@ -1456,12 +1584,12 @@
                     } else { 
                         this.ctx.moveTo(p.px, p.py - s*1.2); this.ctx.lineTo(p.px + s*1.2, p.py); this.ctx.lineTo(p.px, p.py + s*1.2); this.ctx.lineTo(p.px - s*1.2, p.py); 
                     }
-                    if (tgt.class !== 'transport') { this.ctx.closePath(); }
-                    this.ctx.fill(); this.ctx.stroke();
+                    
+                    if (tgt.class !== 'transport' && tgt.class !== 'freighter' && tgt.class !== 'station') { this.ctx.closePath(); this.ctx.fill(); this.ctx.stroke(); }
                     
                     this.ctx.fillStyle = tgt.color; this.ctx.font = "10px Courier"; this.ctx.fillText(tgt.id, p.px + s*1.5 + 4, p.py);
-                    if (tgt.isCapital || tgt.class === 'transport') {
-                        const hpPct = Math.max(0, tgt.hull / tgt.maxHull); const barW = 40;
+                    if (tgt.isCapital || tgt.class === 'transport' || tgt.class === 'freighter' || tgt.class === 'station') {
+                        const hpPct = Math.max(0, tgt.hull / tgt.maxHull); const barW = tgt.class === 'station' ? 60 : 40;
                         this.ctx.fillStyle = '#f00'; this.ctx.fillRect(p.px - barW/2, p.py + s + 5, barW, 3);
                         this.ctx.fillStyle = '#0f0'; this.ctx.fillRect(p.px - barW/2, p.py + s + 5, barW * hpPct, 3);
                     }
@@ -1520,6 +1648,24 @@
                             this.ctx.beginPath(); this.ctx.moveTo(proj.origin.screenX, proj.origin.screenY); this.ctx.lineTo(bx, by); this.ctx.stroke(); this.ctx.shadowBlur = 0;
                         } else { this.projectiles.splice(pIdx, 1); }
 
+                    } else if (proj.type === 'ind_beam') {
+                        proj.progress += 0.2;
+                        if (proj.progress >= 1) {
+                            if (proj.target && proj.target.alive) {
+                                proj.target.hull -= 15;
+                                if (proj.target.hull <= 0) {
+                                    proj.target.alive = false; const coords = this.getSafeCoords(proj.target);
+                                    this.triggerExplosion(coords.x, coords.y, false); this.addScore(50, `Ind-Station defenses eliminated ${proj.target.id}.`);
+                                }
+                            }
+                            this.projectiles.splice(pIdx, 1); continue;
+                        }
+                        if (proj.origin.screenX !== undefined && proj.target.screenX !== undefined && !isNaN(proj.origin.screenX) && !isNaN(proj.target.screenX)) {
+                            const bx = proj.origin.screenX + (proj.target.screenX - proj.origin.screenX) * proj.progress; const by = proj.origin.screenY + (proj.target.screenY - proj.origin.screenY) * proj.progress;
+                            this.ctx.strokeStyle = '#ffaa00'; this.ctx.lineWidth = 1; this.ctx.shadowBlur = 5; this.ctx.shadowColor = '#ffaa00';
+                            this.ctx.beginPath(); this.ctx.moveTo(proj.origin.screenX, proj.origin.screenY); this.ctx.lineTo(bx, by); this.ctx.stroke(); this.ctx.shadowBlur = 0;
+                        } else { this.projectiles.splice(pIdx, 1); }
+                        
                     } else if (proj.type === 'torpedo') {
                         if (proj.target && proj.target.alive && proj.target.screenX !== undefined && !isNaN(proj.target.screenX)) {
                             const tgtAngle = Math.atan2(proj.target.screenY - proj.y, proj.target.screenX - proj.x);
@@ -1567,7 +1713,8 @@
                             } else if (proj.isShipToShip && proj.target && proj.target.alive) {
                                 proj.target.hull -= 25; this.playSound('explosion');
                                 if (proj.target.hull <= 0) {
-                                    proj.target.alive = false; this.log(`<span class="log-alert">Distress Signal Lost. Transport ${proj.target.id} destroyed by pirates.</span>`); this.systems.morale -= 10;
+                                    proj.target.alive = false; this.log(`<span class="log-alert">Distress Signal Lost. ${proj.target.class} ${proj.target.id} destroyed!</span>`); this.systems.morale -= 10;
+                                    const coords = this.getSafeCoords(proj.target); this.triggerExplosion(coords.x, coords.y, false);
                                 }
                             } else if (!proj.isShipToShip && !proj.isFighterTarget) {
                                 this.triggerShake(5, 200); this.systems.hull -= (this.systems.shields > 0) ? 0 : 5; this.systems.shields = Math.max(0, this.systems.shields - 10); this.playSound('explosion');
