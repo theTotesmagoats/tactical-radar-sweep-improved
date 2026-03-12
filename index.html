@@ -13,7 +13,6 @@
         .header-bar{background-color:#0d1a26;border-bottom:1px solid var(--info-color);padding:4px;text-align:center;font-weight:bold;letter-spacing:3px;margin-bottom:8px;flex-shrink:0;text-transform:uppercase;font-size:0.9em;transition:border-color 0.3s;}
         .top-left{grid-column:1;grid-row:1 / span 2;display:flex;flex-direction:column;gap:10px;} .main-view-container{grid-column:2;grid-row:1 / span 3;display:flex;flex-direction:column;gap:12px;} .top-right{grid-column:3;grid-row:1 / span 2;}
         
-        /* Realistic Bezel & Screen */
         #main-view{
             flex-grow:1; background-color:#000102; border-radius:12px; position:relative; overflow:hidden;
             border:8px solid #142230; 
@@ -31,7 +30,6 @@
         .health-bar{width:100%;height:4px;background-color:#1a2b3c;border-radius:2px;overflow:hidden;margin-top:4px;} .health-fill{height:100%;transition:width 0.2s,background-color 0.5s;}
         #comms-log{font-size:0.8em;line-height:1.4;overflow-y:auto;flex-grow:1;padding-right:5px;color:#ccc;} .log-entry{margin-bottom:6px;border-bottom:1px dashed rgba(255,255,255,0.15);padding-bottom:4px;} .log-time{color:var(--mystery-color);font-size:0.85em;margin-right:8px;} .log-sci{color:#d066ff;font-weight:bold;margin-right:4px;} .log-warn{color:var(--warn-color);font-weight:bold;} .log-alert{color:var(--enemy-color);font-weight:bold;} .log-info{color:var(--info-color);font-style:italic;}
         
-        /* Realistic Tactical Buttons */
         .tactical-btn {
             background: linear-gradient(180deg, #2a3b4c 0%, #111e2b 100%);
             border: 1px solid #000; border-top: 1px solid #4a5b6c; border-radius: 4px;
@@ -45,14 +43,12 @@
         .tactical-btn.btn-info { border-bottom: 3px solid var(--info-color); color: #88eeff; }
         .tactical-btn.btn-white { border-bottom: 3px solid var(--viper-color); color: #fff; }
 
-        /* Legacy Buttons */
         button:not(.tactical-btn){background-color:rgba(255,255,255,0.05);color:var(--primary-color);border:1px solid var(--primary-color);padding:6px 10px;font-family:inherit;cursor:pointer;transition:all 0.2s;font-weight:bold;border-radius:3px;font-size:0.85em;} 
         button:not(.tactical-btn):hover:not(:disabled){background-color:rgba(255,255,255,0.2);box-shadow:0 0 12px rgba(255,255,255,0.4);} 
         button:not(.tactical-btn):disabled{border-color:#333;color:#555;background:rgba(0,0,0,0.5);cursor:not-allowed;} 
         button:not(.tactical-btn):active:not(:disabled){transform:scale(0.97);}
         .btn-mode.active{background-color:var(--primary-color);color:#000;box-shadow:0 0 10px var(--primary-color);}
 
-        /* Pulsar Toggles */
         .pulsar-toggle { appearance:none; width:34px; height:18px; background:#111; border-radius:9px; position:relative; outline:none; cursor:pointer; border:1px solid #444; box-shadow:inset 0 2px 4px rgba(0,0,0,0.8); transition:0.3s; margin:0;}
         .pulsar-toggle::after { content:''; position:absolute; top:1px; left:1px; width:14px; height:14px; background:#666; border-radius:50%; transition:0.2s; box-shadow:0 1px 2px rgba(0,0,0,0.5); }
         .pulsar-toggle:checked { background:var(--alert-color); border-color:#ffaaaa; box-shadow:0 0 10px var(--alert-color); }
@@ -62,7 +58,6 @@
         .flash-red{animation:flashRed 1s infinite;} .flash-warn{animation:flashWarn 1s infinite;} 
         @keyframes flashRed{0%,100%{background-color:rgba(255,51,51,0.1);}50%{background-color:rgba(255,51,51,0.4);}} @keyframes flashWarn{0%,100%{background-color:rgba(255,170,0,0.1);}50%{background-color:rgba(255,170,0,0.4);}}
 
-        /* Structural Integrity Glitch */
         @keyframes structuralFailure {
             0% { transform: translate(0) skew(0deg); filter: hue-rotate(0deg); }
             20% { transform: translate(-2px, 2px) skew(-1deg); filter: hue-rotate(-15deg) saturate(1.5); }
@@ -229,7 +224,7 @@
                 this.systems = { hull: 100, shields: 100, morale: 100, supplies: 100, energy: 100 };
                 this.resources = { credits: 0, data: 0 };
                 this.ammo = { torpedoes: 12 };
-                this.pulsarCooldown = 0; // Out of 30 seconds
+                this.pulsarCooldown = 0; 
                 this.powerMode = 'SYSTEMS'; 
                 this.shieldLockout = 0; 
                 this.alertLevel = 'GREEN'; 
@@ -277,6 +272,7 @@
                 this.lockedTargets = []; 
                 this.projectiles = [];
                 this.particles = [];
+                this.shockwaves = [];
                 this.warpStreaks = []; 
                 
                 this.analyzingTarget = null;
@@ -291,6 +287,7 @@
                 ];
 
                 this.audioCtx = null;
+                this.noiseBuffer = null;
                 this.audioInitialized = false;
                 this.ambientStarted = false;
                 this.timeElapsed = 0;
@@ -367,6 +364,12 @@
                 if (!this.audioCtx) {
                     try { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return; }
                 }
+                if (!this.noiseBuffer) {
+                    const bufferSize = this.audioCtx.sampleRate * 2;
+                    this.noiseBuffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+                    const data = this.noiseBuffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                }
                 if (this.audioCtx.state === 'suspended') {
                     this.audioCtx.resume().then(() => this.startAmbientDrone()).catch(e=>{});
                 } else { this.startAmbientDrone(); }
@@ -376,16 +379,10 @@
                 if (this.ambientStarted || !this.audioCtx) return;
                 this.ambientStarted = true;
                 try {
-                    const osc1 = this.audioCtx.createOscillator();
-                    const osc2 = this.audioCtx.createOscillator();
-                    const gain = this.audioCtx.createGain();
-                    const filter = this.audioCtx.createBiquadFilter();
-
-                    osc1.type = 'sine'; osc1.frequency.value = 40;
-                    osc2.type = 'sine'; osc2.frequency.value = 42; 
-                    filter.type = 'lowpass'; filter.frequency.value = 150; 
-                    gain.gain.value = 0.2; 
-
+                    const osc1 = this.audioCtx.createOscillator(); const osc2 = this.audioCtx.createOscillator();
+                    const gain = this.audioCtx.createGain(); const filter = this.audioCtx.createBiquadFilter();
+                    osc1.type = 'sine'; osc1.frequency.value = 40; osc2.type = 'sine'; osc2.frequency.value = 42; 
+                    filter.type = 'lowpass'; filter.frequency.value = 150; gain.gain.value = 0.2; 
                     osc1.connect(filter); osc2.connect(filter); filter.connect(gain); gain.connect(this.audioCtx.destination);
                     osc1.start(); osc2.start();
                 } catch(e) {}
@@ -394,8 +391,7 @@
             playSound(type) {
                 if (!this.audioCtx || this.audioCtx.state !== 'running') return;
                 try {
-                    const osc = this.audioCtx.createOscillator(); 
-                    const osc2 = this.audioCtx.createOscillator(); 
+                    const osc = this.audioCtx.createOscillator(); const osc2 = this.audioCtx.createOscillator(); 
                     const gain = this.audioCtx.createGain();
                     osc.connect(gain); gain.connect(this.audioCtx.destination);
                     const now = this.audioCtx.currentTime;
@@ -417,19 +413,22 @@
                         gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
                         osc.start(now); osc.stop(now + 0.2);
                     } else if (type === 'torpedo') {
-                        osc.type = 'square'; osc.frequency.setValueAtTime(150, now); 
-                        osc.frequency.linearRampToValueAtTime(400, now + 0.2); osc.frequency.linearRampToValueAtTime(50, now + 0.5);
-                        gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0.2, now + 0.2); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-                        osc.start(now); osc.stop(now + 0.5);
-                    } else if (type === 'explosion') {
-                        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(10, now + 0.5);
-                        gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-                        osc.start(now); osc.stop(now + 0.5);
-                    } else if (type === 'heavy_explosion') {
-                        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(5, now + 1.5);
-                        osc2.type = 'square'; osc2.frequency.setValueAtTime(80, now); osc2.frequency.exponentialRampToValueAtTime(1, now + 1.5);
-                        osc2.connect(gain); gain.gain.setValueAtTime(0.4, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
-                        osc.start(now); osc2.start(now); osc.stop(now + 1.5); osc2.stop(now + 1.5);
+                        osc.type = 'sawtooth'; osc2.type = 'square';
+                        osc.frequency.setValueAtTime(40, now); osc.frequency.linearRampToValueAtTime(300, now + 0.1); osc.frequency.exponentialRampToValueAtTime(20, now + 0.8);
+                        osc2.frequency.setValueAtTime(45, now); osc2.frequency.linearRampToValueAtTime(310, now + 0.1); osc2.frequency.exponentialRampToValueAtTime(22, now + 0.8);
+                        osc2.connect(gain);
+                        gain.gain.setValueAtTime(0.4, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+                        osc.start(now); osc2.start(now); osc.stop(now + 0.8); osc2.stop(now + 0.8);
+                    } else if (type === 'explosion' || type === 'heavy_explosion') {
+                        if (!this.noiseBuffer) return;
+                        const dur = type === 'heavy_explosion' ? 1.5 : 0.6;
+                        const noise = this.audioCtx.createBufferSource(); noise.buffer = this.noiseBuffer;
+                        const filter = this.audioCtx.createBiquadFilter(); filter.type = 'lowpass';
+                        filter.frequency.setValueAtTime(type === 'heavy_explosion' ? 1500 : 3000, now);
+                        filter.frequency.exponentialRampToValueAtTime(50, now + dur);
+                        noise.connect(filter); filter.connect(gain);
+                        gain.gain.setValueAtTime(type === 'heavy_explosion' ? 1.0 : 0.6, now); gain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+                        noise.start(now); noise.stop(now + dur);
                     } else if (type === 'tractor') {
                         osc.type = 'sine'; osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(250, now + 3.0);
                         gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 3.0);
@@ -478,12 +477,13 @@
                     document.body.appendChild(flash);
                     setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 500); }, 100);
                 }
+                
+                this.shockwaves.push({x: x, y: y, radius: 1, maxRadius: isLarge ? 120 : 50, life: 1.0});
                 const count = isLarge ? 80 : 35;
                 for(let i=0; i<count; i++) {
-                    this.particles.push({
-                        x: x, y: y, vx: (Math.random() - 0.5) * (isLarge ? 20 : 15), vy: (Math.random() - 0.5) * (isLarge ? 20 : 15),
-                        life: 1.0, color: Math.random() > 0.5 ? '#ffaa00' : '#ff3333', size: Math.random() * 5 + 2 
-                    });
+                    const speed = (Math.random() * (isLarge ? 30 : 15)) + 5;
+                    const angle = Math.random() * Math.PI * 2;
+                    this.particles.push({ x: x, y: y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 1.0 });
                 }
                 this.updateTargetUI();
             }
@@ -630,10 +630,9 @@
 
                 if (this.pulsarCooldown > 0) {
                     this.pulsarCooldown--;
-                    this.updateTargetUI(); // Refresh toggles and bar
+                    this.updateTargetUI(); 
                 }
 
-                // Wave Check Logic
                 let enemiesRemaining = this.targets.filter(t => t.faction === 'enemy' || t.faction === 'pirate').length;
                 if (enemiesRemaining === 0) {
                     if (this.waveDelay > 0) {
@@ -673,7 +672,6 @@
                     this.log(`<span class="log-sci">[SCIENCE OFF.]</span> ${fact}`);
                 }
 
-                // Ambient Traffic
                 if (Math.random() < 0.1 && this.targets.filter(t => t.faction === 'mystery' || t.faction === 'friendly').length < 3) {
                     let classType = Math.random() > 0.5 ? 'transport' : 'unknown';
                     let faction = classType === 'unknown' ? 'mystery' : 'friendly';
@@ -798,7 +796,7 @@
                     this.crewMissionTimer--;
                     let teamAlive = false; 
                     let gatherRate = 0;
-                    let dataBonus = this.resources.data * 0.02; // Operational multiplier
+                    let dataBonus = this.resources.data * 0.02; 
 
                     this.crew.forEach(c => {
                         if (c.deployed && c.hp > 0) {
@@ -1210,7 +1208,7 @@
                             if(tgt && tgt.alive && tgt.screenX !== undefined && !isNaN(tgt.screenX)) {
                                 const angle = Math.atan2(tgt.screenY - this.shipY, tgt.screenX - this.shipX);
                                 if (!isNaN(angle)) {
-                                    this.projectiles.push({ type: 'torpedo', target: tgt, x: this.shipX, y: this.shipY, angle: angle, speed: 10 });
+                                    this.projectiles.push({ type: 'torpedo', target: tgt, x: this.shipX, y: this.shipY, angle: angle, speed: 12, trail: [] });
                                     if (tgt.isCapital) { tgt.faction = 'enemy'; tgt.color = '#ff3333'; tgt.provoked = true; }
                                 }
                             }
@@ -1499,8 +1497,20 @@
                         }
                         proj.x += Math.cos(proj.angle) * proj.speed; proj.y += Math.sin(proj.angle) * proj.speed;
                         if (isNaN(proj.x) || isNaN(proj.y)) { this.projectiles.splice(pIdx, 1); continue; }
-                        this.ctx.fillStyle = '#ffffff'; this.ctx.shadowBlur = 20; this.ctx.shadowColor = '#33ccff';
-                        this.ctx.beginPath(); this.ctx.arc(proj.x, proj.y, 6, 0, Math.PI*2); this.ctx.fill(); this.ctx.shadowBlur = 0;
+
+                        proj.trail.push({x: proj.x, y: proj.y});
+                        if (proj.trail.length > 8) proj.trail.shift();
+                        this.ctx.beginPath(); this.ctx.strokeStyle = 'rgba(255, 51, 0, 0.8)'; this.ctx.lineWidth = 3;
+                        for(let t=0; t<proj.trail.length; t++) {
+                            if(t===0) this.ctx.moveTo(proj.trail[t].x, proj.trail[t].y);
+                            else this.ctx.lineTo(proj.trail[t].x, proj.trail[t].y);
+                        }
+                        this.ctx.stroke();
+
+                        this.ctx.save(); this.ctx.translate(proj.x, proj.y); this.ctx.rotate(proj.angle);
+                        this.ctx.fillStyle = '#ffaa00';
+                        this.ctx.beginPath(); this.ctx.moveTo(10, 0); this.ctx.lineTo(-6, 5); this.ctx.lineTo(-3, 0); this.ctx.lineTo(-6, -5); this.ctx.closePath(); this.ctx.fill();
+                        this.ctx.restore();
 
                         if (proj.target && Math.hypot(proj.target.screenX - proj.x, proj.target.screenY - proj.y) < (proj.target.isCapital ? 25 : 15)) {
                             proj.target.hull -= 100; 
@@ -1561,11 +1571,20 @@
                 }
 
                 this.ctx.globalAlpha = 1.0;
+
+                for(let idx = this.shockwaves.length - 1; idx >= 0; idx--) {
+                    let sw = this.shockwaves[idx];
+                    sw.radius += (sw.maxRadius - sw.radius) * 0.15; sw.life -= 0.04;
+                    if(sw.life <= 0) { this.shockwaves.splice(idx, 1); continue; }
+                    this.ctx.strokeStyle = `rgba(51, 204, 255, ${sw.life})`; this.ctx.lineWidth = 2 + (sw.life * 4);
+                    this.ctx.beginPath(); this.ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI*2); this.ctx.stroke();
+                }
+
                 for (let idx = this.particles.length - 1; idx >= 0; idx--) {
                     let pt = this.particles[idx]; pt.x += pt.vx; pt.y += pt.vy; pt.life -= 0.03;
                     if (pt.life <= 0) { this.particles.splice(idx, 1); continue; }
-                    this.ctx.fillStyle = pt.color; this.ctx.globalAlpha = pt.life;
-                    this.ctx.beginPath(); this.ctx.arc(pt.x, pt.y, pt.size * Math.max(0.1, (2 - pt.life)), 0, Math.PI*2); this.ctx.fill();
+                    this.ctx.strokeStyle = `rgba(255, ${Math.floor(Math.random()*100 + 100)}, 0, ${pt.life})`; this.ctx.lineWidth = 2;
+                    this.ctx.beginPath(); this.ctx.moveTo(pt.x, pt.y); this.ctx.lineTo(pt.x - pt.vx * 0.4, pt.y - pt.vy * 0.4); this.ctx.stroke();
                 }
 
                 this.ctx.globalCompositeOperation = 'source-over'; this.ctx.globalAlpha = 1.0;
