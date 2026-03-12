@@ -271,11 +271,11 @@
                 this.shockwaves = [];
                 this.warpStreaks = []; 
 
-                // Industrial Station Background Asset
+                // Deep Space Hub - Visually distinct from Hostiles
                 this.indStation = {
-                    id: 'IND-HUB-01', class: 'station', faction: 'friendly', color: '#ffaa00',
-                    isCapital: false, isLinear: true, cx: 300, cy: -80, cz: -100,
-                    vx: 0, vy: 0, vz: 0, hull: 2000, maxHull: 2000, alive: true, frozen: false, beamCooldown: 0
+                    id: 'DEEP-SPACE-HUB', class: 'station', isStation: true, faction: 'friendly', color: '#44aaff',
+                    isCapital: false, isLinear: true, cx: -300, cy: -120, cz: 200,
+                    vx: 0, vy: 0, vz: 0, hull: 5000, maxHull: 5000, alive: true, frozen: false, beamCooldown: 0
                 };
                 this.targets.push(this.indStation);
                 
@@ -393,7 +393,7 @@
                         this.pulsarGain.gain.value = 0.05;
                         this.pulsarOsc.start();
                     }
-                    this.pulsarOsc.frequency.value = 100 + (this.pulsarCharge * 5);
+                    this.pulsarOsc.frequency.value = 100 + (this.pulsarCharge * 8); 
                 } else {
                     if (this.pulsarOsc) {
                         this.pulsarOsc.stop();
@@ -603,7 +603,7 @@
                         isCapital: true, provoked: true, fightersDeployed: false, isLinear: true,
                         cx: Math.random() > 0.5 ? -600 : 600, cy: -150 + Math.random() * 100, cz: Math.random() * 200 - 100, 
                         vx: (Math.random() > 0.5 ? 1 : -1) * (0.2 + Math.random() * 0.3), vy: 0, vz: 0,
-                        hull: 400 + (this.currentWave * 50), maxHull: 400 + (this.currentWave * 50), alive: true, frozen: false, beamCooldown: 0
+                        hull: 250 + (this.currentWave * 25), maxHull: 250 + (this.currentWave * 25), alive: true, frozen: false, beamCooldown: 0
                     });
                 }
             }
@@ -696,12 +696,12 @@
                 }
 
                 // Industrial Station Docking Runs
-                if (Math.random() < 0.04 && !this.targets.some(t => t.class === 'freighter')) {
+                if (Math.random() < 0.08 && !this.targets.some(t => t.class === 'freighter')) {
                     let fid = 'HVY-' + Math.floor(Math.random()*899+100);
                     this.targets.push({
                         id: fid, class: 'freighter', faction: 'friendly', color: '#aaddff',
-                        isLinear: true, cx: 800, cy: Math.random()*200-100, cz: Math.random()*200-100,
-                        vx: 0, vy: 0, vz: 0, speed: 1.5, hull: 2000, maxHull: 2000, alive: true, frozen: false,
+                        isLinear: true, cx: 800, cy: Math.random()*150, cz: Math.random()*100,
+                        vx: 0, vy: 0, vz: 0, speed: 1.0, hull: 300, maxHull: 300, alive: true, frozen: false,
                         dockState: 'approaching', dockTimer: 0, beamCooldown: 0
                     });
                     
@@ -712,7 +712,7 @@
                             this.targets.push({
                                 id: 'TRX-' + Math.floor(Math.random()*899+100), class: 'terrorist', faction: 'enemy', color: '#ff0055',
                                 hunting: fid, isLinear: true, cx: 800 + (Math.random()*100-50), cy: Math.random()*300-150, cz: Math.random()*300-150,
-                                vx: 0, vy: 0, vz: 0, speed: 2.0, hull: 60, maxHull: 60, alive: true, frozen: false, beamCooldown: 2
+                                vx: 0, vy: 0, vz: 0, speed: 1.5, hull: 60, maxHull: 60, alive: true, frozen: false, beamCooldown: 2
                             });
                         }
                     }
@@ -800,26 +800,23 @@
                         }
                     }
 
-                    if (tgt.class === 'freighter' && tgt.dockState === 'docking') {
-                        tgt.dockTimer--;
-                        if (tgt.dockTimer <= 0) {
-                            tgt.dockState = 'departing';
-                            tgt.vx = -2.0; tgt.vy = Math.random()*1 - 0.5; tgt.vz = Math.random()*1 - 0.5;
-                        }
-                    }
-
-                    if (tgt.hunting) {
+                    if (tgt.hunting && tgt.class !== 'terrorist') {
                         let prey = this.targets.find(t => t.id === tgt.hunting);
-                        if (!prey || !prey.alive) prey = this.indStation;
                         if (prey && prey.alive && !tgt.frozen) {
                             if (tgt.beamCooldown <= 0 && Math.random() < 0.2) {
-                                let dist = Math.hypot(prey.cx ? prey.cx - tgt.cx : 0, prey.cy ? prey.cy - tgt.cy : 0); // rough
-                                if (dist < 150) {
-                                    this.projectiles.push({ type: 'enemy_beam', target: prey, origin: tgt, progress: 0, isShipToShip: true });
-                                    tgt.beamCooldown = 3; this.playSound('enemy_laser');
-                                }
+                                this.projectiles.push({ type: 'enemy_beam', target: prey, origin: tgt, progress: 0, isShipToShip: true });
+                                tgt.beamCooldown = 3; this.playSound('enemy_laser');
                             }
                         } else { tgt.hunting = null; }
+                    } else if (tgt.class === 'terrorist' && tgt.beamCooldown <= 0 && !tgt.frozen) {
+                        let prey = this.targets.find(t => t.id === tgt.hunting);
+                        if (prey && prey.alive) {
+                            let dist = Math.hypot(prey.cx - tgt.cx, prey.cy - tgt.cy, prey.cz - tgt.cz);
+                            if (dist < 100) {
+                                this.projectiles.push({ type: 'enemy_beam', target: prey, origin: tgt, progress: 0, isShipToShip: true });
+                                tgt.beamCooldown = 2; this.playSound('enemy_laser');
+                            }
+                        }
                     } else if ((tgt.faction === 'enemy' || tgt.faction === 'pirate') && tgt.beamCooldown <= 0 && !tgt.frozen && !tgt.isCapital && tgt.class !== 'terrorist') {
                         let availVipers = this.fighters.filter(f => f.alive && f.deployed && !(this.missionState === 'ACTIVE' && this.activeMission && this.activeMission.type === 'SQUAD'));
                         if (availVipers.length > 0 && Math.random() < 0.4) {
@@ -1195,7 +1192,7 @@
             attemptLock() {
                 this.initAudio(); let hit = null; let minDist = 30;
                 this.targets.forEach(tgt => {
-                    if (tgt.alive && tgt.screenX !== undefined && tgt.screenY !== undefined && !isNaN(tgt.screenX) && !isNaN(tgt.screenY)) {
+                    if (tgt.alive && !tgt.isStation && tgt.screenX !== undefined && tgt.screenY !== undefined && !isNaN(tgt.screenX) && !isNaN(tgt.screenY)) {
                         const dist = Math.hypot(tgt.screenX - this.mouseX, tgt.screenY - this.mouseY);
                         if (dist < minDist) { minDist = dist; hit = tgt; }
                     }
@@ -1203,7 +1200,7 @@
                 if (hit) {
                     this.playSound('lock'); const idx = this.lockedTargets.indexOf(hit);
                     if (idx > -1) { this.lockedTargets.splice(idx, 1); 
-                    } else if (this.lockedTargets.length < 3) { this.lockedTargets.push(hit); } // MAX TARGETS CHANGED TO 3
+                    } else if (this.lockedTargets.length < 3) { this.lockedTargets.push(hit); }
                     const statusEl = document.getElementById('sensor-readings');
                     if (statusEl && idx === -1) {
                         statusEl.innerHTML = `TARGET LOCKED: ${hit.id}`; setTimeout(() => { if (document.getElementById('sensor-readings')) document.getElementById('sensor-readings').innerHTML = 'SCANNING LOCAL SECTOR'; }, 2000);
@@ -1293,7 +1290,7 @@
                     this.targets.forEach(tgt => {
                         if (tgt.alive) {
                             setTimeout(() => { 
-                                if (!tgt.alive || tgt.class === 'station') return; 
+                                if (!tgt.alive || tgt.isStation) return; 
                                 const coords = this.getSafeCoords(tgt);
                                 tgt.hull -= dmgYield; 
                                 
@@ -1381,11 +1378,11 @@
                 
                 if (this.systems.hull < 90) {
                     let severity = (90 - this.systems.hull) / 90;
-                    if (Math.random() < severity * 0.5) {
-                        let dx = (Math.random() - 0.5) * severity * 30;
-                        let dy = (Math.random() - 0.5) * severity * 30;
+                    if (Math.random() < severity * 0.8) {
+                        let dx = (Math.random() - 0.5) * severity * 40;
+                        let dy = (Math.random() - 0.5) * severity * 40;
                         document.body.style.transform = `translate(${dx}px, ${dy}px)`;
-                        document.body.style.filter = `hue-rotate(${Math.random()*180 - 90}deg) saturate(${1 + severity * 2})`;
+                        document.body.style.filter = `hue-rotate(${Math.random()*180 - 90}deg) saturate(${1 + severity * 3})`;
                     } else { document.body.style.transform = 'none'; document.body.style.filter = 'none'; }
                 } else { document.body.style.transform = 'none'; document.body.style.filter = 'none'; }
 
@@ -1499,10 +1496,16 @@
                         if (tgt.dockState === 'approaching') {
                             let dx = this.indStation.cx - tgt.cx; let dy = this.indStation.cy - tgt.cy; let dz = this.indStation.cz - tgt.cz;
                             let dist = Math.hypot(dx, dy, dz);
-                            if (dist < 5) {
-                                tgt.dockState = 'docking'; tgt.dockTimer = 10;
+                            if (dist < 20) {
+                                tgt.dockState = 'docking'; tgt.dockTimer = 600;
                             } else {
                                 tgt.cx += (dx/dist) * tgt.speed; tgt.cy += (dy/dist) * tgt.speed; tgt.cz += (dz/dist) * tgt.speed;
+                            }
+                        } else if (tgt.dockState === 'docking') {
+                            tgt.dockTimer -= 1;
+                            if (tgt.dockTimer <= 0) {
+                                tgt.dockState = 'departing';
+                                tgt.vx = -tgt.speed; tgt.vy = Math.random()*0.5 - 0.25; tgt.vz = Math.random()*0.5 - 0.25;
                             }
                         } else if (tgt.dockState === 'departing') {
                             tgt.cx += tgt.vx; tgt.cy += tgt.vy; tgt.cz += tgt.vz;
@@ -1514,11 +1517,13 @@
                         }
                     } else if (tgt.class === 'terrorist') {
                         let prey = this.targets.find(t => t.id === tgt.hunting);
-                        if (!prey || !prey.alive) prey = this.indStation; 
-                        if (prey && prey.alive && !tgt.frozen) {
+                        if (!prey || !prey.alive) {
+                            tgt.cx += 2; tgt.cy += 1;
+                            if(tgt.cx > 1000) tgt.alive = false;
+                        } else if (!tgt.frozen) {
                             let dx = prey.cx - tgt.cx; let dy = prey.cy - tgt.cy; let dz = prey.cz - tgt.cz;
                             let dist = Math.hypot(dx, dy, dz);
-                            if (dist > 60) { tgt.cx += (dx/dist) * tgt.speed; tgt.cy += (dy/dist) * tgt.speed; tgt.cz += (dz/dist) * tgt.speed; }
+                            if (dist > 80) { tgt.cx += (dx/dist) * tgt.speed; tgt.cy += (dy/dist) * tgt.speed; tgt.cz += (dz/dist) * tgt.speed; }
                         }
                     }
                     
@@ -1546,7 +1551,7 @@
                         if (aDiff < 0) aDiff += Math.PI * 2;
                         if (aDiff < 0.4) {
                             const gInt = 1.0 - (aDiff / 0.4);
-                            this.ctx.beginPath(); this.ctx.arc(p.px, p.py, 20 * p.scale, 0, Math.PI*2);
+                            this.ctx.beginPath(); this.ctx.arc(p.px, p.py, (tgt.class === 'station' ? 50 : 20) * p.scale, 0, Math.PI*2);
                             this.ctx.fillStyle = `rgba(51, 204, 255, ${gInt * 0.7})`; this.ctx.fill();
                         }
                     }
@@ -1563,17 +1568,17 @@
                         this.ctx.moveTo(p.px - s*2, p.py); this.ctx.lineTo(p.px - s, p.py - s); this.ctx.lineTo(p.px + s, p.py - s);
                         this.ctx.lineTo(p.px + s*2, p.py); this.ctx.lineTo(p.px + s, p.py + s); this.ctx.lineTo(p.px - s, p.py + s);
                     } else if (tgt.class === 'station') {
-                        this.ctx.moveTo(p.px - s*2, p.py - s*1.5); this.ctx.lineTo(p.px + s*2, p.py - s*1.5);
-                        this.ctx.lineTo(p.px + s*1.5, p.py + s*1.5); this.ctx.lineTo(p.px - s*1.5, p.py + s*1.5);
-                        this.ctx.closePath(); this.ctx.fill(); this.ctx.stroke();
-                        this.ctx.strokeRect(p.px - s, p.py - s, s*2, s*2);
+                        let ss = 12 * p.scale;
+                        this.ctx.moveTo(p.px, p.py - ss*4); this.ctx.lineTo(p.px, p.py + ss*4); this.ctx.stroke();
+                        this.ctx.beginPath(); this.ctx.ellipse(p.px, p.py, ss*3, ss, 0, 0, Math.PI*2); this.ctx.stroke();
+                        this.ctx.beginPath(); this.ctx.ellipse(p.px, p.py, ss*4, ss*1.5, 0, 0, Math.PI*2); this.ctx.stroke();
                     } else if (tgt.class === 'freighter') {
-                        this.ctx.moveTo(p.px - s*1.5, p.py - s); this.ctx.lineTo(p.px + s*1.5, p.py - s);
-                        this.ctx.lineTo(p.px + s*1.5, p.py + s); this.ctx.lineTo(p.px - s*1.5, p.py + s);
+                        this.ctx.moveTo(p.px - s*2, p.py - s*1.2); this.ctx.lineTo(p.px + s*2, p.py - s*1.2);
+                        this.ctx.lineTo(p.px + s*2, p.py + s*1.2); this.ctx.lineTo(p.px - s*2, p.py + s*1.2);
                         this.ctx.fillStyle = '#113344'; this.ctx.closePath(); this.ctx.fill(); this.ctx.stroke();
                     } else if (tgt.class === 'terrorist') {
-                        this.ctx.moveTo(p.px, p.py - s*1.2); this.ctx.lineTo(p.px + s*0.8, p.py + s*0.8);
-                        this.ctx.lineTo(p.px, p.py + s*0.4); this.ctx.lineTo(p.px - s*0.8, p.py + s*0.8);
+                        this.ctx.moveTo(p.px, p.py - s*1.5); this.ctx.lineTo(p.px + s*1.2, p.py + s*1.2);
+                        this.ctx.lineTo(p.px, p.py + s*0.6); this.ctx.lineTo(p.px - s*1.2, p.py + s*1.2);
                     } else if (tgt.class === 'fighter') { 
                         this.ctx.moveTo(p.px, p.py - s*1.5); this.ctx.lineTo(p.px + s, p.py + s); this.ctx.lineTo(p.px, p.py + s*0.4); this.ctx.lineTo(p.px - s, p.py + s); 
                     } else if (tgt.class === 'pirate') {
@@ -1587,11 +1592,14 @@
                     
                     if (tgt.class !== 'transport' && tgt.class !== 'freighter' && tgt.class !== 'station') { this.ctx.closePath(); this.ctx.fill(); this.ctx.stroke(); }
                     
-                    this.ctx.fillStyle = tgt.color; this.ctx.font = "10px Courier"; this.ctx.fillText(tgt.id, p.px + s*1.5 + 4, p.py);
+                    this.ctx.fillStyle = tgt.color; this.ctx.font = "10px Courier"; 
+                    this.ctx.fillText(tgt.id, p.px + (tgt.class === 'station' ? 40 * p.scale : s*1.5 + 4), p.py);
+                    
                     if (tgt.isCapital || tgt.class === 'transport' || tgt.class === 'freighter' || tgt.class === 'station') {
                         const hpPct = Math.max(0, tgt.hull / tgt.maxHull); const barW = tgt.class === 'station' ? 60 : 40;
-                        this.ctx.fillStyle = '#f00'; this.ctx.fillRect(p.px - barW/2, p.py + s + 5, barW, 3);
-                        this.ctx.fillStyle = '#0f0'; this.ctx.fillRect(p.px - barW/2, p.py + s + 5, barW * hpPct, 3);
+                        const yOff = tgt.class === 'station' ? 25 : s + 5;
+                        this.ctx.fillStyle = '#f00'; this.ctx.fillRect(p.px - barW/2, p.py + yOff, barW, 3);
+                        this.ctx.fillStyle = '#0f0'; this.ctx.fillRect(p.px - barW/2, p.py + yOff, barW * hpPct, 3);
                     }
 
                     if (this.lockedTargets.includes(tgt)) {
@@ -1779,8 +1787,8 @@
                 if (this.mouseX > 0 && this.mouseY > 0) {
                     let drawX = this.mouseX; let drawY = this.mouseY; let targetColor = 'rgba(255, 255, 255, 0.8)';
                     this.targets.forEach(tgt => {
-                        const hitRadius = tgt.isCapital ? 50 : 30;
-                        if(tgt.alive && !tgt.isOccluded && tgt.screenX !== undefined && !isNaN(tgt.screenX) && Math.hypot(tgt.screenX - this.mouseX, tgt.screenY - this.mouseY) < hitRadius) {
+                        const hitRadius = tgt.isCapital || tgt.class === 'station' ? 50 : 30;
+                        if(tgt.alive && !tgt.isStation && !tgt.isOccluded && tgt.screenX !== undefined && !isNaN(tgt.screenX) && Math.hypot(tgt.screenX - this.mouseX, tgt.screenY - this.mouseY) < hitRadius) {
                             drawX += (tgt.screenX - drawX) * 0.4; drawY += (tgt.screenY - drawY) * 0.4; targetColor = tgt.color;
                         }
                     });
