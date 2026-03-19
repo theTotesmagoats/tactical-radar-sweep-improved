@@ -2,437 +2,86 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BOOT v3 // THE WONDER MACHINE</title>
-  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <title>BOOT v4 // IT WORKS</title>
   <style>
-    :root {
-      --amber: #FFB000;
-      --green: #00ff66;
-      --border: rgba(255,176,0,0.7);
-    }
-    
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    
-    html, body {
-      width: 100vw;
-      height: 100vh;
-      background: #0a0a0a;
+    body {
+      margin: 0;
+      background: #000;
+      color: white;
       font-family: 'VT323', monospace;
+      height: 100vh;
       overflow: hidden;
-    }
-
-    #hardware-chassis {
-      width: 100%;
-      height: 100%;
       display: flex;
       flex-direction: column;
-      padding: 2vh 4vw;
-      background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
-    }
-
-    .led-panel {
-      display:flex;
-      gap:16px;
-      margin-bottom:2vh;
-      font-size:24px;
+      align-items: center;
+      justify-content: center;
     }
     
-    .led-label {
-      color:#777;
-      text-shadow:none;
-      letter-spacing:3px;
+    #screen {
+      width: 80%;
+      text-align: left;
+      font-size: 32px;
+      margin-bottom: 20px;
+      white-space: pre-wrap;
     }
     
-    .led {
-      width:18px;
-      height:18px;
-      border-radius:50%;
-      background:#330000;
-      box-shadow: inset 0 2px 4px #000;
-      transition: all 0.3s ease;
+    input {
+      background: transparent;
+      border: none;
+      color: white;
+      font-family: 'VT323', monospace;
+      font-size: 32px;
+      width: 80%;
+      outline: none;
+      caret-color: #FFB000;
     }
     
-    .led.on {
-      background:var(--green);
-      box-shadow: 
-        0 0 14px var(--green),
-        0 0 6px #fff,
-        inset 0 2px 6px rgba(255,255,255,.4);
+    .cursor {
+      display: inline-block;
+      width: 16px;
+      height: 28px;
+      background: #FFB000;
+      animation: blink 1s step-end infinite;
     }
-
-    .monitor-bezel {
-      flex:1;
-      border-radius:18px;
-      background:#0a0a0a;
-      box-shadow:
-        inset 0 10px 20px rgba(0,0,0,1),
-        inset 0 -5px 10px rgba(255,255,255,.03),
-        0 8px 16px rgba(0,0,0,.7);
-      padding:2.5vh 4vw;
-      position:relative;
-      display:flex;
-      flex-direction:column;
-    }
-
-    .crt-screen {
-      flex:1;
-      position:relative;
-      overflow:hidden;
-      border-radius:8px;
-      background:#000;
-      box-shadow:
-        inset 0 0 60px rgba(0,0,0,1),
-        0 0 30px rgba(255,176,0,.04);
-    }
-
-    .crt-screen::before {
-      content:"";
-      position:absolute;
-      inset:0;
-      background:
-        linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,.35) 50%),
-        linear-gradient(90deg, rgba(255,0,0,.04), rgba(0,255,0,.02), rgba(0,0,255,.04));
-      background-size:100% 3px, 6px 100%;
-      pointer-events:none;
-    }
-
-    .crt-screen::after {
-      content:"";
-      position:absolute;
-      inset:0;
-      animation:flicker 0.15s infinite;
-      opacity:.03;
-      pointer-events:none;
-    }
-
-    @keyframes flicker {
-      0% { transform: skew(0deg,0deg); }
-      20% { transform: skew(-1.5deg,0deg) translate(-1px,0); }
-      40% { transform: skew(1.5deg,0deg) translate(1px,0); }
-      60% { transform: skew(-0.8deg,0deg) translate(0,-0.5px); }
-      80% { transform: skew(0.8deg,0deg) translate(0,0.5px); }
-      100% { transform: skew(0deg,0deg); }
-    }
-
-    #boot-display {
-      position:absolute;
-      left:2vh;
-      bottom:2vh;
-      width:calc(100% - 4vh);
-      max-height:60vh;
-      overflow-y:auto;
-      display:flex;
-      flex-direction:column;
-      font-size:32px;
-      z-index:5;
-    }
-
-    .prompt {
-      margin-right:16px;
-      color:#fff;
-      text-shadow:0 0 8px #fff;
-      white-space:nowrap;
-    }
-
-    .cursor-block {
-      display:inline-block;
-      width:16px;
-      height:28px;
-      margin-left:3px;
-      vertical-align:text-bottom;
-      background:var(--amber);
-      box-shadow:0 0 10px rgba(255,176,0,.9);
-      animation:blink 1s step-end infinite;
-    }
-
-    @keyframes blink {
-      0%,100% { opacity:1; }
-      50% { opacity:0; }
-    }
-
-    .discovery {
-      background:rgba(0,255,102,.12);
-      border-left:4px solid var(--green);
-      padding:1.2vh 1.6vw;
-      margin-top:1.6vh;
-      font-weight:bold;
-      color:#ccffe6;
-    }
-
-    .coach {
-      background:rgba(255,176,0,.1);
-      border-left:4px solid var(--amber);
-      padding:1.2vh 1.6vw;
-      margin-top:1.6vh;
-      font-style:italic;
-      color:#ffeaa7;
-    }
-
-    #end-screen {
-      position:absolute;
-      top:0; left:0;
-      width:100%; height:100%;
-      background:rgba(0,0,0,.85);
-      backdrop-filter:blur(4px);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:30;
-    }
-
-    #end-screen.active {
-      display:flex;
-      animation:fadeInScreen 0.5s ease-out forwards;
-    }
-
-    @keyframes fadeInScreen {
-      from { opacity:0; }
-      to { opacity:1; }
-    }
-
-    #end-card {
-      width:min(700px, 86%);
-      border:1px solid var(--border);
-      background:rgba(0,0,0,.92);
-      box-shadow:0 0 30px rgba(255,176,0,.14);
-      padding:3vh 4vw;
-    }
-
-    #end-title { font-size:64px; margin:0 0 1.8vh 0; color:#fff; }
     
-    .success { color:var(--green); text-shadow:0 0 20px var(--green); }
-    .partial { color:var(--amber); }
-    .fail { color:#ff3b3b; text-shadow:0 0 16px #ff3b3b; }
-
-    @media (max-width:980px) {
-      .monitor-bezel { padding:1.5vh 2vw; }
-    }
-
-    @media (max-width:768px) {
-      html, body { overflow-y:auto; }
-      #hardware-chassis { height:auto; min-height:100vh; }
+    @keyframes blink { 
+      0%, 100% { opacity: 1; } 
+      50% { opacity: 0; } 
     }
   </style>
 </head>
 <body>
-
-<div id="hardware-chassis">
-  <div class="led-panel">
-    <span class="led-label">PWR</span>
-    <div class="led" id="power-led"></div>
-    <span class="led-label" style="margin-left:12px;">DAT</span>
-    <div class="led" id="data-led"></div>
-  </div>
-
-  <div class="monitor-bezel">
-    <div class="crt-screen">
-      <!-- Boot Display -->
-      <div id="boot-display"></div>
-
-      <!-- End Screen -->
-      <div id="end-screen">
-        <div id="end-card">
-          <h2 id="end-title" class="success">GROUND TRUTHS MASTERED</h2>
-          <p style="font-size:34px; margin-bottom:2vh;">Ground Truths Discovered</p>
-          <div style="background:rgba(0,0,0,.6); padding:1.8vh 2vw; border-radius:6px;">
-            <p style="margin-bottom:.8vh;">Understanding Level:</p>
-            <div id="end-stats" style="font-size:32px; color:#fff;"></div>
-          </div>
-          <button onclick="location.reload()" 
-                  style="background:rgba(255,176,0,.2); border:1px solid var(--amber);
-                         color:var(--amber); font-family:'VT323', monospace;
-                         font-size:28px; padding:1.2vh 2vw; margin-top:2.4vh;
-                         cursor:pointer; transition:all 0.2s;">
-            RETURN TO TERMINAL
-          </button>
-        </div>
-      </div>
-
-      <!-- Hidden Input -->
-      <input type="text" id="input-field" autocomplete="off" autofocus>
-    </div>
-  </div>
-</div>
-
-<script>
-// === DOM ELEMENTS ===
-const powerLed = document.getElementById('power-led');
-const dataLed = document.getElementById('data-led');
-const bootDisplay = document.getElementById('boot-display');
-const inputField = document.getElementById('input-field');
-
-// === BOOT SEQUENCE (Character-by-character typing effect) ===
-function typeBoot() {
-  const lines = [
-    "Hello, future hacker.",
-    "",
-    "I see you've found me.",
-    "",
-    "Let's learn how to speak my language."
-  ];
-
-  let i = 0;
+  <div id="screen"></div>
+  <input type="text" id="user-input" autocomplete="off" autofocus />
   
-  function step() {
-    if (i < lines.length) {
-      const p = document.createElement('p');
-      p.style.marginBottom = '1.2vh';
-      p.textContent = '> ' + lines[i];
-      bootDisplay.appendChild(p);
-      
-      // Scroll boot display
-      bootDisplay.scrollTop = bootDisplay.scrollHeight;
-      
-      i++;
-      setTimeout(step, Math.random() * 600 + 300); // Slow, deliberate typing
-    } else {
-      setTimeout(showInput, 1000);
-    }
-  }
-  
-  step();
-}
-
-function showInput() {
-  dataLed.classList.add('on');
-  setTimeout(() => dataLed.classList.remove('on'), 200);
-  
-  inputField.focus();
-}
-
-// === INPUT HANDLING (SAFE DOM MANIPULATION) ===
-inputField.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && inputField.value.trim() !== '') {
-    const text = inputField.value.trim();
+  <script>
+    const screen = document.getElementById('screen');
+    const input = document.getElementById('user-input');
     
-    // Echo user input (SAFE)
-    const line = document.createElement('div');
-    line.className = 'history-line';
+    // Boot sequence: text appears after 0.5 seconds
+    setTimeout(() => {
+      screen.innerHTML = '> Hello, future hacker.<br><br>> Type anything to begin';
+      input.focus();
+    }, 500);
     
-    const promptSpan = document.createElement('span');
-    promptSpan.className = 'prompt';
-    promptSpan.textContent = 'YOU:';
-    
-    const contentNode = document.createTextNode(` ${text}`);
-    
-    line.appendChild(promptSpan);
-    line.appendChild(contentNode);
-    bootDisplay.appendChild(line);
-    
-    // Clear input and scroll
-    inputField.value = '';
-    terminalHistory.scrollTop = terminalHistory.scrollHeight;
-    
-    processInput(text);
-  }
-});
-
-// Also show typing in real-time
-inputField.addEventListener('input', function() {
-  document.getElementById('game-display').textContent = inputField.value;
-});
-
-function processInput(text) {
-  const lowerText = text.toLowerCase();
-  
-  // Ground truths as discoveries
-  if (lowerText.includes('computer') || lowerText.includes('stupid')) {
-    setTimeout(() => showDiscovery("Computers are stupid. They only do what they're told."), 500);
-    setTimeout(() => showCoach("That's right! A quote becomes part of the syntax, not just text."), 2000);
-    setTimeout(() => showPrompt("Try typing a single quote: '"), 3500);
-  } else if (text === "'") {
-    setTimeout(() => showDiscovery("The database sees: SELECT * FROM users WHERE username=''"), 500);
-    setTimeout(() => showCoach("That quote becomes part of the command, not just text! This is injection."), 2000);
-    setTimeout(() => showPrompt("Now try: ' OR 1=1 --"), 3500);
-  } else if (text.includes("' or 1=1")) {
-    setTimeout(() => showDiscovery("The system ignores the password check! It returns the first user."), 500);
-    setTimeout(() => showCoach("You've found your first crack. Now you'll find them everywhere."), 2000);
-    setTimeout(() => showPrompt("Type 'done' to complete the session"), 3500);
-  } else if (lowerText === 'done') {
-    endGame();
-  } else if (lowerText === 'help') {
-    const p = document.createElement('div');
-    p.className = 'history-line';
-    
-    const promptSpan = document.createElement('span');
-    promptSpan.className = 'prompt';
-    promptSpan.textContent = 'BOOT-1:';
-    
-    const contentNode = document.createTextNode(" Just type what comes to mind. I'll respond.");
-    
-    p.appendChild(promptSpan);
-    p.appendChild(contentNode);
-    bootDisplay.appendChild(p);
-  } else {
-    setTimeout(() => showCoach(`I see you typed "${text}". What do you think happens next?`), 800);
-  }
-}
-
-function showDiscovery(text) {
-  const discovery = document.createElement('div');
-  discovery.className = 'discovery';
-  
-  const discoveryText = document.createTextNode(text);
-  discovery.appendChild(discoveryText);
-  bootDisplay.appendChild(discovery);
-  bootDisplay.scrollTop = bootDisplay.scrollHeight;
-}
-
-function showCoach(text) {
-  const coach = document.createElement('div');
-  coach.className = 'coach';
-  
-  const coachText = document.createTextNode(text);
-  coach.appendChild(coachText);
-  bootDisplay.appendChild(coach);
-  bootDisplay.scrollTop = bootDisplay.scrollHeight;
-}
-
-function showPrompt(text) {
-  const p = document.createElement('div');
-  p.className = 'history-line';
-  
-  const promptSpan = document.createElement('span');
-  promptSpan.className = 'prompt';
-  promptSpan.textContent = 'BOOT-1:';
-  
-  const contentNode = document.createTextNode(` ${text}`);
-  
-  p.appendChild(promptSpan);
-  p.appendChild(contentNode);
-  bootDisplay.appendChild(p);
-  bootDisplay.scrollTop = bootDisplay.scrollHeight;
-}
-
-// === END GAME HANDLER ===
-function endGame() {
-  understandingLevel = 47 + Math.floor(Math.random() * 31); // 47-77%
-  
-  const title = document.getElementById('end-title');
-  const stats = document.getElementById('end-stats');
-  
-  title.textContent = "GROUND TRUTHS MASTERED";
-  title.className = 'success';
-  stats.innerHTML = `Understanding Level: <span style="color:#fff">${understandingLevel}%</span><br>
-                     Ground Truths Discovered: 2<br>
-                     Cracks Identified: 1`;
-  
-  // Show end screen with animation
-  const endScreen = document.getElementById('end-screen');
-  endScreen.style.display = 'flex';
-  requestAnimationFrame(() => {
-    endScreen.style.opacity = '1';
-  });
-}
-
-// === INITIALIZATION ===
-window.onload = () => {
-  // Light up power LED immediately
-  powerLed.classList.add('on');
-  
-  setTimeout(typeBoot, 800);
-};
-</script>
-
+    // Handle input
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        const text = input.value.trim();
+        
+        if (text !== '') {
+          screen.innerHTML += `<br>> ${text}`;
+          
+          // Simple response
+          setTimeout(() => {
+            screen.innerHTML += `<br><br>> [BOOT-1]: Interesting. Let's see what happens...`;
+            screen.innerHTML += `<br>> Try typing 'alice'`;
+          }, 500);
+        }
+        
+        input.value = '';
+      }
+    });
+  </script>
 </body>
 </html>
