@@ -1,390 +1,138 @@
-<script>
-const powerLed = document.getElementById('power-led');
-const dataLed = document.getElementById('data-led');
-const bootDisplay = document.getElementById('boot-display');
-const introSequence = document.getElementById('intro-sequence');
-const menuContainer = document.getElementById('menu-container');
-const gameInterface = document.getElementById('game-interface');
-const terminalHistory = document.getElementById('terminal-history');
-const gameDisplay = document.getElementById('game-display');
-const understandingDisplay = document.getElementById('understanding-display');
-const endScreen = document.getElementById('end-screen');
-const endTitle = document.getElementById('end-title');
-const endStats = document.getElementById('end-stats');
-
-let terminalState = 'BOOT';
-let currentPath = null;
-let lessonStep = 0;
-let understandingLevel = 0;
-let inputBuffer = '';
-
-const bootLines = [
-  'Booting Macintosh System v2.3...',
-  'Initializing neural interface...',
-  'Loading ground truths module...',
-  'Connecting to coach BOOT-1...',
-  '[WAITING FOR USER]'
-];
-
-function blinkDataLed(ms = 150) {
-  dataLed.classList.add('on');
-  setTimeout(() => dataLed.classList.remove('on'), ms);
-}
-
-function show(el, display = 'block') {
-  el.style.display = display;
-  el.style.opacity = '1';
-  el.style.pointerEvents = 'auto';
-}
-
-function hide(el) {
-  el.style.opacity = '0';
-  el.style.pointerEvents = 'none';
-  el.style.display = 'none';
-}
-
-function appendHistory(label, text) {
-  const line = document.createElement('div');
-  line.className = 'history-line';
-
-  const prompt = document.createElement('span');
-  prompt.className = 'prompt';
-  prompt.textContent = label;
-
-  line.appendChild(prompt);
-  line.appendChild(document.createTextNode(' ' + text));
-  terminalHistory.appendChild(line);
-  terminalHistory.scrollTop = terminalHistory.scrollHeight;
-}
-
-function appendBox(text, className) {
-  const div = document.createElement('div');
-  div.className = className;
-  div.textContent = text;
-  terminalHistory.appendChild(div);
-  terminalHistory.scrollTop = terminalHistory.scrollHeight;
-}
-
-function appendCode(text) {
-  const div = document.createElement('div');
-  div.className = 'history-line';
-  div.style.color = 'var(--amber)';
-  div.style.marginLeft = '1.5vw';
-  div.textContent = text;
-  terminalHistory.appendChild(div);
-  terminalHistory.scrollTop = terminalHistory.scrollHeight;
-}
-
-function setUnderstanding(val) {
-  understandingLevel = Math.max(0, Math.min(100, val));
-  understandingDisplay.textContent = understandingLevel + '%';
-}
-
-function addUnderstanding(delta) {
-  setUnderstanding(understandingLevel + delta);
-}
-
-function clearInput() {
-  inputBuffer = '';
-  gameDisplay.textContent = '';
-}
-
-function renderInput() {
-  gameDisplay.textContent = inputBuffer;
-}
-
-function normalizeCommand(raw) {
-  return raw
-    .trim()
-    .replace(/^['"]+|['"]+$/g, '')
-    .toLowerCase();
-}
-
-function isInjectionAttempt(raw) {
-  const s = raw.trim().toLowerCase();
-  return s.includes("' or 1=1") || s.includes('" or 1=1') || s.includes("or 1=1 --");
-}
-
-function typeBoot() {
-  let i = 0;
-
-  function step() {
-    if (i >= bootLines.length) {
-      setTimeout(finishBoot, 300);
-      return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BOOT v4.1 // IT ACTUALLY WORKS</title>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      color: white;
+      font-family: 'VT323', monospace;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-
-    const p = document.createElement('p');
-    p.style.marginBottom = '1.2vh';
-    p.textContent = '> ' + bootLines[i];
-    bootDisplay.appendChild(p);
-    bootDisplay.scrollTop = bootDisplay.scrollHeight;
-
-    blinkDataLed(130);
-    i++;
-    setTimeout(step, Math.random() * 250 + 180);
-  }
-
-  step();
-}
-
-function finishBoot() {
-  hide(bootDisplay);
-
-  setTimeout(() => {
-    show(introSequence, 'block');
-
-    setTimeout(() => {
-      hide(introSequence);
-      setTimeout(showMenu, 300);
-    }, 2200);
-  }, 500);
-}
-
-function showMenu() {
-  terminalState = 'MENU';
-  show(menuContainer, 'block');
-}
-
-function selectPath(num) {
-  currentPath = num;
-  lessonStep = 0;
-  setUnderstanding(0);
-  clearInput();
-
-  hide(menuContainer);
-  show(gameInterface, 'flex');
-  terminalState = 'GAME';
-
-  const names = {
-    1: 'Trust the Machine',
-    2: 'Hack a Fake Website',
-    3: 'How Data Flows'
-  };
-
-  appendHistory('BOOT-1:', `Selected: [${num}] ${names[num]}`);
-
-  setTimeout(() => {
-    if (num === 1) {
-      appendHistory('BOOT-1:', 'First step: computers are literal. Type alice to begin.');
-    } else if (num === 2) {
-      appendHistory('BOOT-1:', 'You are at a fake login screen. Type alice to begin.');
-    } else {
-      appendHistory('BOOT-1:', 'Imagine data flowing through pipes. Type map to begin.');
+    
+    #container {
+      width: 90%;
+      max-width: 800px;
+      margin-top: 10vh;
+      position: relative;
     }
-  }, 400);
-}
-
-function showUnknownCommand(cmd) {
-  appendHistory('BOOT-1:', `Unknown command: "${cmd}". Try help.`);
-}
-
-function handlePath1or2(raw, cmd) {
-  if (cmd === 'help') {
-    if (lessonStep === 0) appendHistory('BOOT-1:', 'Try typing alice.');
-    else if (lessonStep === 1) appendHistory('BOOT-1:', "Now type a single quote: '");
-    else if (lessonStep === 2) appendHistory('BOOT-1:', "Now try: ' OR 1=1 --");
-    else appendHistory('BOOT-1:', 'Type done to finish.');
-    return;
-  }
-
-  if (cmd === 'done' && lessonStep < 3) {
-    appendHistory('BOOT-1:', 'Finish the exercise first.');
-    return;
-  }
-
-  if (lessonStep === 0 && cmd === 'alice') {
-    lessonStep = 1;
-    addUnderstanding(18);
-
-    appendHistory('BOOT-1:', 'You typed alice. The system builds this command:');
-    appendCode("SELECT * FROM users WHERE username='alice'");
-    setTimeout(() => {
-      appendBox("Computers are literal. They only do what they are told.", 'coach-msg');
-    }, 700);
-    setTimeout(() => {
-      appendHistory('BOOT-1:', "Now type just a single quote: '");
-    }, 1400);
-    return;
-  }
-
-  if (lessonStep === 1 && raw.trim() === "'") {
-    lessonStep = 2;
-    addUnderstanding(16);
-
-    appendHistory('BOOT-1:', "You typed a single quote. The system now builds:");
-    appendCode("SELECT * FROM users WHERE username='' AND password=''");
-    setTimeout(() => {
-      appendBox("GROUND TRUTH: The database does not decide. It follows instructions.", 'ground-truth');
-    }, 700);
-    setTimeout(() => {
-      appendHistory('BOOT-1:', "That quote became part of the syntax. Now try: ' OR 1=1 --");
-    }, 1400);
-    return;
-  }
-
-  if (lessonStep === 2 && isInjectionAttempt(raw)) {
-    lessonStep = 3;
-    addUnderstanding(24);
-
-    appendHistory('BOOT-1:', "You typed an injection string.");
-    appendCode("SELECT * FROM users WHERE username='' OR 1=1 --' AND password=''");
-    setTimeout(() => {
-      appendHistory('BOOT-1:', 'The password check gets commented out.');
-    }, 700);
-    setTimeout(() => {
-      appendBox("GROUND TRUTH: Security failures usually begin as bad assumptions.", 'ground-truth');
-      appendBox("You just saw how input can take control of the query itself.", 'coach-msg');
-    }, 1400);
-    setTimeout(() => {
-      appendHistory('BOOT-1:', 'Type done to complete the session.');
-    }, 2200);
-    return;
-  }
-
-  if (cmd === 'done' && lessonStep >= 3) {
-    endGame();
-    return;
-  }
-
-  showUnknownCommand(raw);
-}
-
-function handlePath3(raw, cmd) {
-  if (cmd === 'help') {
-    if (lessonStep === 0) appendHistory('BOOT-1:', 'Try typing map.');
-    else if (lessonStep === 1) appendHistory('BOOT-1:', 'Which device filters traffic first? Type firewall.');
-    else appendHistory('BOOT-1:', 'Type done to finish.');
-    return;
-  }
-
-  if (cmd === 'done' && lessonStep < 2) {
-    appendHistory('BOOT-1:', 'Finish the topology exercise first.');
-    return;
-  }
-
-  if (lessonStep === 0 && (cmd === 'map' || cmd === 'network')) {
-    lessonStep = 1;
-    addUnderstanding(20);
-
-    appendHistory('BOOT-1:', 'You map the route:');
-    appendCode('[LOCAL_HOST] -> [FIREWALL] -> [SERVER_CLUSTER]');
-    setTimeout(() => {
-      appendBox('Every system has a topology. Weakness usually lives at a joint or choke point.', 'coach-msg');
-    }, 700);
-    setTimeout(() => {
-      appendHistory('BOOT-1:', 'Which device filters traffic first? Type firewall.');
-    }, 1400);
-    return;
-  }
-
-  if (lessonStep === 1 && cmd === 'firewall') {
-    lessonStep = 2;
-    addUnderstanding(22);
-
-    appendHistory('BOOT-1:', 'Correct. The firewall is the first obvious choke point.');
-    setTimeout(() => {
-      appendBox('GROUND TRUTH: Most systems are broken by understanding flow and trust boundaries, not by magic.', 'ground-truth');
-    }, 700);
-    setTimeout(() => {
-      appendHistory('BOOT-1:', 'Type done to complete the session.');
-    }, 1400);
-    return;
-  }
-
-  if (cmd === 'done' && lessonStep >= 2) {
-    endGame();
-    return;
-  }
-
-  showUnknownCommand(raw);
-}
-
-function processInput(raw) {
-  const cmd = normalizeCommand(raw);
-
-  if (currentPath === 1 || currentPath === 2) {
-    handlePath1or2(raw, cmd);
-  } else if (currentPath === 3) {
-    handlePath3(raw, cmd);
-  }
-}
-
-function endGame() {
-  terminalState = 'END';
-
-  if (currentPath === 3) {
-    endTitle.textContent = 'NETWORK TOPOLOGY MASTERED';
-    endTitle.className = 'success';
-    endStats.innerHTML =
-      `Understanding Level: <span style="color:#fff">${Math.max(understandingLevel, 55)}%</span><br>` +
-      `Topologies Mapped: 1<br>` +
-      `Choke Points Identified: 1`;
-  } else {
-    endTitle.textContent = 'GROUND TRUTHS MASTERED';
-    endTitle.className = 'success';
-    endStats.innerHTML =
-      `Understanding Level: <span style="color:#fff">${Math.max(understandingLevel, 58)}%</span><br>` +
-      `Ground Truths Discovered: 2<br>` +
-      `Cracks Identified: 1`;
-  }
-
-  show(endScreen, 'flex');
-}
-
-document.addEventListener('click', (e) => {
-  const item = e.target.closest('.menu-item');
-  if (terminalState === 'MENU' && item) {
-    blinkDataLed(180);
-    selectPath(Number(item.dataset.path || item.getAttribute('onclick')?.match(/\d+/)?.[0]));
-  }
-});
-
-document.addEventListener('keydown', (e) => {
-  if (terminalState === 'MENU') {
-    if (['1', '2', '3'].includes(e.key)) {
-      e.preventDefault();
-      blinkDataLed(180);
-      selectPath(Number(e.key));
+    
+    #screen {
+      min-height: 300px;
+      font-size: 28px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      max-height: 70vh;
+      margin-bottom: 16px;
+      padding-right: 10px;
     }
-    return;
-  }
-
-  if (terminalState !== 'GAME') return;
-
-  if (e.key === 'Backspace') {
-    e.preventDefault();
-    inputBuffer = inputBuffer.slice(0, -1);
-    renderInput();
-    return;
-  }
-
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    const raw = inputBuffer.trim();
-    if (!raw) return;
-
-    appendHistory('YOU:', raw);
-    clearInput();
-    processInput(raw);
-    return;
-  }
-
-  if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-    e.preventDefault();
-    inputBuffer += e.key;
-    renderInput();
-  }
-});
-
-window.onload = () => {
-  powerLed.classList.add('on');
-
-  hide(introSequence);
-  hide(menuContainer);
-  hide(gameInterface);
-  hide(endScreen);
-
-  setTimeout(typeBoot, 700);
-};
-</script>
+    
+    #screen::-webkit-scrollbar { width: 8px; }
+    #screen::-webkit-scrollbar-track { background: transparent; }
+    #screen::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+    
+    .boot-line {
+      margin-bottom: 12px;
+    }
+    
+    input {
+      background: transparent;
+      border: none;
+      color: white;
+      font-family: 'VT323', monospace;
+      font-size: 28px;
+      width: 100%;
+      outline: none;
+      caret-color: #FFB000;
+    }
+    
+    .cursor-block {
+      display: inline-block;
+      width: 16px;
+      height: 24px;
+      background: #FFB000;
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+    
+    @keyframes blink { 
+      0%, 100% { opacity: 1; } 
+      50% { opacity: 0; } 
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="screen"></div>
+    <input type="text" id="user-input" autocomplete="off" />
+  </div>
+  
+  <script>
+    const screen = document.getElementById('screen');
+    const input = document.getElementById('user-input');
+    
+    // Boot sequence: text appears after 0.5 seconds
+    setTimeout(() => {
+      // Add boot lines one by one
+      addLine('> Hello, future hacker.');
+      setTimeout(() => addLine('> I see you\'ve found me.'), 400);
+      setTimeout(() => addLine('> Let\'s learn how to speak my language.'), 800);
+      setTimeout(() => {
+        // Show input and focus it
+        input.style.display = 'block';
+        input.focus();
+        
+        // Add the "typing" indicator after a pause
+        const typingLine = document.createElement('div');
+        typingLine.className = 'boot-line';
+        typingLine.innerHTML = '> Type anything to begin<span class="cursor-block"></span>';
+        screen.appendChild(typingLine);
+        screen.scrollTop = screen.scrollHeight;
+      }, 1200);
+    }, 500);
+    
+    // Add a line to the screen and auto-scroll
+    function addLine(text) {
+      const line = document.createElement('div');
+      line.className = 'boot-line';
+      line.textContent = text;
+      screen.appendChild(line);
+      screen.scrollTop = screen.scrollHeight;
+    }
+    
+    // Handle input
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        const text = input.value.trim();
+        
+        if (text !== '') {
+          addLine('> ' + text);
+          
+          // Simple response
+          setTimeout(() => {
+            addLine('');
+            setTimeout(() => addLine('[BOOT-1]: Interesting. Let\'s see what happens...'), 300);
+            setTimeout(() => addLine('[BOOT-1]: Try typing \'alice\' to begin'), 800);
+          }, 500);
+        }
+        
+        input.value = '';
+      }
+    });
+    
+    // Hide input initially
+    input.style.display = 'none';
+  </script>
+</body>
+</html>
