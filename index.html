@@ -2,85 +2,914 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BOOT v4 // IT WORKS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BOOT v2.3 // GROUND TRUTH TERMINAL</title>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
   <style>
-    body {
+    :root {
+      --amber: #ffb000;
+      --green: #00ff66;
+      --red: #ff4d4d;
+      --bg: #050505;
+      --border: rgba(255, 176, 0, 0.7);
+      --panel: rgba(0, 0, 0, 0.7);
+      --text: #f2f2f2;
+      --muted: #9a9a9a;
+    }
+
+    * {
       margin: 0;
-      background: #000;
-      color: white;
-      font-family: 'VT323', monospace;
-      height: 100vh;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #0a0a0a;
+      font-family: "VT323", monospace;
       overflow: hidden;
+    }
+
+    body {
+      color: var(--text);
+    }
+
+    #hardware-chassis {
+      width: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
+      padding: 2vh 4vw;
+      background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+    }
+
+    .led-panel {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 2vh;
+      font-size: 24px;
+    }
+
+    .led-label {
+      color: #777;
+      letter-spacing: 3px;
+    }
+
+    .led {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #2e0a0a;
+      box-shadow: inset 0 2px 4px #000;
+      transition: all 0.2s ease;
+    }
+
+    .led.on {
+      background: var(--green);
+      box-shadow:
+        0 0 14px var(--green),
+        0 0 6px #fff,
+        inset 0 2px 6px rgba(255,255,255,.4);
+    }
+
+    .monitor-bezel {
+      flex: 1;
+      border-radius: 18px;
+      background: #0a0a0a;
+      box-shadow:
+        inset 0 10px 20px rgba(0,0,0,1),
+        inset 0 -5px 10px rgba(255,255,255,.03),
+        0 8px 16px rgba(0,0,0,.7);
+      padding: 2.5vh 4vw;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .crt-screen {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      background: #000;
+      box-shadow:
+        inset 0 0 60px rgba(0,0,0,1),
+        0 0 30px rgba(255,176,0,.04);
+      min-height: 0;
+    }
+
+    .crt-screen::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,.35) 50%),
+        linear-gradient(90deg, rgba(255,0,0,.04), rgba(0,255,0,.02), rgba(0,0,255,.04));
+      background-size: 100% 3px, 6px 100%;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    .crt-screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      animation: flicker 0.15s infinite;
+      opacity: .03;
+      pointer-events: none;
+      z-index: 51;
+    }
+
+    @keyframes flicker {
+      0%   { transform: skew(0deg, 0deg); }
+      20%  { transform: skew(-1.5deg, 0deg) translate(-1px, 0); }
+      40%  { transform: skew(1.5deg, 0deg) translate(1px, 0); }
+      60%  { transform: skew(-0.8deg, 0deg) translate(0, -0.5px); }
+      80%  { transform: skew(0.8deg, 0deg) translate(0, 0.5px); }
+      100% { transform: skew(0deg, 0deg); }
+    }
+
+    #boot-display {
+      position: absolute;
+      left: 2vh;
+      bottom: 2vh;
+      width: calc(100% - 4vh);
+      max-height: 42vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1vh;
+      font-size: 32px;
+      z-index: 5;
+      color: var(--amber);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,176,0,.35) transparent;
+    }
+
+    .boot-line {
+      text-shadow: 0 0 8px rgba(255,176,0,.25);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .screen-layer {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+      z-index: 10;
+    }
+
+    .screen-layer.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #intro-sequence {
+      display: none;
+      width: 86%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      position: absolute;
+      font-size: 34px;
+    }
+
+    #menu-container {
+      display: none;
+      width: 72%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      position: absolute;
+    }
+
+    #game-interface {
+      display: none;
+      z-index: 20;
+      padding: 2vh 2vw;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+    }
+
+    #end-screen {
+      display: none;
+      z-index: 30;
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(4px);
       align-items: center;
       justify-content: center;
     }
-    
-    #screen {
-      width: 80%;
-      text-align: left;
-      font-size: 32px;
-      margin-bottom: 20px;
-      white-space: pre-wrap;
+
+    h2 {
+      color: #fff;
+      font-size: 52px;
+      text-shadow: 0 0 18px rgba(255,255,255,.7);
+      letter-spacing: 4px;
+      margin-bottom: 1.2vh;
     }
-    
-    input {
-      background: transparent;
-      border: none;
-      color: white;
-      font-family: 'VT323', monospace;
-      font-size: 32px;
-      width: 80%;
+
+    .sys-ok {
+      color: var(--green);
+      text-shadow: 0 0 6px var(--green);
+      font-weight: bold;
+    }
+
+    .menu-item {
+      padding: 1.4vh 2vw;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      background: rgba(255,176,0,.06);
+      border-left: 4px solid var(--amber);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .menu-item:hover,
+    .menu-item:focus-visible {
+      background: rgba(255,176,0,.18);
+      transform: translateX(8px);
+      box-shadow: 0 0 14px rgba(255,176,0,.3);
       outline: none;
-      caret-color: #FFB000;
     }
-    
-    .cursor {
+
+    .highlight {
+      color: #fff;
+      font-weight: bold;
+      text-shadow: 0 0 8px #fff;
+    }
+
+    .status-strip {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 1.4vh;
+      flex-wrap: wrap;
+    }
+
+    .status-box {
+      flex: 1 1 240px;
+      background: rgba(0,0,0,.5);
+      border: 1px solid var(--border);
+      box-shadow: 0 0 8px rgba(255,176,0,.1);
+      padding: 1.2vh 1.4vw;
+      min-width: 0;
+    }
+
+    .status-title {
+      font-size: 22px;
+      color: #d2b162;
+      margin-bottom: .8vh;
+      letter-spacing: 2px;
+    }
+
+    #terminal-history {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 2vh;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,176,0,.4) transparent;
+      min-height: 0;
+    }
+
+    .history-line,
+    .coach-msg,
+    .ground-truth,
+    .system-alert,
+    .code-line {
+      margin-bottom: 1.2vh;
+      font-size: 28px;
+      line-height: 1.35;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .prompt {
+      margin-right: 12px;
+      color: #fff;
+      text-shadow: 0 0 8px #fff;
+      white-space: nowrap;
+    }
+
+    .display-text {
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--amber);
+    }
+
+    .code-line {
+      margin-left: 1.8vw;
+      color: var(--amber);
+      text-shadow: 0 0 8px rgba(255,176,0,.18);
+    }
+
+    .coach-msg {
+      background: rgba(255,176,0,.1);
+      border-left: 4px solid var(--amber);
+      padding: 1.2vh 1.6vw;
+      color: #ffeaa7;
+      font-style: italic;
+    }
+
+    .ground-truth {
+      background: rgba(0,255,102,.12);
+      border-left: 4px solid var(--green);
+      padding: 1.2vh 1.6vw;
+      color: #ccffe6;
+      font-weight: bold;
+    }
+
+    .system-alert {
+      background: rgba(255,0,0,.12);
+      border-left: 4px solid var(--red);
+      padding: 1.2vh 1.6vw;
+      color: #ffbcbc;
+    }
+
+    #game-input-line {
+      margin-top: 1.2vh;
+      display: flex;
+      align-items: center;
+      min-height: 40px;
+      flex-wrap: wrap;
+      z-index: 25;
+    }
+
+    .cursor-block {
       display: inline-block;
       width: 16px;
       height: 28px;
-      background: #FFB000;
+      margin-left: 4px;
+      vertical-align: text-bottom;
+      background: var(--amber);
+      box-shadow: 0 0 10px rgba(255,176,0,.9);
       animation: blink 1s step-end infinite;
     }
-    
-    @keyframes blink { 
-      0%, 100% { opacity: 1; } 
-      50% { opacity: 0; } 
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    #end-card {
+      width: min(700px, 86%);
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.92);
+      box-shadow: 0 0 30px rgba(255,176,0,.14);
+      padding: 3vh 4vw;
+    }
+
+    #end-title {
+      font-size: 58px;
+      margin-bottom: 1.8vh;
+      color: #fff;
+    }
+
+    .success {
+      color: var(--green) !important;
+      text-shadow: 0 0 20px var(--green);
+    }
+
+    .partial {
+      color: var(--amber) !important;
+    }
+
+    .fail {
+      color: var(--red) !important;
+      text-shadow: 0 0 16px var(--red);
+    }
+
+    button {
+      background: rgba(255,176,0,.2);
+      border: 1px solid var(--amber);
+      color: var(--amber);
+      font-family: "VT323", monospace;
+      font-size: 28px;
+      padding: 1.2vh 2vw;
+      margin-top: 2.4vh;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      background: rgba(255,176,0,.28);
+      box-shadow: 0 0 14px rgba(255,176,0,.22);
+    }
+
+    #input-field {
+      position: absolute;
+      left: -9999px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 980px) {
+      .monitor-bezel { padding: 1.5vh 2vw; }
+      h2 { font-size: 38px; }
+      #end-title { font-size: 42px; }
+    }
+
+    @media (max-width: 768px) {
+      html, body { overflow-y: auto; }
+      #hardware-chassis { height: auto; min-height: 100vh; }
+      .history-line, .coach-msg, .ground-truth, .system-alert, .code-line { font-size: 22px; }
+      #boot-display { font-size: 24px; }
+      .menu-item span:last-child { font-size: 20px !important; }
     }
   </style>
 </head>
 <body>
-  <div id="screen"></div>
-  <input type="text" id="user-input" autocomplete="off" autofocus />
-  
+  <div id="hardware-chassis">
+    <div class="led-panel">
+      <span class="led-label">PWR</span>
+      <div class="led" id="power-led"></div>
+      <span class="led-label" style="margin-left:12px;">DAT</span>
+      <div class="led" id="data-led"></div>
+    </div>
+
+    <div class="monitor-bezel">
+      <div class="crt-screen">
+        <div id="boot-display" aria-live="polite"></div>
+
+        <div id="intro-sequence" class="screen-layer" aria-hidden="true">
+          <h2>SYSTEM READY</h2>
+          <p style="color: var(--amber); text-shadow: 0 0 8px var(--amber);">
+            Ground Truth Terminal v2.3 // Uplink Secure
+          </p>
+          <p style="margin-top: 3vh; color: #fff;">
+            &gt; mounting encrypted learning volume... <span class="sys-ok">[OK]</span><br>
+            &gt; establishing secure neural interface... <span class="sys-ok">[OK]</span><br>
+            &gt; loading ground truths... <span class="sys-ok">[OK]</span><br>
+            &gt; coach BOOT-1 online... <span class="sys-ok">[OK]</span>
+          </p>
+          <p style="margin-top: 3vh; color: #ffeaa7;">
+            &gt; AWAITING INPUT...
+          </p>
+        </div>
+
+        <div id="menu-container" class="screen-layer" aria-hidden="true">
+          <div class="menu-item" tabindex="0" data-path="1">
+            <span class="highlight">[1]</span> Trust the Machine<br>
+            <span style="opacity:0.8; font-size:26px;">Learn how literal systems really are</span>
+          </div>
+          <div class="menu-item" tabindex="0" data-path="2">
+            <span class="highlight">[2]</span> Hack a Fake Website<br>
+            <span style="opacity:0.8; font-size:26px;">See login injection in action</span>
+          </div>
+          <div class="menu-item" tabindex="0" data-path="3">
+            <span class="highlight">[3]</span> How Data Flows<br>
+            <span style="opacity:0.8; font-size:26px;">Map routes, choke points, and exposure</span>
+          </div>
+        </div>
+
+        <div id="game-interface" class="screen-layer" aria-hidden="true">
+          <div class="status-strip">
+            <div class="status-box">
+              <div class="status-title">Understanding</div>
+              <div id="understanding-display" style="font-size:32px; color:#fff;">0%</div>
+            </div>
+            <div class="status-box">
+              <div class="status-title">Mode</div>
+              <div id="mode-display" style="font-size:24px; color:var(--green);">IDLE</div>
+            </div>
+          </div>
+
+          <div id="terminal-history"></div>
+
+          <div id="game-input-line">
+            <span class="prompt">BOOT-1:</span>
+            <span class="display-text" id="game-display"></span>
+            <span class="cursor-block"></span>
+          </div>
+        </div>
+
+        <div id="end-screen" class="screen-layer" aria-hidden="true">
+          <div id="end-card">
+            <h2 id="end-title">GROUND TRUTHS MASTERED</h2>
+            <p style="font-size:34px; margin-bottom:2vh;">Session Summary</p>
+            <div style="background:rgba(0,0,0,.6); padding:1.8vh 2vw; border-radius:6px;">
+              <p style="margin-bottom:.8vh;">Results:</p>
+              <div id="end-stats" style="font-size:32px; color:#fff;"></div>
+            </div>
+            <button id="restart-button" type="button">RETURN TO TERMINAL</button>
+          </div>
+        </div>
+
+        <input type="text" id="input-field" autocomplete="off" autofocus>
+      </div>
+    </div>
+  </div>
+
   <script>
-    const screen = document.getElementById('screen');
-    const input = document.getElementById('user-input');
-    
-    // Boot sequence: text appears after 0.5 seconds
-    setTimeout(() => {
-      screen.innerHTML = '> Hello, future hacker.<br><br>> Type anything to begin';
-      input.focus();
-    }, 500);
-    
-    // Handle input
-    input.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        const text = input.value.trim();
-        
-        if (text !== '') {
-          screen.innerHTML += `<br>> ${text}`;
-          
-          // Simple response
-          setTimeout(() => {
-            screen.innerHTML += `<br><br>> [BOOT-1]: Interesting. Let's see what happens...`;
-            screen.innerHTML += `<br>> Try typing 'alice'`;
-          }, 500);
+    const powerLed = document.getElementById("power-led");
+    const dataLed = document.getElementById("data-led");
+    const bootDisplay = document.getElementById("boot-display");
+    const introSequence = document.getElementById("intro-sequence");
+    const menuContainer = document.getElementById("menu-container");
+    const gameInterface = document.getElementById("game-interface");
+    const terminalHistory = document.getElementById("terminal-history");
+    const inputField = document.getElementById("input-field");
+    const gameDisplay = document.getElementById("game-display");
+    const understandingDisplay = document.getElementById("understanding-display");
+    const modeDisplay = document.getElementById("mode-display");
+    const endScreen = document.getElementById("end-screen");
+    const endTitle = document.getElementById("end-title");
+    const endStats = document.getElementById("end-stats");
+    const restartButton = document.getElementById("restart-button");
+
+    let terminalState = "BOOT";
+    let currentPath = null;
+    let lessonStep = 0;
+    let understandingLevel = 0;
+
+    const bootLines = [
+      "Booting Macintosh System v2.3...",
+      "Initializing neural interface...",
+      "Loading ground truths module...",
+      "Connecting to coach BOOT-1...",
+      "[WAITING FOR USER]"
+    ];
+
+    const pathNames = {
+      1: "Trust the Machine",
+      2: "Hack a Fake Website",
+      3: "How Data Flows"
+    };
+
+    function blinkDataLed(duration = 150) {
+      dataLed.classList.add("on");
+      window.setTimeout(() => dataLed.classList.remove("on"), duration);
+    }
+
+    function scrollHistory() {
+      terminalHistory.scrollTop = terminalHistory.scrollHeight;
+    }
+
+    function updateUnderstanding(amount) {
+      understandingLevel = Math.max(0, Math.min(100, understandingLevel + amount));
+      understandingDisplay.textContent = `${understandingLevel}%`;
+    }
+
+    function showLayer(el, displayValue) {
+      el.style.display = displayValue;
+      requestAnimationFrame(() => {
+        el.classList.add("active");
+        el.setAttribute("aria-hidden", "false");
+      });
+    }
+
+    function hideLayer(el) {
+      el.classList.remove("active");
+      el.setAttribute("aria-hidden", "true");
+      window.setTimeout(() => {
+        if (!el.classList.contains("active")) {
+          el.style.display = "none";
         }
-        
-        input.value = '';
+      }, 350);
+    }
+
+    function makePromptLine(speaker, text) {
+      const line = document.createElement("div");
+      line.className = "history-line";
+
+      const prompt = document.createElement("span");
+      prompt.className = "prompt";
+      prompt.textContent = speaker;
+
+      const content = document.createTextNode(` ${text}`);
+
+      line.appendChild(prompt);
+      line.appendChild(content);
+      return line;
+    }
+
+    function appendHistory(speaker, text) {
+      const line = makePromptLine(speaker, text);
+      terminalHistory.appendChild(line);
+      scrollHistory();
+    }
+
+    function appendCode(text) {
+      const code = document.createElement("div");
+      code.className = "code-line";
+      code.textContent = text;
+      terminalHistory.appendChild(code);
+      scrollHistory();
+    }
+
+    function appendBox(text, className) {
+      const box = document.createElement("div");
+      box.className = className;
+      box.textContent = text;
+      terminalHistory.appendChild(box);
+      scrollHistory();
+    }
+
+    function focusInput() {
+      if (terminalState !== "END") {
+        inputField.focus();
       }
+    }
+
+    function typeBoot() {
+      let i = 0;
+
+      function step() {
+        if (i >= bootLines.length) {
+          window.setTimeout(finishBoot, 300);
+          return;
+        }
+
+        const p = document.createElement("div");
+        p.className = "boot-line";
+        p.textContent = `> ${bootLines[i]}`;
+        bootDisplay.appendChild(p);
+        bootDisplay.scrollTop = bootDisplay.scrollHeight;
+        blinkDataLed(130);
+
+        i += 1;
+        window.setTimeout(step, Math.random() * 250 + 180);
+      }
+
+      step();
+    }
+
+    function finishBoot() {
+      bootDisplay.style.display = "none";
+      showLayer(introSequence, "block");
+
+      window.setTimeout(() => {
+        hideLayer(introSequence);
+        window.setTimeout(showMenu, 420);
+      }, 2800);
+    }
+
+    function showMenu() {
+      terminalState = "MENU";
+      showLayer(menuContainer, "block");
+      focusInput();
+    }
+
+    function startPath(pathNum) {
+      currentPath = pathNum;
+      lessonStep = 0;
+      understandingLevel = 0;
+      updateUnderstanding(0);
+
+      terminalState = "GAME";
+      hideLayer(menuContainer);
+      showLayer(gameInterface, "flex");
+      modeDisplay.textContent = pathNames[pathNum].toUpperCase();
+
+      appendHistory("BOOT-1:", `Selected: [${pathNum}] ${pathNames[pathNum]}`);
+
+      window.setTimeout(() => {
+        if (pathNum === 1) {
+          appendHistory("BOOT-1:", "First step: computers are literal. Type \"alice\" to begin.");
+        } else if (pathNum === 2) {
+          appendHistory("BOOT-1:", "You're testing a fake login page. Type \"alice\" to begin.");
+        } else {
+          appendHistory("BOOT-1:", "Imagine data flowing through pipes. Type \"map\" to trace the route.");
+        }
+        focusInput();
+      }, 450);
+    }
+
+    function showUnknownCommand(cmd) {
+      appendHistory("BOOT-1:", `Unknown command: "${cmd}". Try "help".`);
+    }
+
+    function handlePathOneOrTwo(text) {
+      if (text === "help") {
+        if (lessonStep === 0) {
+          appendHistory("BOOT-1:", "Try typing \"alice\" first.");
+        } else if (lessonStep === 1) {
+          appendHistory("BOOT-1:", "Now type a single quote: '");
+        } else if (lessonStep === 2) {
+          appendHistory("BOOT-1:", "Now try: ' OR 1=1 --");
+        } else {
+          appendHistory("BOOT-1:", "Type \"done\" to complete the session.");
+        }
+        return;
+      }
+
+      if (text === "done" && lessonStep < 3) {
+        appendHistory("BOOT-1:", "Finish the exercise first. Type \"help\" if you want a hint.");
+        return;
+      }
+
+      if (lessonStep === 0 && text === "alice") {
+        lessonStep = 1;
+        updateUnderstanding(18);
+
+        appendHistory("BOOT-1:", "You typed \"alice\". The system builds this command:");
+        appendCode("SELECT * FROM users WHERE username='alice'");
+        window.setTimeout(() => {
+          appendBox("Computers are literal. They only do what they are told — no more, no less. That is why changing a single character matters.", "coach-msg");
+        }, 700);
+        window.setTimeout(() => {
+          appendHistory("BOOT-1:", "Now type just a single quote: '");
+          focusInput();
+        }, 1500);
+        return;
+      }
+
+      if (lessonStep === 1 && text === "'") {
+        lessonStep = 2;
+        updateUnderstanding(16);
+
+        appendHistory("BOOT-1:", "You typed a single quote. The system now builds:");
+        appendCode("SELECT * FROM users WHERE username='' AND password=''");
+        window.setTimeout(() => {
+          appendBox("GROUND TRUTH: The database does not decide. It follows instructions.", "ground-truth");
+        }, 700);
+        window.setTimeout(() => {
+          appendHistory("BOOT-1:", "That quote became part of the syntax. Now try: ' OR 1=1 --");
+          focusInput();
+        }, 1500);
+        return;
+      }
+
+      if (lessonStep === 2 && text.includes("' or 1=1")) {
+        lessonStep = 3;
+        updateUnderstanding(24);
+
+        appendHistory("BOOT-1:", "You typed: ' OR 1=1 --");
+        appendCode("SELECT * FROM users WHERE username='' OR 1=1 --' AND password=''");
+        window.setTimeout(() => {
+          appendHistory("BOOT-1:", "\"--\" comments out the rest. The password check gets ignored.");
+        }, 700);
+        window.setTimeout(() => {
+          appendBox("GROUND TRUTH: Security failures usually begin as bad assumptions, not dramatic code.", "ground-truth");
+          appendBox("You just learned why injection works: the system trusted a string that should never have controlled the query.", "coach-msg");
+        }, 1500);
+        window.setTimeout(() => {
+          appendHistory("BOOT-1:", "You have built your first security mindset. Type \"done\" to complete the session.");
+          focusInput();
+        }, 2400);
+        return;
+      }
+
+      showUnknownCommand(text);
+    }
+
+    function handlePathThree(text) {
+      if (text === "help") {
+        if (lessonStep === 0) {
+          appendHistory("BOOT-1:", "Try typing \"map\".");
+        } else if (lessonStep === 1) {
+          appendHistory("BOOT-1:", "Which device filters traffic first? Try \"firewall\".");
+        } else {
+          appendHistory("BOOT-1:", "Type \"done\" to complete the session.");
+        }
+        return;
+      }
+
+      if (text === "done" && lessonStep < 2) {
+        appendHistory("BOOT-1:", "Finish the route-mapping exercise first. Type \"help\" if you want a hint.");
+        return;
+      }
+
+      if (lessonStep === 0 && (text === "map" || text === "network")) {
+        lessonStep = 1;
+        updateUnderstanding(20);
+
+        appendHistory("BOOT-1:", "You map the route:");
+        appendCode("[LOCAL_HOST] -> [FIREWALL] -> [SERVER_CLUSTER]");
+        window.setTimeout(() => {
+          appendBox("Every system has a topology. People who break systems usually start by mapping the route and finding the choke point.", "coach-msg");
+        }, 800);
+        window.setTimeout(() => {
+          appendHistory("BOOT-1:", "Which device filters the traffic first? Type \"firewall\".");
+          focusInput();
+        }, 1600);
+        return;
+      }
+
+      if (lessonStep === 1 && text === "firewall") {
+        lessonStep = 2;
+        updateUnderstanding(22);
+
+        appendHistory("BOOT-1:", "Correct. The firewall is the first obvious choke point between the local host and the server cluster.");
+        window.setTimeout(() => {
+          appendBox("GROUND TRUTH: Most systems are not breached by magic. They are breached by understanding flow, trust boundaries, and weak joints.", "ground-truth");
+        }, 700);
+        window.setTimeout(() => {
+          appendHistory("BOOT-1:", "Topology mapped. Type \"done\" to complete the session.");
+          focusInput();
+        }, 1500);
+        return;
+      }
+
+      showUnknownCommand(text);
+    }
+
+    function processInput(rawText) {
+      const text = rawText.toLowerCase();
+
+      if (text === "done") {
+        if ((currentPath === 1 || currentPath === 2) && lessonStep >= 3) {
+          endGame();
+          return;
+        }
+        if (currentPath === 3 && lessonStep >= 2) {
+          endGame();
+          return;
+        }
+      }
+
+      if (currentPath === 1 || currentPath === 2) {
+        handlePathOneOrTwo(text);
+      } else if (currentPath === 3) {
+        handlePathThree(text);
+      }
+    }
+
+    function endGame() {
+      terminalState = "END";
+      gameDisplay.textContent = "";
+
+      if (currentPath === 3) {
+        endTitle.textContent = "NETWORK TOPOLOGY MASTERED";
+        endTitle.className = "success";
+        endStats.innerHTML =
+          `Understanding Level: <span style="color:#fff">${Math.max(understandingLevel, 54)}%</span><br>` +
+          `Topologies Mapped: 1<br>` +
+          `Choke Points Identified: 1`;
+      } else {
+        endTitle.textContent = "GROUND TRUTHS MASTERED";
+        endTitle.className = "success";
+        endStats.innerHTML =
+          `Understanding Level: <span style="color:#fff">${Math.max(understandingLevel, 58)}%</span><br>` +
+          `Ground Truths Discovered: 2<br>` +
+          `Cracks Identified: 1`;
+      }
+
+      showLayer(endScreen, "flex");
+    }
+
+    inputField.addEventListener("input", () => {
+      if (terminalState === "GAME") {
+        gameDisplay.textContent = inputField.value;
+      } else {
+        gameDisplay.textContent = "";
+      }
+    });
+
+    inputField.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      if (terminalState !== "GAME") return;
+
+      const text = inputField.value.trim();
+      if (!text) return;
+
+      appendHistory("YOU:", text);
+      inputField.value = "";
+      gameDisplay.textContent = "";
+      processInput(text);
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (terminalState === "MENU" && ["1", "2", "3"].includes(e.key)) {
+        blinkDataLed(180);
+        startPath(Number(e.key));
+      }
+    });
+
+    menuContainer.addEventListener("click", (e) => {
+      const item = e.target.closest(".menu-item");
+      if (!item) return;
+      blinkDataLed(180);
+      startPath(Number(item.dataset.path));
+    });
+
+    menuContainer.addEventListener("keydown", (e) => {
+      const item = e.target.closest(".menu-item");
+      if (!item) return;
+
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        blinkDataLed(180);
+        startPath(Number(item.dataset.path));
+      }
+    });
+
+    restartButton.addEventListener("click", () => {
+      window.location.reload();
+    });
+
+    document.addEventListener("click", () => {
+      focusInput();
+    });
+
+    window.addEventListener("load", () => {
+      powerLed.classList.add("on");
+      focusInput();
+      window.setTimeout(typeBoot, 700);
     });
   </script>
 </body>
