@@ -2,14 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BOOT v2.0 // GROUND TRUTH TERMINAL</title>
+  <title>BOOT v2.1 // GROUND TRUTH TERMINAL</title>
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
   <style>
     :root {
       --amber: #FFB000;
       --green: #00ff66;
       --bg: #050505;
-      --panel: rgba(0,0,0,0.7);
       --border: rgba(255,176,0,0.7);
     }
     
@@ -53,12 +52,6 @@
       background:#330000;
       box-shadow: inset 0 2px 4px #000;
       transition: all 0.3s ease;
-      position:relative;
-    }
-    
-    .led.pwr {
-      background:#800000;
-      box-shadow: inset 0 2px 6px rgba(128,0,0,.5);
     }
     
     .led.on {
@@ -167,12 +160,6 @@
       50% { opacity:0; }
     }
 
-    #input-field {
-      position:absolute;
-      opacity:0;
-      left:-9999px;
-    }
-
     /* Intro Sequence */
     #intro-sequence {
       position:absolute;
@@ -181,24 +168,11 @@
       transform:translate(-50%,-50%);
       width:86%;
       z-index:10;
-      opacity:0;
-      transition:opacity 1.2s ease-in-out;
+      display:none;
       font-size:34px;
     }
 
-    #intro-sequence h2 {
-      margin:0 0 16px 0;
-      font-size:52px;
-      color:#fff;
-      text-shadow:0 0 18px rgba(255,255,255,.7);
-      letter-spacing:4px;
-    }
-
-    .sys-ok {
-      color:var(--green);
-      text-shadow:0 0 6px var(--green);
-      font-weight:bold;
-    }
+    .sys-ok { color:var(--green); text-shadow:0 0 6px var(--green); font-weight:bold; }
 
     /* Menu */
     #menu-container {
@@ -208,8 +182,7 @@
       transform:translate(-50%,-50%);
       width:72%;
       z-index:10;
-      opacity:0;
-      transition:opacity 1s ease-in-out;
+      display:none;
     }
 
     .menu-item {
@@ -228,11 +201,7 @@
       box-shadow:0 0 14px rgba(255,176,0,.3);
     }
 
-    .highlight {
-      color:#fff;
-      font-weight:bold;
-      text-shadow:0 0 8px #fff;
-    }
+    .highlight { color:#fff; font-weight:bold; text-shadow:0 0 8px #fff; }
 
     /* Game Interface */
     #game-interface {
@@ -256,11 +225,8 @@
       scrollbar-color:rgba(255,176,0,.4) transparent;
     }
 
-    .history-line {
-      margin-bottom:1.2vh;
-      font-size:28px;
-    }
-
+    .history-line { margin-bottom:1.2vh; font-size:28px; }
+    
     .coach-msg {
       background:rgba(255,176,0,.1);
       border-left:4px solid var(--amber);
@@ -279,48 +245,14 @@
       color:#ccffe6;
     }
 
-    .system-alert {
-      background:rgba(255,0,0,.1);
-      border-left:4px solid #ff3b3b;
-      padding:1.2vh 1.6vw;
-      margin-top:1.6vh;
-      color:#ffb3b3;
-    }
-
-    /* Status Strip */
-    .status-strip {
-      display:flex;
-      gap:16px;
-      margin-bottom:1.4vh;
-    }
-
-    .status-box {
-      flex:1;
-      background:rgba(0,0,0,.5);
-      border:1px solid var(--border);
-      box-shadow:0 0 8px rgba(255,176,0,.1);
-      padding:1.2vh 1.4vw;
-      display:flex;
-      flex-direction:column;
-    }
-
-    .status-title {
-      font-size:22px;
-      color:#d2b162;
-      margin-bottom:.8vh;
-      letter-spacing:2px;
-    }
-
     /* End Screen */
     #end-screen {
       position:absolute;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
+      top:0; left:0;
+      width:100%; height:100%;
       background:rgba(0,0,0,.85);
       backdrop-filter:blur(4px);
-      display:flex;
+      display:none; /* HIDDEN BY DEFAULT */
       align-items:center;
       justify-content:center;
       z-index:30;
@@ -334,28 +266,26 @@
       padding:3vh 4vw;
     }
 
-    #end-title {
-      font-size:64px;
-      margin:0 0 1.8vh 0;
+    #end-title { font-size:64px; margin:0 0 1.8vh 0; color:#fff; }
+    
+    #end-screen.active {
+      display:flex;
+      animation:fadeInScreen 0.5s ease-out forwards;
     }
 
-    #end-success { color:var(--green); text-shadow:0 0 20px var(--green); }
-    #end-partial { color:var(--amber); }
-    #end-fail { color:#ff3b3b; text-shadow:0 0 16px #ff3b3b; }
+    @keyframes fadeInScreen {
+      from { opacity:0; }
+      to { opacity:1; }
+    }
 
     /* Responsive */
     @media (max-width:980px) {
       .monitor-bezel { padding:1.5vh 2vw; }
-      .crt-screen::before { background-size:100% 4px, 8px 100%; }
-      #intro-sequence h2 { font-size:36px; }
-      .menu-item { font-size:26px; padding:1vh 2vw; }
     }
 
     @media (max-width:768px) {
       html, body { overflow-y:auto; }
       #hardware-chassis { height:auto; min-height:100vh; }
-      .monitor-bezel { flex:none; min-height:60vh; }
-      .led-panel { font-size:20px; }
     }
   </style>
 </head>
@@ -365,7 +295,7 @@
   <!-- LED Panel -->
   <div class="led-panel">
     <span class="led-label">PWR</span>
-    <div class="led pwr" id="power-led"></div>
+    <div class="led" id="power-led"></div>
     <span class="led-label" style="margin-left:12px;">DAT</span>
     <div class="led" id="data-led"></div>
   </div>
@@ -384,10 +314,9 @@
 
       <!-- Intro Sequence (after boot completes) -->
       <div id="intro-sequence">
-        <h2>SYSTEM READY</h2>
-        <p style="color:var(--amber); text-shadow:0 0 8px var(--amber);">
-          Ground Truth Terminal v2.0 // Uplink Secure
-        </p>
+        <h2 style="color:#fff; font-size:52px; text-shadow:0 0 18px rgba(255,255,255,.7); letter-spacing:4px;">
+          SYSTEM READY
+        </h2>
         <p style="margin-top:3vh; color:#fff;">
           &gt; mounting encrypted learning volume... <span class="sys-ok">[OK]</span><br>
           &gt; establishing secure neural interface... <span class="sys-ok">[OK]</span><br>
@@ -417,18 +346,15 @@
 
       <!-- Game Interface -->
       <div id="game-interface">
-        <div class="status-strip">
-          <div class="status-box">
-            <div class="status-title">Understanding</div>
+        <div class="status-strip" style="display:flex; gap:16px; margin-bottom:1.4vh;">
+          <div style="flex:1; background:rgba(0,0,0,.5); border:1px solid var(--border);
+                      box-shadow:0 0 8px rgba(255,176,0,.1); padding:1.2vh 1.4vw;">
+            <div style="font-size:22px; color:#d2b162; margin-bottom:.8vh; letter-spacing:2px;">Understanding</div>
             <div style="font-size:32px; color:#fff;">0%</div>
-          </div>
-          <div class="status-box">
-            <div class="status-title">Coach Status</div>
-            <div style="color:var(--green); font-size:24px;">BOOT-1 ONLINE</div>
           </div>
         </div>
 
-        <div id="terminal-history"></div>
+        <div id="terminal-history" style="flex:1; overflow-y:auto;"></div>
         
         <div id="game-input-line" style="margin-top:2vh; display:flex; align-items:center;">
           <span class="prompt">BOOT-1:</span>
@@ -440,8 +366,8 @@
       <!-- End Screen -->
       <div id="end-screen">
         <div id="end-card">
-          <h2 id="end-title">MISSION COMPLETE</h2>
-          <p style="font-size:34px; margin-bottom:2vh;">Ground Truths Mastered</p>
+          <h2 id="end-title">GROUND TRUTHS MASTERED</h2>
+          <p style="font-size:34px; margin-bottom:2vh;">Ground Truths Discovered</p>
           <div style="background:rgba(0,0,0,.6); padding:1.8vh 2vw; border-radius:6px;">
             <p style="margin-bottom:.8vh;">Understanding Level:</p>
             <div id="end-stats" style="font-size:32px; color:#fff;"></div>
@@ -463,110 +389,6 @@
 </div>
 
 <script>
-// === AUDIO SYSTEM (No external files) ===
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-let isAudioInitialized = false;
-
-function initAudio() {
-  if (!isAudioInitialized) {
-    if (audioContext.state === 'suspended') audioContext.resume();
-    isAudioInitialized = true;
-    
-    // Start ambient hum during boot
-    startAmbientHum();
-  }
-}
-
-function playTypewriterClack() {
-  if (!isAudioInitialized) return;
-  
-  const osc = audioContext.createOscillator();
-  const gainNode = audioContext.createGain();
-  
-  osc.type = 'square';
-  osc.frequency.setValueAtTime(120, audioContext.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(40, audioContext.currentTime + 0.03);
-  
-  gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.03);
-  
-  osc.connect(gainNode);
-  gainNode.connect(audioContext.destination);
-  
-  osc.start();
-  osc.stop(audioContext.currentTime + 0.035);
-}
-
-function playMenuSelect() {
-  if (!isAudioInitialized) return;
-  
-  const osc = audioContext.createOscillator();
-  const gainNode = audioContext.createGain();
-  
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(420, audioContext.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.15);
-  
-  gainNode.gain.setValueAtTime(0.12, audioContext.currentTime);
-  gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.4);
-  
-  osc.connect(gainNode);
-  gainNode.connect(audioContext.destination);
-  
-  osc.start();
-  osc.stop(audioContext.currentTime + 0.45);
-}
-
-function playSystemOk() {
-  if (!isAudioInitialized) return;
-  
-  const osc = audioContext.createOscillator();
-  const gainNode = audioContext.createGain();
-  
-  osc.type = 'triangle';
-  osc.frequency.setValueAtTime(240, audioContext.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(380, audioContext.currentTime + 0.1);
-  
-  gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0, audioContext.currentTime + 0.6);
-  
-  osc.connect(gainNode);
-  gainNode.connect(audioContext.destination);
-  
-  osc.start();
-  osc.stop(audioContext.currentTime + 0.7);
-}
-
-function startAmbientHum() {
-  const osc = audioContext.createOscillator();
-  const gainNode = audioContext.createGain();
-  const filter = audioContext.createBiquadFilter();
-  
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(50, audioContext.currentTime);
-  
-  filter.type = 'lowpass';
-  filter.frequency.setValueAtTime(120, audioContext.currentTime);
-  
-  gainNode.gain.setValueAtTime(0.04, audioContext.currentTime);
-  
-  osc.connect(filter);
-  filter.connect(gainNode);
-  gainNode.connect(audioContext.destination);
-  
-  osc.start();
-}
-
-// === SYSTEM STATE ===
-let terminalState = 'BOOT'; // BOOT → MENU → GAME → END
-const bootLines = [
-  "Booting Macintosh System v2.0...",
-  "Initializing neural interface...",
-  "Loading ground truths module...",
-  "Connecting to coach BOOT-1...",
-  "[WAITING FOR USER]"
-];
-
 // === DOM ELEMENTS ===
 const powerLed = document.getElementById('power-led');
 const dataLed = document.getElementById('data-led');
@@ -577,18 +399,25 @@ const gameInterface = document.getElementById('game-interface');
 const terminalHistory = document.getElementById('terminal-history');
 const inputField = document.getElementById('input-field');
 
-// === BOOT SEQUENCE ===
+// === BOOT SEQUENCE (Auto-starts immediately) ===
 function typeBoot() {
+  console.log("Starting boot sequence...");
+  
+  const lines = [
+    "Booting Macintosh System v2.1...",
+    "Initializing neural interface...",
+    "Loading ground truths module...",
+    "Connecting to coach BOOT-1...",
+    "[WAITING FOR USER]"
+  ];
+
   let i = 0;
   
   function step() {
-    if (i < bootLines.length) {
-      const line = bootLines[i];
-      
-      // Create new line element
+    if (i < lines.length) {
       const p = document.createElement('p');
       p.style.marginBottom = '1.2vh';
-      p.textContent = '> ' + line;
+      p.textContent = '> ' + lines[i];
       bootDisplay.appendChild(p);
       
       // Scroll to bottom
@@ -601,7 +430,7 @@ function typeBoot() {
       
       i++;
       
-      if (i === bootLines.length) {
+      if (i === lines.length) {
         setTimeout(finishBoot, Math.random() * 400 + 200);
       } else {
         setTimeout(step, Math.random() * 350 + 200); // Typewriter speed
@@ -613,14 +442,14 @@ function typeBoot() {
 }
 
 function finishBoot() {
-  playSystemOk();
+  console.log("Boot sequence complete");
   
   // Hide boot terminal
   document.getElementById('boot-terminal').style.display = 'none';
   
   // Show intro sequence
   setTimeout(() => {
-    introSequence.style.opacity = '1';
+    introSequence.style.display = 'block';
     
     // After 2 seconds, show menu
     setTimeout(() => {
@@ -631,22 +460,21 @@ function finishBoot() {
 }
 
 function showMenu() {
-  terminalState = 'MENU';
-  menuContainer.style.opacity = '1';
+  console.log("Showing menu");
   
-  // Focus input for keyboard navigation
+  introSequence.style.display = 'none';
+  menuContainer.style.display = 'block';
+  
+  // Focus input
   inputField.focus();
 }
 
 // === PATH SELECTION ===
 function selectPath(num) {
-  initAudio(); // Ensure audio context is ready
-  
-  playMenuSelect();
   dataLed.classList.add('on');
   setTimeout(() => dataLed.classList.remove('on'), 180);
   
-  menuContainer.style.opacity = '0';
+  menuContainer.style.display = 'none';
   
   const pathNames = [
     "Trust the Machine",
@@ -667,7 +495,8 @@ function selectPath(num) {
 
 // === PATH HANDLERS ===
 function startPath(num) {
-  terminalState = 'GAME';
+  console.log("Starting path:", num);
+  
   gameInterface.style.opacity = '1';
   
   // Scroll to bottom of history
@@ -695,7 +524,7 @@ inputField.addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
     const text = inputField.value.trim();
     
-    if (terminalState === 'GAME' && text !== '') {
+    if (text !== '') {
       // Echo user input
       const line = document.createElement('div');
       line.className = 'history-line';
@@ -709,8 +538,6 @@ inputField.addEventListener('keydown', function(e) {
       // Process based on current path
       processInput(text);
     }
-  } else {
-    playTypewriterClack();
   }
 });
 
@@ -723,6 +550,8 @@ function processInput(text) {
     setTimeout(() => showQuoteResponse(), 400);
   } else if (lowerText.includes("' or 1=1")) {
     setTimeout(() => showInjectionReveal(), 600);
+  } else if (lowerText === 'done') {
+    endGame();
   } else if (lowerText === 'help') {
     const p = document.createElement('div');
     p.className = 'history-line';
@@ -831,50 +660,35 @@ function showInjectionReveal() {
 
 // === END GAME HANDLER ===
 function endGame() {
-  terminalState = 'END';
-  
   // Calculate understanding level (fake for demo)
   const understandingLevel = 37 + Math.floor(Math.random() * 25); // 37-61%
   
   document.getElementById('end-title').textContent = "GROUND TRUTHS MASTERED";
-  document.getElementById('end-title').className = 'success';
   document.getElementById('end-stats').innerHTML = 
     `Understanding Level: <span style="color:#fff">${understandingLevel}%</span><br>
      Ground Truths Discovered: 2<br>
      Cracks Identified: 1`;
   
-  setTimeout(() => {
-    const endScreen = document.getElementById('end-screen');
-    endScreen.style.opacity = '0';
-    setTimeout(() => {
-      endScreen.style.display = 'flex';
-      
-      // Fade in
-      let opacity = 0;
-      const fadeInterval = setInterval(() => {
-        opacity += 0.1;
-        endScreen.style.opacity = Math.min(1, opacity);
-        if (opacity >= 1) clearInterval(fadeInterval);
-      }, 30);
-    }, 50);
-  }, 800);
+  // Show end screen with animation
+  const endScreen = document.getElementById('end-screen');
+  endScreen.classList.add('active');
 }
 
 // === INITIALIZATION ===
 window.onload = () => {
+  console.log("Page loaded");
+  
   // Start boot sequence after a moment
   setTimeout(typeBoot, 800);
   
   // Make window click focus input
   document.addEventListener('click', () => {
-    if (terminalState !== 'END') inputField.focus();
+    const endScreen = document.getElementById('end-screen');
+    if (!endScreen.classList.contains('active')) {
+      inputField.focus();
+    }
   });
 };
-
-// Override endGame to actually show the screen
-function doneTyping() {
-  endGame();
-}
 </script>
 
 </body>
