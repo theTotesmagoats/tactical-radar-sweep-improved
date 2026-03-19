@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BOOT v2.2 // GROUND TRUTH TERMINAL</title>
+  <title>BOOT v3 // THE WONDER MACHINE</title>
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -119,7 +119,7 @@
       left:2vh;
       bottom:2vh;
       width:calc(100% - 4vh);
-      max-height:40vh;
+      max-height:60vh;
       overflow-y:auto;
       display:flex;
       flex-direction:column;
@@ -150,80 +150,7 @@
       50% { opacity:0; }
     }
 
-    #intro-sequence {
-      position:absolute;
-      top:50%;
-      left:50%;
-      transform:translate(-50%,-50%);
-      width:86%;
-      z-index:10;
-      display:none;
-      font-size:34px;
-    }
-
-    .sys-ok { color:var(--green); text-shadow:0 0 6px var(--green); font-weight:bold; }
-
-    #menu-container {
-      position:absolute;
-      top:50%;
-      left:50%;
-      transform:translate(-50%,-50%);
-      width:72%;
-      z-index:10;
-      display:none;
-    }
-
-    .menu-item {
-      padding:1.4vh 2vw;
-      margin-bottom:12px;
-      border-radius:6px;
-      background:rgba(255,176,0,.06);
-      border-left:4px solid var(--amber);
-      transition:all 0.2s ease;
-      cursor:pointer;
-    }
-
-    .menu-item:hover {
-      background:rgba(255,176,0,.18);
-      transform:translateX(8px);
-      box-shadow:0 0 14px rgba(255,176,0,.3);
-    }
-
-    .highlight { color:#fff; font-weight:bold; text-shadow:0 0 8px #fff; }
-
-    #game-interface {
-      position:absolute;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
-      display:flex;
-      flex-direction:column;
-      opacity:0;
-      transition:opacity 1s ease-in-out;
-      z-index:20;
-    }
-
-    #terminal-history {
-      flex:1;
-      overflow-y:auto;
-      padding-bottom:3vh;
-      scrollbar-width:thin;
-      scrollbar-color:rgba(255,176,0,.4) transparent;
-    }
-
-    .history-line { margin-bottom:1.2vh; font-size:28px; line-height:1.4; }
-    
-    .coach-msg {
-      background:rgba(255,176,0,.1);
-      border-left:4px solid var(--amber);
-      padding:1.2vh 1.6vw;
-      margin-top:1.6vh;
-      font-style:italic;
-      color:#ffeaa7;
-    }
-
-    .ground-truth {
+    .discovery {
       background:rgba(0,255,102,.12);
       border-left:4px solid var(--green);
       padding:1.2vh 1.6vw;
@@ -232,9 +159,14 @@
       color:#ccffe6;
     }
 
-    .success { color:var(--green); text-shadow:0 0 20px var(--green); }
-    .partial { color:var(--amber); }
-    .fail { color:#ff3b3b; text-shadow:0 0 16px #ff3b3b; }
+    .coach {
+      background:rgba(255,176,0,.1);
+      border-left:4px solid var(--amber);
+      padding:1.2vh 1.6vw;
+      margin-top:1.6vh;
+      font-style:italic;
+      color:#ffeaa7;
+    }
 
     #end-screen {
       position:absolute;
@@ -268,6 +200,10 @@
 
     #end-title { font-size:64px; margin:0 0 1.8vh 0; color:#fff; }
     
+    .success { color:var(--green); text-shadow:0 0 20px var(--green); }
+    .partial { color:var(--amber); }
+    .fail { color:#ff3b3b; text-shadow:0 0 16px #ff3b3b; }
+
     @media (max-width:980px) {
       .monitor-bezel { padding:1.5vh 2vw; }
     }
@@ -290,64 +226,13 @@
 
   <div class="monitor-bezel">
     <div class="crt-screen">
-      <!-- Boot Display (div, not span) -->
+      <!-- Boot Display -->
       <div id="boot-display"></div>
-
-      <!-- Intro Sequence -->
-      <div id="intro-sequence">
-        <h2 style="color:#fff; font-size:52px; text-shadow:0 0 18px rgba(255,255,255,.7); letter-spacing:4px;">
-          SYSTEM READY
-        </h2>
-        <p style="margin-top:3vh; color:#fff;">
-          &gt; mounting encrypted learning volume... <span class="sys-ok">[OK]</span><br>
-          &gt; establishing secure neural interface... <span class="sys-ok">[OK]</span><br>
-          &gt; loading ground truths... <span class="sys-ok">[OK]</span><br>
-          &gt; coach BOOT-1 online... <span class="sys-ok">[OK]</span>
-        </p>
-        <p style="margin-top:3vh; color:#ffeaa7;">
-          &gt; AWAITING INPUT...
-        </p>
-      </div>
-
-      <!-- Menu -->
-      <div id="menu-container">
-        <div class="menu-item" onclick="selectPath(1)">
-          <span class="highlight">[1]</span> Trust the Machine<br>
-          <span style="opacity:0.8; font-size:26px;">Learn how systems really think</span>
-        </div>
-        <div class="menu-item" onclick="selectPath(2)">
-          <span class="highlight">[2]</span> Hack a Fake Website<br>
-          <span style="opacity:0.8; font-size:26px;">See injection in action</span>
-        </div>
-        <div class="menu-item" onclick="selectPath(3)">
-          <span class="highlight">[3]</span> How Data Flows<br>
-          <span style="opacity:0.8; font-size:26px;">Network basics and topologies</span>
-        </div>
-      </div>
-
-      <!-- Game Interface -->
-      <div id="game-interface">
-        <div class="status-strip" style="display:flex; gap:16px; margin-bottom:1.4vh;">
-          <div style="flex:1; background:rgba(0,0,0,.5); border:1px solid var(--border);
-                      box-shadow:0 0 8px rgba(255,176,0,.1); padding:1.2vh 1.4vw;">
-            <div style="font-size:22px; color:#d2b162; margin-bottom:.8vh; letter-spacing:2px;">Understanding</div>
-            <div id="understanding-display" style="font-size:32px; color:#fff;">0%</div>
-          </div>
-        </div>
-
-        <div id="terminal-history"></div>
-        
-        <div id="game-input-line" style="margin-top:2vh; display:flex; align-items:center;">
-          <span class="prompt">BOOT-1:</span>
-          <span class="display-text" id="game-display"></span>
-          <span class="cursor-block"></span>
-        </div>
-      </div>
 
       <!-- End Screen -->
       <div id="end-screen">
         <div id="end-card">
-          <h2 id="end-title">GROUND TRUTHS MASTERED</h2>
+          <h2 id="end-title" class="success">GROUND TRUTHS MASTERED</h2>
           <p style="font-size:34px; margin-bottom:2vh;">Ground Truths Discovered</p>
           <div style="background:rgba(0,0,0,.6); padding:1.8vh 2vw; border-radius:6px;">
             <p style="margin-bottom:.8vh;">Understanding Level:</p>
@@ -374,24 +259,16 @@
 const powerLed = document.getElementById('power-led');
 const dataLed = document.getElementById('data-led');
 const bootDisplay = document.getElementById('boot-display');
-const introSequence = document.getElementById('intro-sequence');
-const menuContainer = document.getElementById('menu-container');
-const gameInterface = document.getElementById('game-interface');
-const terminalHistory = document.getElementById('terminal-history');
 const inputField = document.getElementById('input-field');
 
-// === STATE ===
-let currentPath = null;
-let understandingLevel = 0;
-
-// === BOOT SEQUENCE (Auto-starts immediately) ===
+// === BOOT SEQUENCE (Character-by-character typing effect) ===
 function typeBoot() {
   const lines = [
-    "Booting Macintosh System v2.2...",
-    "Initializing neural interface...",
-    "Loading ground truths module...",
-    "Connecting to coach BOOT-1...",
-    "[WAITING FOR USER]"
+    "Hello, future hacker.",
+    "",
+    "I see you've found me.",
+    "",
+    "Let's learn how to speak my language."
   ];
 
   let i = 0;
@@ -406,105 +283,21 @@ function typeBoot() {
       // Scroll boot display
       bootDisplay.scrollTop = bootDisplay.scrollHeight;
       
-      // LED feedback
-      dataLed.classList.add('on');
-      setTimeout(() => dataLed.classList.remove('on'), 150);
-      
       i++;
-      
-      if (i === lines.length) {
-        setTimeout(finishBoot, Math.random() * 400 + 200);
-      } else {
-        setTimeout(step, Math.random() * 350 + 200); // Typewriter speed
-      }
+      setTimeout(step, Math.random() * 600 + 300); // Slow, deliberate typing
+    } else {
+      setTimeout(showInput, 1000);
     }
   }
   
   step();
 }
 
-function finishBoot() {
-  document.getElementById('boot-display').style.display = 'none';
-  
-  setTimeout(() => {
-    introSequence.style.display = 'block';
-    
-    setTimeout(() => {
-      introSequence.style.opacity = '0';
-      setTimeout(showMenu, 800);
-    }, 3500);
-  }, 800);
-}
-
-function showMenu() {
-  introSequence.style.display = 'none';
-  menuContainer.style.display = 'block';
-  
-  // Focus input
-  inputField.focus();
-}
-
-// === PATH SELECTION ===
-function selectPath(num) {
+function showInput() {
   dataLed.classList.add('on');
-  setTimeout(() => dataLed.classList.remove('on'), 180);
+  setTimeout(() => dataLed.classList.remove('on'), 200);
   
-  menuContainer.style.display = 'none';
-  
-  const pathNames = [
-    "Trust the Machine",
-    "Hack a Fake Website",
-    "How Data Flows"
-  ];
-  
-  currentPath = num;
-  
-  // Create selection log
-  const line = document.createElement('div');
-  line.className = 'history-line';
-  
-  const promptSpan = document.createElement('span');
-  promptSpan.className = 'prompt';
-  promptSpan.textContent = 'BOOT-1:';
-  
-  const textNode = document.createTextNode(` Selected: [${num}] ${pathNames[num-1]}`);
-  
-  line.appendChild(promptSpan);
-  line.appendChild(textNode);
-  terminalHistory.appendChild(line);
-  
-  setTimeout(() => {
-    startPath(num);
-  }, 700);
-}
-
-// === PATH HANDLERS ===
-function startPath(num) {
-  gameInterface.style.opacity = '1';
-  terminalHistory.scrollTop = terminalHistory.scrollHeight;
-  
-  const prompts = [
-    "> First step: computers are stupid. They only do what they're told.",
-    "> You're at a login screen. Type 'alice' to begin.",
-    "> Imagine data flowing through pipes. Let's map the route."
-  ];
-  
-  setTimeout(() => {
-    const p = document.createElement('div');
-    p.className = 'history-line';
-    
-    const promptSpan2 = document.createElement('span');
-    promptSpan2.className = 'prompt';
-    promptSpan2.textContent = 'BOOT-1:';
-    
-    const textNode2 = document.createTextNode(` ${prompts[num-1]}`);
-    
-    p.appendChild(promptSpan2);
-    p.appendChild(textNode2);
-    terminalHistory.appendChild(p);
-    
-    inputField.focus();
-  }, 500);
+  inputField.focus();
 }
 
 // === INPUT HANDLING (SAFE DOM MANIPULATION) ===
@@ -524,14 +317,12 @@ inputField.addEventListener('keydown', function(e) {
     
     line.appendChild(promptSpan);
     line.appendChild(contentNode);
-    terminalHistory.appendChild(line);
+    bootDisplay.appendChild(line);
     
     // Clear input and scroll
     inputField.value = '';
-    document.getElementById('game-display').textContent = '';
     terminalHistory.scrollTop = terminalHistory.scrollHeight;
     
-    // Process based on current path
     processInput(text);
   }
 });
@@ -544,28 +335,22 @@ inputField.addEventListener('input', function() {
 function processInput(text) {
   const lowerText = text.toLowerCase();
   
-  if (lowerText === 'done') {
-    endGame();
-    return;
-  }
-  
-  // Path-specific logic
-  if (currentPath === 1 || currentPath === 2) {
-    handlePath1or2(lowerText);
-  } else if (currentPath === 3) {
-    handlePath3(lowerText);
-  }
-}
-
-// === PATH 1 & 2: SQL INJECTION LESSON ===
-function handlePath1or2(text) {
-  if (text === 'alice') {
-    setTimeout(() => showAliceResponse(), 400);
+  // Ground truths as discoveries
+  if (lowerText.includes('computer') || lowerText.includes('stupid')) {
+    setTimeout(() => showDiscovery("Computers are stupid. They only do what they're told."), 500);
+    setTimeout(() => showCoach("That's right! A quote becomes part of the syntax, not just text."), 2000);
+    setTimeout(() => showPrompt("Try typing a single quote: '"), 3500);
   } else if (text === "'") {
-    setTimeout(() => showQuoteResponse(), 400);
+    setTimeout(() => showDiscovery("The database sees: SELECT * FROM users WHERE username=''"), 500);
+    setTimeout(() => showCoach("That quote becomes part of the command, not just text! This is injection."), 2000);
+    setTimeout(() => showPrompt("Now try: ' OR 1=1 --"), 3500);
   } else if (text.includes("' or 1=1")) {
-    setTimeout(() => showInjectionReveal(), 600);
-  } else if (text === 'help') {
+    setTimeout(() => showDiscovery("The system ignores the password check! It returns the first user."), 500);
+    setTimeout(() => showCoach("You've found your first crack. Now you'll find them everywhere."), 2000);
+    setTimeout(() => showPrompt("Type 'done' to complete the session"), 3500);
+  } else if (lowerText === 'done') {
+    endGame();
+  } else if (lowerText === 'help') {
     const p = document.createElement('div');
     p.className = 'history-line';
     
@@ -573,39 +358,37 @@ function handlePath1or2(text) {
     promptSpan.className = 'prompt';
     promptSpan.textContent = 'BOOT-1:';
     
-    const contentNode = document.createTextNode(' Try typing "alice" first.');
+    const contentNode = document.createTextNode(" Just type what comes to mind. I'll respond.");
     
     p.appendChild(promptSpan);
     p.appendChild(contentNode);
-    terminalHistory.appendChild(p);
+    bootDisplay.appendChild(p);
   } else {
-    // Fallback for unknown commands
-    setTimeout(() => showUnknownCommand(text), 200);
+    setTimeout(() => showCoach(`I see you typed "${text}". What do you think happens next?`), 800);
   }
 }
 
-function handlePath3(text) {
-  if (text === 'map' || text === 'network') {
-    setTimeout(() => showNetworkMap(), 400);
-  } else if (text === 'help') {
-    const p = document.createElement('div');
-    p.className = 'history-line';
-    
-    const promptSpan = document.createElement('span');
-    promptSpan.className = 'prompt';
-    promptSpan.textContent = 'BOOT-1:';
-    
-    const contentNode = document.createTextNode(' Try typing "map" to see the network.');
-    
-    p.appendChild(promptSpan);
-    p.appendChild(contentNode);
-    terminalHistory.appendChild(p);
-  } else {
-    setTimeout(() => showUnknownCommand(text), 200);
-  }
+function showDiscovery(text) {
+  const discovery = document.createElement('div');
+  discovery.className = 'discovery';
+  
+  const discoveryText = document.createTextNode(text);
+  discovery.appendChild(discoveryText);
+  bootDisplay.appendChild(discovery);
+  bootDisplay.scrollTop = bootDisplay.scrollHeight;
 }
 
-function showUnknownCommand(cmd) {
+function showCoach(text) {
+  const coach = document.createElement('div');
+  coach.className = 'coach';
+  
+  const coachText = document.createTextNode(text);
+  coach.appendChild(coachText);
+  bootDisplay.appendChild(coach);
+  bootDisplay.scrollTop = bootDisplay.scrollHeight;
+}
+
+function showPrompt(text) {
   const p = document.createElement('div');
   p.className = 'history-line';
   
@@ -613,192 +396,12 @@ function showUnknownCommand(cmd) {
   promptSpan.className = 'prompt';
   promptSpan.textContent = 'BOOT-1:';
   
-  const contentNode = document.createTextNode(` Unknown command: "${cmd}". Try "help".`);
+  const contentNode = document.createTextNode(` ${text}`);
   
   p.appendChild(promptSpan);
   p.appendChild(contentNode);
-  terminalHistory.appendChild(p);
-}
-
-// === PATH 1/2 RESPONSES ===
-function showAliceResponse() {
-  const p = document.createElement('div');
-  p.className = 'history-line';
-  
-  const promptSpan = document.createElement('span');
-  promptSpan.className = 'prompt';
-  promptSpan.textContent = 'BOOT-1:';
-  
-  const contentNode = document.createTextNode(' You typed "alice". The system builds this command: SELECT * FROM users WHERE username=\'alice\'');
-  
-  p.appendChild(promptSpan);
-  p.appendChild(contentNode);
-  terminalHistory.appendChild(p);
-  
-  // Add coach insight
-  setTimeout(() => {
-    const coach = document.createElement('div');
-    coach.className = 'coach-msg';
-    
-    const coachText = document.createTextNode("Computers are stupid. They only do what they're told — no more, no less. That's why adding a quote changes everything.");
-    
-    coach.appendChild(coachText);
-    terminalHistory.appendChild(coach);
-  }, 1200);
-  
-  setTimeout(() => {
-    const p = document.createElement('div');
-    p.className = 'history-line';
-    
-    const promptSpan2 = document.createElement('span');
-    promptSpan2.className = 'prompt';
-    promptSpan2.textContent = 'BOOT-1:';
-    
-    const contentNode2 = document.createTextNode(" Now try typing just a single quote: '");
-    
-    p.appendChild(promptSpan2);
-    p.appendChild(contentNode2);
-    terminalHistory.appendChild(p);
-    
-    inputField.focus();
-  }, 2500);
-}
-
-function showQuoteResponse() {
-  const p = document.createElement('div');
-  p.className = 'history-line';
-  
-  const promptSpan = document.createElement('span');
-  promptSpan.className = 'prompt';
-  promptSpan.textContent = 'BOOT-1:';
-  
-  const contentNode = document.createTextNode(" You typed '. The system builds: SELECT * FROM users WHERE username='' AND password=''");
-  
-  p.appendChild(promptSpan);
-  p.appendChild(contentNode);
-  terminalHistory.appendChild(p);
-  
-  // Ground truth alert
-  setTimeout(() => {
-    const alert = document.createElement('div');
-    alert.className = 'ground-truth';
-    
-    const alertText = document.createTextNode("GROUND TRUTH: The database doesn't decide. It follows instructions.");
-    
-    alert.appendChild(alertText);
-    terminalHistory.appendChild(alert);
-  }, 1200);
-  
-  setTimeout(() => {
-    const p = document.createElement('div');
-    p.className = 'history-line';
-    
-    const promptSpan2 = document.createElement('span');
-    promptSpan2.className = 'prompt';
-    promptSpan2.textContent = 'BOOT-1:';
-    
-    const contentNode2 = document.createTextNode(" That single quote becomes part of the syntax! Try: ' OR 1=1 --");
-    
-    p.appendChild(promptSpan2);
-    p.appendChild(contentNode2);
-    terminalHistory.appendChild(p);
-    
-    inputField.focus();
-  }, 2800);
-}
-
-function showInjectionReveal() {
-  const p = document.createElement('div');
-  p.className = 'history-line';
-  
-  const promptSpan = document.createElement('span');
-  promptSpan.className = 'prompt';
-  promptSpan.textContent = 'BOOT-1:';
-  
-  const contentNode = document.createTextNode(" You typed: ' OR 1=1 -- The system ignores the password check! Result? It returns the first user.");
-  
-  p.appendChild(promptSpan);
-  p.appendChild(contentNode);
-  terminalHistory.appendChild(p);
-  
-  // Final ground truth
-  setTimeout(() => {
-    const alert = document.createElement('div');
-    alert.className = 'ground-truth';
-    
-    const alertText = document.createTextNode("GROUND TRUTH: Security isn't about code. It's about assumptions.");
-    
-    alert.appendChild(alertText);
-    terminalHistory.appendChild(alert);
-    
-    const coach = document.createElement('div');
-    coach.className = 'coach-msg';
-    
-    const coachText = document.createTextNode("You just learned SQL injection — not by memorizing, but by seeing how a crack opens. Now you can find cracks anywhere.");
-    
-    coach.appendChild(coachText);
-    terminalHistory.appendChild(coach);
-  }, 2500);
-  
-  setTimeout(() => {
-    const p = document.createElement('div');
-    p.className = 'history-line';
-    
-    const promptSpan2 = document.createElement('span');
-    promptSpan2.className = 'prompt';
-    promptSpan2.textContent = 'BOOT-1:';
-    
-    const contentNode2 = document.createTextNode(" You've built your first security mindset. Type \"done\" to complete the session.");
-    
-    p.appendChild(promptSpan2);
-    p.appendChild(contentNode2);
-    terminalHistory.appendChild(p);
-    
-    inputField.focus();
-  }, 4200);
-}
-
-// === PATH 3: NETWORK MAP LESSON (NEW!) ===
-function showNetworkMap() {
-  const p = document.createElement('div');
-  p.className = 'history-line';
-  
-  const promptSpan = document.createElement('span');
-  promptSpan.className = 'prompt';
-  promptSpan.textContent = 'BOOT-1:';
-  
-  const contentNode = document.createTextNode(" You map the network: [LOCAL_HOST] -> [FIREWALL] -> [SERVER_CLUSTER]");
-  
-  p.appendChild(promptSpan);
-  p.appendChild(contentNode);
-  terminalHistory.appendChild(p);
-  
-  setTimeout(() => {
-    const coach = document.createElement('div');
-    coach.className = 'coach-msg';
-    
-    const coachText = document.createTextNode("Every system has a topology. Hackers don't break the machine — they map the pipes and find the weakest joint.");
-    
-    coach.appendChild(coachText);
-    terminalHistory.appendChild(coach);
-  }, 1500);
-  
-  setTimeout(() => {
-    const p = document.createElement('div');
-    p.className = 'history-line';
-    
-    const promptSpan2 = document.createElement('span');
-    promptSpan2.className = 'prompt';
-    promptSpan2.textContent = 'BOOT-1:';
-    
-    const contentNode2 = document.createTextNode(" Now try typing \"done\" to complete the session.");
-    
-    p.appendChild(promptSpan2);
-    p.appendChild(contentNode2);
-    terminalHistory.appendChild(p);
-    
-    inputField.focus();
-  }, 3000);
+  bootDisplay.appendChild(p);
+  bootDisplay.scrollTop = bootDisplay.scrollHeight;
 }
 
 // === END GAME HANDLER ===
@@ -808,19 +411,11 @@ function endGame() {
   const title = document.getElementById('end-title');
   const stats = document.getElementById('end-stats');
   
-  if (currentPath === 3) {
-    title.textContent = "NETWORK TOPOLOGY MASTERED";
-    title.className = 'success';
-    stats.innerHTML = `Understanding Level: <span style="color:#fff">${understandingLevel}%</span><br>
-                       Topologies Mapped: 1<br>
-                       Weak Points Identified: 2`;
-  } else {
-    title.textContent = "GROUND TRUTHS MASTERED";
-    title.className = 'success';
-    stats.innerHTML = `Understanding Level: <span style="color:#fff">${understandingLevel}%</span><br>
-                       Ground Truths Discovered: 2<br>
-                       Cracks Identified: 1`;
-  }
+  title.textContent = "GROUND TRUTHS MASTERED";
+  title.className = 'success';
+  stats.innerHTML = `Understanding Level: <span style="color:#fff">${understandingLevel}%</span><br>
+                     Ground Truths Discovered: 2<br>
+                     Cracks Identified: 1`;
   
   // Show end screen with animation
   const endScreen = document.getElementById('end-screen');
@@ -836,13 +431,6 @@ window.onload = () => {
   powerLed.classList.add('on');
   
   setTimeout(typeBoot, 800);
-  
-  document.addEventListener('click', () => {
-    const endScreen = document.getElementById('end-screen');
-    if (!endScreen.style.display || endScreen.style.display === 'none') {
-      inputField.focus();
-    }
-  });
 };
 </script>
 
