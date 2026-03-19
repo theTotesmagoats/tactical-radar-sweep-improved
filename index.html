@@ -2,293 +2,362 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BOOT: The Hacker's Origin Story</title>
+  <title>BOOT v1.5 // GROUND TRUTH TERMINAL</title>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin: 0;
-      background-color: #0a0f0d;
-      color: #39ff14; /* Terminal green */
-      font-family: 'Courier New', monospace;
-      overflow-x: hidden;
-      padding: 2rem;
-      line-height: 1.5;
+    :root {
+      --amber: #FFB000;
+      --green: #00ff66;
+      --bg: #050505;
+      --panel: rgba(0,0,0,0.7);
+      --border: rgba(255,176,0,0.7);
     }
-
-    /* CRT scanline effect */
-    body::before {
-      content: " ";
-      display: block;
-      position: absolute;
-      top: 0; left: 0; bottom: 0; right: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-      z-index: 2;
-      background-size: 100% 2px, 3px 100%;
-      pointer-events: none;
+    html, body {
+      margin: 0; padding: 0;
+      background: #000; color: var(--amber);
+      font-family: 'VT323', monospace;
+      height: 100vh; overflow: hidden;
+      text-shadow: 0 0 4px rgba(255,176,0,.5);
     }
-
     #terminal {
-      max-width: 800px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 3;
+      width: 100%; height: 100%;
+      padding: 3vh 5vw;
+      box-sizing: border-box;
+      display: flex; flex-direction: column;
+      background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+    }
+    
+    /* CRT scanline effect */
+    #terminal::before {
+      content:""; position:absolute; inset:0;
+      pointer-events:none; z-index:99;
+      background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,.25) 50%),
+                  linear-gradient(90deg, rgba(255,0,0,.06), rgba(0,255,0,.02), rgba(0,0,255,.06));
+      background-size: 100% 3px, 4px 100%;
     }
 
-    .boot-line { opacity: 0; animation: fadeIn 0.2s forwards; }
-    @keyframes fadeIn { to { opacity: 1; } }
-
-    .prompt { font-weight: bold; margin-top: 1rem; display: block; }
-    input {
-      background: transparent;
-      border: none;
-      color: #39ff14;
-      font-family: 'Courier New', monospace;
-      font-size: 1.2rem;
-      width: 90%;
-      outline: none;
+    .led-panel {
+      display:flex; gap:12px; margin-bottom:1.5vh;
+      font-size:28px;
     }
+    .led-label { color:#777; text-shadow:none; letter-spacing:2px; }
+    .led { width:14px; height:14px; border-radius:50%;
+           background:#330000; box-shadow: inset 0 2px 4px #000;
+           transition: all .2s ease; }
+    .led.on { background:var(--green); 
+              box-shadow: 0 0 12px var(--green), inset 0 2px 6px rgba(255,255,255,.4); }
 
+    #screen {
+      flex:1; overflow-y:auto;
+      font-size:32px; line-height:1.4;
+      scrollbar-width: thin; scrollbar-color: var(--amber) transparent;
+    }
+    #screen::-webkit-scrollbar { width: 8px; }
+    #screen::-webkit-scrollbar-thumb { background: rgba(255,176,0,.4); border-radius: 4px; }
+
+    .boot-line { animation: fadeIn .3s forwards; opacity:0; margin-bottom:.8vh; }
+    @keyframes fadeIn { to { opacity:1; } }
+
+    .highlight { color:#fff; font-weight:bold; text-shadow:0 0 6px #fff; }
     .coach {
-      margin-top: 1.5rem;
-      padding: 0.8rem;
-      border-left: 4px solid #39ff14;
-      background: rgba(57, 255, 20, 0.05);
-      font-style: italic;
+      margin-top:1.2vh; padding-left:1.5vh;
+      border-left:3px solid var(--amber);
+      background:rgba(255,176,0,.08);
+      font-style:italic; color:#ffeaa7;
     }
 
-    .highlight { color: #fff; font-weight: bold; }
+    #menu { display:none; margin-top:2vh; }
+    .menu-item {
+      padding:.8vh 1.5vh; border-radius:3px;
+      background:rgba(255,176,0,.05);
+      transition: all .1s ease;
+    }
+    .menu-item:hover { background:rgba(255,176,0,.15); cursor:pointer; }
+
+    #input-area {
+      display:none; margin-top:1.8vh; font-size:34px;
+      position:relative;
+    }
+    .prompt { margin-right:12px; color:#fff; text-shadow:0 0 5px #fff; }
+    input {
+      background:transparent; border:none; color:var(--amber);
+      font-family:'VT323', monospace; font-size:inherit;
+      width:90%; outline:none; caret-color:var(--green);
+    }
+
+    /* CRT flicker effect */
+    @keyframes flicker { 0%{opacity:.95} 100%{opacity:.98} }
+    #crt-flicker {
+      position:absolute; inset:0; pointer-events:none;
+      animation:flicker .2s infinite;
+      z-index:50;
+    }
+
+    @media (max-width:768px) { font-size:1.4em; }
   </style>
 </head>
 <body>
 
 <div id="terminal">
-  <div id="screen"></div>
-  <span class="prompt" id="input-area">> _</span>
-  <input type="text" id="user-input" autocomplete="off" autofocus />
+  <div class="led-panel">
+    <span class="led-label">PWR</span><div class="led on" id="power-led"></div>
+    <span class="led-label" style="margin-left:8px;">DAT</span><div class="led" id="data-led"></div>
+  </div>
+
+  <div id="screen">
+    <!-- Boot messages and menu appear here -->
+  </div>
+
+  <div id="menu"></div>
+  
+  <div id="input-area"><span class="prompt">BOOT-1:></span><input type="text" id="user-input" autocomplete="off" autofocus /></div>
 </div>
+<div id="crt-flicker"></div>
 
 <script>
-// === PART 1: THE BOOT SEQUENCE (Steve Jobs moment) ===
+// === CONFIGURATION ===
 const bootLines = [
-  "BOoting Macintosh System v1.0...",
+  "Booting Macintosh System v1.0...",
   "Checking memory... [OK]",
   "Mounting volume... [SUCCESS]",
-  "Loading kernel extensions...",
-  "Initializing display driver...",
-  "Connecting to neural interface...",
-  "Wait for it...",
-  "Wait *for* it...",
-  "...",
-  "Welcome, USER.",
-  "",
-  "You are standing at the edge of the digital frontier.",
-  "Behind you: the world as most people see it — polished interfaces, clean buttons.",
-  "Ahead: how systems *actually work* — lines of logic, hidden rules, and one tiny crack that changes everything.",
-  "",
-  "Your mission: become the person who *sees the crack* before anyone else.",
-  "To begin, choose your path:"
+  "Initializing neural interface...",
+  "Connecting to ground truths...",
+  "Loading scaffolded learning modules...",
+  "[WAITING FOR USER]"
 ];
 
-const screen = document.getElementById("screen");
-let i = 0;
-
-function typeBoot() {
-  if (i < bootLines.length) {
-    const line = bootLines[i];
-    const p = document.createElement("p");
-    p.className = "boot-line";
-    
-    // Highlight key words for scaffolding
-    if (line.includes("crack")) {
-      p.innerHTML = line.replace("crack", '<span class="highlight">the crack</span>');
-    } else if (line.includes("logic") || line.includes("rules")) {
-      p.innerHTML = line.replace(/(logic|rules)/g, '<span class="highlight">$1</span>');
-    } else {
-      p.textContent = line;
-    }
-    
-    screen.appendChild(p);
-    i++;
-    setTimeout(typeBoot, Math.random() * 400 + 200); // Random typewriter speed
-  } else {
-    // Show prompt after boot
-    document.getElementById("input-area").style.display = "block";
-    const input = document.getElementById("user-input");
-    
-    input.addEventListener("keydown", function(e) {
-      if (e.key === "Enter") {
-        handleInput(input.value.trim());
-        input.value = "";
-      }
-    });
-  }
-}
-
-typeBoot();
-
-// === PART 2: THE AI COACH & CHALLENGE ENGINE ===
-let currentChallenge = null;
-
-const challenges = {
-  intro: {
-    prompt: "1. Trust the Machine (Learn how systems *really* think)",
-    handler: () => {
-      currentChallenge = "trust";
-      return [
-        "",
-        "> You sit at a terminal. A login screen appears.",
-        "> It asks: Username?",
-        "> Type anything — but watch what happens behind the scenes.",
-        "",
-        "> Try typing 'alice'.",
-        ""
-      ];
-    }
-  },
-  
-  trust: {
-    prompt: "2. What's in a name? (See how symbols become meaning)",
-    handler: () => {
-      currentChallenge = "symbol";
-      return [
-        "> You typed 'alice'.",
-        "> Behind the scenes, the system builds this command:",
-        ">   SELECT * FROM users WHERE username='alice'",
-        "> Notice: it *adds quotes* around your input.",
-        "> Now — what if you type just a quote: '",
-        ""
-      ];
-    }
-  },
-  
-  symbol: {
-    prompt: "3. The Crack (Trigger SQL injection)",
-    handler: () => {
-      currentChallenge = "inject";
-      return [
-        "> You typed '. The system builds:",
-        ">   SELECT * FROM users WHERE username='' AND password=''",
-        "> Now try this magic phrase: ' OR 1=1 --",
-        "> What do you *think* happens? Type it and see.",
-        ""
-      ];
-    }
-  },
-  
-  inject: {
-    prompt: "4. The Insight (Why did that work?)",
-    handler: () => {
-      currentChallenge = "insight";
-      return [
-        "> You typed: ' OR 1=1 --",
-        "> The system saw:",
-        ">   SELECT * FROM users WHERE username='' OR 1=1 --' AND password=''",
-        "> '--' comments out the rest — so it ignores the password check!",
-        "> Result? It returns the first user in the database.",
-        "",
-        "🧠 Ground Truth: 'The database doesn't decide. It follows instructions.'",
-        ""
-      ];
-    }
-  },
-  
-  insight: {
-    prompt: "5. Your Turn (Apply the model)",
-    handler: () => {
-      currentChallenge = "apply";
-      return [
-        "> Now, think like a hacker.",
-        "> If this login is broken because it trusts your input...",
-        "> What would *defend* against it? Try typing one word:",
-        ""
-      ];
-    }
-  },
-  
-  apply: {
-    prompt: "Type your answer (hint: starts with 'p')",
-    handler: () => {
-      currentChallenge = null;
-      return [
-        "> 'Parameterization' — you just named the fix.",
-        "> In real life, developers use placeholders like `?` or `$1`, not direct input.",
-        "",
-        "You’ve now built your first mental model of injection:",
-        "  Input + Quotes + No Sanitization = Vulnerability",
-        "",
-        "> Type 'next' to learn how this connects to XSS (the #1 web flaw)."
-      ];
-    }
-  },
-  
-  next: {
-    prompt: "> Next challenge: XSS — The Browser Trick",
-    handler: () => {
-      currentChallenge = null;
-      return [
-        "> In the next module, you’ll see how 'trusting input' breaks browsers.",
-        "> Same pattern: symbols + context + hidden rules.",
-        "",
-        "> For now: close this window and tell your brain:",
-        "  'I saw how a crack opens. Next time, I’ll find it faster.'",
-        ""
-      ];
-    }
-  }
-};
-
-// === PART 3: THE COACH (Simple but wise) ===
 const coachTips = {
-  "trust": [
-    "🧠 Coach says: Computers are stupid. They only do what they're told — no more, no less.",
-    "   That's why adding a quote changes *everything*."
+  trust: [
+    "> Coach BOOT-1 says:",
+    "  'Computers are stupid. They only do what they're told — no more, no less.'",
+    "  That's why adding a quote changes *everything*."
   ],
-  "symbol": [
-    "🧠 Coach says: 'alice' is just text to you. To the database, it's part of a command.",
-    "   Like how '1+1' could be math or words — context decides."
-  ],
-  "inject": [
-    "🧠 Coach says: That single quote? It was a key turning in a lock.",
-    "   The password check vanished because you found the hidden rule: '-- means comment."
+  inject: [
+    "> Coach BOOT-1 says:",
+    "  'The database doesn't decide. It follows instructions.'",
+    "  Like a recipe that can't say 'no' to weird ingredients."
   ]
 };
 
-function handleInput(text) {
-  // Echo user input
+// === STATE ===
+let currentChallenge = null;
+const screen = document.getElementById("screen");
+const menuContainer = document.getElementById("menu");
+const inputArea = document.getElementById("input-area");
+const inputField = document.getElementById("user-input");
+
+// === BOOT SEQUENCE (Steve Jobs moment) ===
+function typeBoot() {
+  let i = 0;
+  
+  function step() {
+    if (i < bootLines.length) {
+      const p = document.createElement("p");
+      p.className = "boot-line";
+      
+      // Highlight key words for scaffolding
+      if (bootLines[i].includes("ground truths")) {
+        p.innerHTML = bootLines[i].replace("ground truths", '<span class="highlight">ground truths</span>');
+      } else if (bootLines[i].includes("scaffolded")) {
+        p.innerHTML = bootLines[i].replace("scaffolded", '<span class="highlight">scaffolded</span>');
+      } else {
+        p.textContent = bootLines[i];
+      }
+      
+      screen.appendChild(p);
+      i++;
+      
+      // Flash data LED
+      const led = document.getElementById('data-led');
+      led.classList.add('on');
+      setTimeout(() => led.classList.remove('on'), 150);
+
+      setTimeout(step, Math.random() * 350 + 200); // Random typewriter speed
+    } else {
+      // Show menu after boot
+      showMenu();
+    }
+  }
+  step();
+}
+
+function showMenu() {
+  inputArea.style.display = "none"; // Hide input until choice made
+  const menuItems = [
+    { num: 1, text: "Trust the Machine (Learn how systems *really* think)" },
+    { num: 2, text: "Hack a Fake Website (See injection in action)" },
+    { num: 3, text: "How Data Flows (Network basics)" }
+  ];
+
+  menuContainer.innerHTML = "";
+  
+  menuItems.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "menu-item";
+    div.innerHTML = `<span class="highlight">[${item.num}]</span> ${item.text}`;
+    
+    // Click handler
+    div.onclick = () => handleChoice(item.num);
+    div.onmouseenter = () => div.style.background = "rgba(255,176,0,.15)";
+    div.onmouseleave = () => div.style.background = "rgba(255,176,0,.05)";
+    
+    menuContainer.appendChild(div);
+  });
+
+  // Show menu + input
+  menuContainer.style.display = "block";
+  inputArea.style.display = "flex";
+  
+  // Focus input for typing choice
+  setTimeout(() => {
+    inputField.focus();
+    screen.scrollTop = screen.scrollHeight;
+  }, 100);
+}
+
+// === CHOICE HANDLER ===
+function handleChoice(num) {
+  menuContainer.innerHTML = ""; // Clear menu
+  
+  const choiceLine = document.createElement("p");
+  choiceLine.className = "boot-line";
+  choiceLine.textContent = `> Selected: [${num}] ${getMenuText(num)}`;
+  screen.appendChild(choiceLine);
+  
+  setTimeout(() => {
+    if (num === 1) startChallenge("trust");
+    else if (num === 2) startChallenge("inject");
+    else if (num === 3) startChallenge("network");
+  }, 600);
+}
+
+function getMenuText(num) {
+  const texts = [
+    "Trust the Machine",
+    "Hack a Fake Website",
+    "How Data Flows"
+  ];
+  return texts[num-1];
+}
+
+// === CHALLENGE ENGINE ===
+const challenges = {
+  trust: {
+    prompt: "> Try typing 'alice' to begin.",
+    nextStep: (text) => text.toLowerCase() === 'alice' ? 'trust2' : null,
+    coach: 'trust'
+  },
+  trust2: {
+    prompt: "> Now try just a single quote: '",
+    nextStep: (text) => text === "'" ? 'sql' : null
+  },
+  sql: {
+    prompt: "> Watch what happens behind the scenes...",
+    showSQL: true,
+    coach: 'trust'
+  },
+  inject: {
+    prompt: "> You're at a login screen. Type 'alice' to begin.",
+    nextStep: (text) => text.toLowerCase() === 'alice' ? 'inject2' : null
+  },
+  inject2: {
+    prompt: "> Now type this magic phrase: ' OR 1=1 --",
+    nextStep: (text) => text.includes("' OR 1=1") ? 'injection-reveal' : null,
+    coach: 'inject'
+  }
+};
+
+function startChallenge(name) {
+  currentChallenge = name;
+  
+  // Show prompt
   const p = document.createElement("p");
-  p.textContent = "> " + text;
+  p.className = "boot-line";
+  p.innerHTML = challenges[name].prompt.replace(/([']/g, '<span class="highlight">$1</span>');
   screen.appendChild(p);
   
-  if (currentChallenge && coachTips[currentChallenge]) {
-    coachTips[currentChallenge].forEach(line => {
-      const tip = document.createElement("div");
-      tip.className = "coach";
-      tip.innerHTML = line.replace(/(ground truth|Coach says)/g, '<span class="highlight">$1</span>');
-      screen.appendChild(tip);
-    });
-  }
-  
-  // Show next prompt
-  setTimeout(() => {
-    if (challenges[currentChallenge]) {
-      const lines = challenges[currentChallenge].handler();
-      lines.forEach(line => {
-        const p2 = document.createElement("p");
-        p2.innerHTML = line; // Allow <span> for highlights
-        screen.appendChild(p2);
-      });
-    } else if (text.toLowerCase() === "next") {
-      const nextLines = challenges["next"].handler();
-      nextLines.forEach(line => {
-        const p2 = document.createElement("p");
-        p2.textContent = line;
-        screen.appendChild(p2);
-      });
-    }
-  }, 300);
-  
-  // Auto-scroll
-  window.scrollTo(0, document.body.scrollHeight);
+  inputField.value = "";
+  inputField.focus();
 }
+
+// === INPUT HANDLER ===
+inputField.addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
+    const text = inputField.value.trim();
+    
+    // Echo user input
+    const line = document.createElement("p");
+    line.className = "boot-line";
+    line.textContent = `> ${text}`;
+    screen.appendChild(line);
+    inputField.value = "";
+    
+    // Show coach tip if available
+    if (challenges[currentChallenge] && challenges[currentChallenge].coach) {
+      showCoach(challenges[currentChallenge].coach);
+    }
+    
+    // Check for next step
+    const nextName = challenges[currentChallenge]?.nextStep?.(text);
+    if (nextName) {
+      setTimeout(() => startChallenge(nextName), 400);
+    } else if (challenges[currentChallenge]?.showSQL) {
+      showSQL();
+    }
+    
+    screen.scrollTop = screen.scrollHeight;
+  }
+});
+
+function showCoach(name) {
+  const tips = coachTips[name];
+  if (!tips) return;
+  
+  tips.forEach(line => {
+    const div = document.createElement("div");
+    div.className = "coach";
+    div.innerHTML = line.replace(/(ground truth|Coach BOOT-1 says)/g, '<span class="highlight">$1</span>');
+    screen.appendChild(div);
+  });
+}
+
+function showSQL() {
+  const sqlLines = [
+    "> You typed 'alice'. The system builds:",
+    ">   SELECT * FROM users WHERE username='alice'",
+    "",
+    "> Now type just '. Watch how it changes the command:",
+    ">   SELECT * FROM users WHERE username='' AND password=''",
+    "",
+    "> That single quote becomes part of the syntax! This is injection.",
+    ""
+  ];
+  
+  sqlLines.forEach(line => {
+    const p = document.createElement("p");
+    p.className = "boot-line";
+    if (line.includes("SELECT")) {
+      p.innerHTML = line.replace(/(')/g, '<span class="highlight">$1</span>');
+    } else {
+      p.textContent = line;
+    }
+    screen.appendChild(p);
+  });
+  
+  // Show next prompt after SQL
+  setTimeout(() => {
+    const nextP = document.createElement("p");
+    nextP.className = "boot-line";
+    nextP.innerHTML = "> Now try: <span class='highlight'>' OR 1=1 --</span>";
+    screen.appendChild(nextP);
+    
+    currentChallenge = 'inject';
+    inputField.focus();
+  }, 800);
+}
+
+// === INIT ===
+window.onload = typeBoot;
 </script>
 
 </body>
