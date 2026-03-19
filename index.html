@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BOOT v1.5 // GROUND TRUTH TERMINAL</title>
+  <title>BOOT v2.0 // GROUND TRUTH TERMINAL</title>
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -12,352 +12,869 @@
       --panel: rgba(0,0,0,0.7);
       --border: rgba(255,176,0,0.7);
     }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
     html, body {
-      margin: 0; padding: 0;
-      background: #000; color: var(--amber);
+      width: 100vw;
+      height: 100vh;
+      background: #0a0a0a;
       font-family: 'VT323', monospace;
-      height: 100vh; overflow: hidden;
-      text-shadow: 0 0 4px rgba(255,176,0,.5);
+      overflow: hidden;
     }
-    #terminal {
-      width: 100%; height: 100%;
-      padding: 3vh 5vw;
-      box-sizing: border-box;
-      display: flex; flex-direction: column;
+
+    #hardware-chassis {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 2vh 4vw;
       background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
     }
-    
-    /* CRT scanline effect */
-    #terminal::before {
-      content:""; position:absolute; inset:0;
-      pointer-events:none; z-index:99;
-      background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,.25) 50%),
-                  linear-gradient(90deg, rgba(255,0,0,.06), rgba(0,255,0,.02), rgba(0,0,255,.06));
-      background-size: 100% 3px, 4px 100%;
-    }
 
+    /* LED Panel */
     .led-panel {
-      display:flex; gap:12px; margin-bottom:1.5vh;
-      font-size:28px;
+      display:flex;
+      gap:16px;
+      margin-bottom:2vh;
+      font-size:24px;
     }
-    .led-label { color:#777; text-shadow:none; letter-spacing:2px; }
-    .led { width:14px; height:14px; border-radius:50%;
-           background:#330000; box-shadow: inset 0 2px 4px #000;
-           transition: all .2s ease; }
-    .led.on { background:var(--green); 
-              box-shadow: 0 0 12px var(--green), inset 0 2px 6px rgba(255,255,255,.4); }
-
-    #screen {
-      flex:1; overflow-y:auto;
-      font-size:32px; line-height:1.4;
-      scrollbar-width: thin; scrollbar-color: var(--amber) transparent;
+    
+    .led-label {
+      color:#777;
+      text-shadow:none;
+      letter-spacing:3px;
     }
-    #screen::-webkit-scrollbar { width: 8px; }
-    #screen::-webkit-scrollbar-thumb { background: rgba(255,176,0,.4); border-radius: 4px; }
-
-    .boot-line { animation: fadeIn .3s forwards; opacity:0; margin-bottom:.8vh; }
-    @keyframes fadeIn { to { opacity:1; } }
-
-    .highlight { color:#fff; font-weight:bold; text-shadow:0 0 6px #fff; }
-    .coach {
-      margin-top:1.2vh; padding-left:1.5vh;
-      border-left:3px solid var(--amber);
-      background:rgba(255,176,0,.08);
-      font-style:italic; color:#ffeaa7;
-    }
-
-    #menu { display:none; margin-top:2vh; }
-    .menu-item {
-      padding:.8vh 1.5vh; border-radius:3px;
-      background:rgba(255,176,0,.05);
-      transition: all .1s ease;
-    }
-    .menu-item:hover { background:rgba(255,176,0,.15); cursor:pointer; }
-
-    #input-area {
-      display:none; margin-top:1.8vh; font-size:34px;
+    
+    .led {
+      width:18px;
+      height:18px;
+      border-radius:50%;
+      background:#330000;
+      box-shadow: inset 0 2px 4px #000;
+      transition: all 0.3s ease;
       position:relative;
     }
-    .prompt { margin-right:12px; color:#fff; text-shadow:0 0 5px #fff; }
-    input {
-      background:transparent; border:none; color:var(--amber);
-      font-family:'VT323', monospace; font-size:inherit;
-      width:90%; outline:none; caret-color:var(--green);
+    
+    .led.pwr {
+      background:#800000;
+      box-shadow: inset 0 2px 6px rgba(128,0,0,.5);
+    }
+    
+    .led.on {
+      background:var(--green);
+      box-shadow: 
+        0 0 14px var(--green),
+        0 0 6px #fff,
+        inset 0 2px 6px rgba(255,255,255,.4);
     }
 
-    /* CRT flicker effect */
-    @keyframes flicker { 0%{opacity:.95} 100%{opacity:.98} }
-    #crt-flicker {
-      position:absolute; inset:0; pointer-events:none;
-      animation:flicker .2s infinite;
-      z-index:50;
+    /* Monitor Bezel */
+    .monitor-bezel {
+      flex:1;
+      border-radius:18px;
+      background:#0a0a0a;
+      box-shadow:
+        inset 0 10px 20px rgba(0,0,0,1),
+        inset 0 -5px 10px rgba(255,255,255,.03),
+        0 8px 16px rgba(0,0,0,.7);
+      padding:2.5vh 4vw;
+      position:relative;
+      display:flex;
+      flex-direction:column;
     }
 
-    @media (max-width:768px) { font-size:1.4em; }
+    /* CRT Screen */
+    .crt-screen {
+      flex:1;
+      position:relative;
+      overflow:hidden;
+      border-radius:8px;
+      background:#000;
+      box-shadow:
+        inset 0 0 60px rgba(0,0,0,1),
+        0 0 30px rgba(255,176,0,.04);
+    }
+
+    /* CRT Effects */
+    .crt-screen::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,.35) 50%),
+        linear-gradient(90deg, rgba(255,0,0,.04), rgba(0,255,0,.02), rgba(0,0,255,.04));
+      background-size:100% 3px, 6px 100%;
+      pointer-events:none;
+    }
+
+    .crt-screen::after {
+      content:"";
+      position:absolute;
+      inset:0;
+      animation:flicker 0.15s infinite;
+      opacity:.03;
+      pointer-events:none;
+    }
+
+    @keyframes flicker {
+      0% { transform: skew(0deg,0deg); }
+      20% { transform: skew(-1.5deg,0deg) translate(-1px,0); }
+      40% { transform: skew(1.5deg,0deg) translate(1px,0); }
+      60% { transform: skew(-0.8deg,0deg) translate(0,-0.5px); }
+      80% { transform: skew(0.8deg,0deg) translate(0,0.5px); }
+      100% { transform: skew(0deg,0deg); }
+    }
+
+    /* Boot Terminal */
+    #boot-terminal {
+      position:absolute;
+      left:2vh;
+      bottom:2vh;
+      width:calc(100% - 4vh);
+      display:flex;
+      align-items:center;
+      font-size:32px;
+      z-index:5;
+    }
+
+    .prompt {
+      margin-right:16px;
+      color:#fff;
+      text-shadow:0 0 8px #fff;
+      white-space:nowrap;
+    }
+
+    .display-text {
+      white-space:pre-wrap;
+      word-break:break-word;
+      line-height:1.4;
+    }
+
+    .cursor-block {
+      display:inline-block;
+      width:16px;
+      height:28px;
+      margin-left:3px;
+      vertical-align:text-bottom;
+      background:var(--amber);
+      box-shadow:0 0 10px rgba(255,176,0,.9);
+      animation:blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%,100% { opacity:1; }
+      50% { opacity:0; }
+    }
+
+    #input-field {
+      position:absolute;
+      opacity:0;
+      left:-9999px;
+    }
+
+    /* Intro Sequence */
+    #intro-sequence {
+      position:absolute;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      width:86%;
+      z-index:10;
+      opacity:0;
+      transition:opacity 1.2s ease-in-out;
+      font-size:34px;
+    }
+
+    #intro-sequence h2 {
+      margin:0 0 16px 0;
+      font-size:52px;
+      color:#fff;
+      text-shadow:0 0 18px rgba(255,255,255,.7);
+      letter-spacing:4px;
+    }
+
+    .sys-ok {
+      color:var(--green);
+      text-shadow:0 0 6px var(--green);
+      font-weight:bold;
+    }
+
+    /* Menu */
+    #menu-container {
+      position:absolute;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      width:72%;
+      z-index:10;
+      opacity:0;
+      transition:opacity 1s ease-in-out;
+    }
+
+    .menu-item {
+      padding:1.4vh 2vw;
+      margin-bottom:12px;
+      border-radius:6px;
+      background:rgba(255,176,0,.06);
+      border-left:4px solid var(--amber);
+      transition:all 0.2s ease;
+      cursor:pointer;
+    }
+
+    .menu-item:hover {
+      background:rgba(255,176,0,.18);
+      transform:translateX(8px);
+      box-shadow:0 0 14px rgba(255,176,0,.3);
+    }
+
+    .highlight {
+      color:#fff;
+      font-weight:bold;
+      text-shadow:0 0 8px #fff;
+    }
+
+    /* Game Interface */
+    #game-interface {
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      opacity:0;
+      transition:opacity 1s ease-in-out;
+      z-index:20;
+    }
+
+    #terminal-history {
+      flex:1;
+      overflow-y:auto;
+      padding-bottom:3vh;
+      scrollbar-width:thin;
+      scrollbar-color:rgba(255,176,0,.4) transparent;
+    }
+
+    .history-line {
+      margin-bottom:1.2vh;
+      font-size:28px;
+    }
+
+    .coach-msg {
+      background:rgba(255,176,0,.1);
+      border-left:4px solid var(--amber);
+      padding:1.2vh 1.6vw;
+      margin-top:1.6vh;
+      font-style:italic;
+      color:#ffeaa7;
+    }
+
+    .ground-truth {
+      background:rgba(0,255,102,.12);
+      border-left:4px solid var(--green);
+      padding:1.2vh 1.6vw;
+      margin-top:1.6vh;
+      font-weight:bold;
+      color:#ccffe6;
+    }
+
+    .system-alert {
+      background:rgba(255,0,0,.1);
+      border-left:4px solid #ff3b3b;
+      padding:1.2vh 1.6vw;
+      margin-top:1.6vh;
+      color:#ffb3b3;
+    }
+
+    /* Status Strip */
+    .status-strip {
+      display:flex;
+      gap:16px;
+      margin-bottom:1.4vh;
+    }
+
+    .status-box {
+      flex:1;
+      background:rgba(0,0,0,.5);
+      border:1px solid var(--border);
+      box-shadow:0 0 8px rgba(255,176,0,.1);
+      padding:1.2vh 1.4vw;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .status-title {
+      font-size:22px;
+      color:#d2b162;
+      margin-bottom:.8vh;
+      letter-spacing:2px;
+    }
+
+    /* End Screen */
+    #end-screen {
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:rgba(0,0,0,.85);
+      backdrop-filter:blur(4px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:30;
+    }
+
+    #end-card {
+      width:min(700px, 86%);
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.92);
+      box-shadow:0 0 30px rgba(255,176,0,.14);
+      padding:3vh 4vw;
+    }
+
+    #end-title {
+      font-size:64px;
+      margin:0 0 1.8vh 0;
+    }
+
+    #end-success { color:var(--green); text-shadow:0 0 20px var(--green); }
+    #end-partial { color:var(--amber); }
+    #end-fail { color:#ff3b3b; text-shadow:0 0 16px #ff3b3b; }
+
+    /* Responsive */
+    @media (max-width:980px) {
+      .monitor-bezel { padding:1.5vh 2vw; }
+      .crt-screen::before { background-size:100% 4px, 8px 100%; }
+      #intro-sequence h2 { font-size:36px; }
+      .menu-item { font-size:26px; padding:1vh 2vw; }
+    }
+
+    @media (max-width:768px) {
+      html, body { overflow-y:auto; }
+      #hardware-chassis { height:auto; min-height:100vh; }
+      .monitor-bezel { flex:none; min-height:60vh; }
+      .led-panel { font-size:20px; }
+    }
   </style>
 </head>
 <body>
 
-<div id="terminal">
+<div id="hardware-chassis">
+  <!-- LED Panel -->
   <div class="led-panel">
-    <span class="led-label">PWR</span><div class="led on" id="power-led"></div>
-    <span class="led-label" style="margin-left:8px;">DAT</span><div class="led" id="data-led"></div>
+    <span class="led-label">PWR</span>
+    <div class="led pwr" id="power-led"></div>
+    <span class="led-label" style="margin-left:12px;">DAT</span>
+    <div class="led" id="data-led"></div>
   </div>
 
-  <div id="screen">
-    <!-- Boot messages and menu appear here -->
-  </div>
+  <!-- Monitor Bezel -->
+  <div class="monitor-bezel">
+    
+    <!-- CRT Screen -->
+    <div class="crt-screen">
+      <!-- Boot Terminal (visible during boot) -->
+      <div id="boot-terminal">
+        <span class="prompt">BOOT-1:</span>
+        <span class="display-text" id="boot-display"></span>
+        <span class="cursor-block"></span>
+      </div>
 
-  <div id="menu"></div>
-  
-  <div id="input-area"><span class="prompt">BOOT-1:></span><input type="text" id="user-input" autocomplete="off" autofocus /></div>
+      <!-- Intro Sequence (after boot completes) -->
+      <div id="intro-sequence">
+        <h2>SYSTEM READY</h2>
+        <p style="color:var(--amber); text-shadow:0 0 8px var(--amber);">
+          Ground Truth Terminal v2.0 // Uplink Secure
+        </p>
+        <p style="margin-top:3vh; color:#fff;">
+          &gt; mounting encrypted learning volume... <span class="sys-ok">[OK]</span><br>
+          &gt; establishing secure neural interface... <span class="sys-ok">[OK]</span><br>
+          &gt; loading ground truths... <span class="sys-ok">[OK]</span><br>
+          &gt; coach BOOT-1 online... <span class="sys-ok">[OK]</span>
+        </p>
+        <p style="margin-top:3vh; color:#ffeaa7;">
+          &gt; AWAITING INPUT...
+        </p>
+      </div>
+
+      <!-- Menu -->
+      <div id="menu-container">
+        <div class="menu-item" onclick="selectPath(1)">
+          <span class="highlight">[1]</span> Trust the Machine<br>
+          <span style="opacity:0.8; font-size:26px;">Learn how systems really think</span>
+        </div>
+        <div class="menu-item" onclick="selectPath(2)">
+          <span class="highlight">[2]</span> Hack a Fake Website<br>
+          <span style="opacity:0.8; font-size:26px;">See injection in action</span>
+        </div>
+        <div class="menu-item" onclick="selectPath(3)">
+          <span class="highlight">[3]</span> How Data Flows<br>
+          <span style="opacity:0.8; font-size:26px;">Network basics and topologies</span>
+        </div>
+      </div>
+
+      <!-- Game Interface -->
+      <div id="game-interface">
+        <div class="status-strip">
+          <div class="status-box">
+            <div class="status-title">Understanding</div>
+            <div style="font-size:32px; color:#fff;">0%</div>
+          </div>
+          <div class="status-box">
+            <div class="status-title">Coach Status</div>
+            <div style="color:var(--green); font-size:24px;">BOOT-1 ONLINE</div>
+          </div>
+        </div>
+
+        <div id="terminal-history"></div>
+        
+        <div id="game-input-line" style="margin-top:2vh; display:flex; align-items:center;">
+          <span class="prompt">BOOT-1:</span>
+          <span class="display-text" id="game-display"></span>
+          <span class="cursor-block"></span>
+        </div>
+      </div>
+
+      <!-- End Screen -->
+      <div id="end-screen">
+        <div id="end-card">
+          <h2 id="end-title">MISSION COMPLETE</h2>
+          <p style="font-size:34px; margin-bottom:2vh;">Ground Truths Mastered</p>
+          <div style="background:rgba(0,0,0,.6); padding:1.8vh 2vw; border-radius:6px;">
+            <p style="margin-bottom:.8vh;">Understanding Level:</p>
+            <div id="end-stats" style="font-size:32px; color:#fff;"></div>
+          </div>
+          <button onclick="location.reload()" 
+                  style="background:rgba(255,176,0,.2); border:1px solid var(--amber);
+                         color:var(--amber); font-family:'VT323', monospace;
+                         font-size:28px; padding:1.2vh 2vw; margin-top:2.4vh;
+                         cursor:pointer; transition:all 0.2s;">
+            RETURN TO TERMINAL
+          </button>
+        </div>
+      </div>
+
+      <!-- Hidden Input -->
+      <input type="text" id="input-field" autocomplete="off" autofocus>
+    </div>
+  </div>
 </div>
-<div id="crt-flicker"></div>
 
 <script>
-// === CONFIGURATION ===
+// === AUDIO SYSTEM (No external files) ===
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+let isAudioInitialized = false;
+
+function initAudio() {
+  if (!isAudioInitialized) {
+    if (audioContext.state === 'suspended') audioContext.resume();
+    isAudioInitialized = true;
+    
+    // Start ambient hum during boot
+    startAmbientHum();
+  }
+}
+
+function playTypewriterClack() {
+  if (!isAudioInitialized) return;
+  
+  const osc = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+  
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(120, audioContext.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(40, audioContext.currentTime + 0.03);
+  
+  gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.03);
+  
+  osc.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  
+  osc.start();
+  osc.stop(audioContext.currentTime + 0.035);
+}
+
+function playMenuSelect() {
+  if (!isAudioInitialized) return;
+  
+  const osc = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+  
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(420, audioContext.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.15);
+  
+  gainNode.gain.setValueAtTime(0.12, audioContext.currentTime);
+  gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.4);
+  
+  osc.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  
+  osc.start();
+  osc.stop(audioContext.currentTime + 0.45);
+}
+
+function playSystemOk() {
+  if (!isAudioInitialized) return;
+  
+  const osc = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+  
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(240, audioContext.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(380, audioContext.currentTime + 0.1);
+  
+  gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0, audioContext.currentTime + 0.6);
+  
+  osc.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  
+  osc.start();
+  osc.stop(audioContext.currentTime + 0.7);
+}
+
+function startAmbientHum() {
+  const osc = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+  const filter = audioContext.createBiquadFilter();
+  
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(50, audioContext.currentTime);
+  
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(120, audioContext.currentTime);
+  
+  gainNode.gain.setValueAtTime(0.04, audioContext.currentTime);
+  
+  osc.connect(filter);
+  filter.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  
+  osc.start();
+}
+
+// === SYSTEM STATE ===
+let terminalState = 'BOOT'; // BOOT → MENU → GAME → END
 const bootLines = [
-  "Booting Macintosh System v1.0...",
-  "Checking memory... [OK]",
-  "Mounting volume... [SUCCESS]",
+  "Booting Macintosh System v2.0...",
   "Initializing neural interface...",
-  "Connecting to ground truths...",
-  "Loading scaffolded learning modules...",
+  "Loading ground truths module...",
+  "Connecting to coach BOOT-1...",
   "[WAITING FOR USER]"
 ];
 
-const coachTips = {
-  trust: [
-    "> Coach BOOT-1 says:",
-    "  'Computers are stupid. They only do what they're told — no more, no less.'",
-    "  That's why adding a quote changes *everything*."
-  ],
-  inject: [
-    "> Coach BOOT-1 says:",
-    "  'The database doesn't decide. It follows instructions.'",
-    "  Like a recipe that can't say 'no' to weird ingredients."
-  ]
-};
+// === DOM ELEMENTS ===
+const powerLed = document.getElementById('power-led');
+const dataLed = document.getElementById('data-led');
+const bootDisplay = document.getElementById('boot-display');
+const introSequence = document.getElementById('intro-sequence');
+const menuContainer = document.getElementById('menu-container');
+const gameInterface = document.getElementById('game-interface');
+const terminalHistory = document.getElementById('terminal-history');
+const inputField = document.getElementById('input-field');
 
-// === STATE ===
-let currentChallenge = null;
-const screen = document.getElementById("screen");
-const menuContainer = document.getElementById("menu");
-const inputArea = document.getElementById("input-area");
-const inputField = document.getElementById("user-input");
-
-// === BOOT SEQUENCE (Steve Jobs moment) ===
+// === BOOT SEQUENCE ===
 function typeBoot() {
   let i = 0;
   
   function step() {
     if (i < bootLines.length) {
-      const p = document.createElement("p");
-      p.className = "boot-line";
+      const line = bootLines[i];
       
-      // Highlight key words for scaffolding
-      if (bootLines[i].includes("ground truths")) {
-        p.innerHTML = bootLines[i].replace("ground truths", '<span class="highlight">ground truths</span>');
-      } else if (bootLines[i].includes("scaffolded")) {
-        p.innerHTML = bootLines[i].replace("scaffolded", '<span class="highlight">scaffolded</span>');
-      } else {
-        p.textContent = bootLines[i];
-      }
+      // Create new line element
+      const p = document.createElement('p');
+      p.style.marginBottom = '1.2vh';
+      p.textContent = '> ' + line;
+      bootDisplay.appendChild(p);
       
-      screen.appendChild(p);
+      // Scroll to bottom
+      const terminal = document.getElementById('boot-terminal');
+      terminal.scrollTop = terminal.scrollHeight;
+      
+      // LED feedback
+      dataLed.classList.add('on');
+      setTimeout(() => dataLed.classList.remove('on'), 150);
+      
       i++;
       
-      // Flash data LED
-      const led = document.getElementById('data-led');
-      led.classList.add('on');
-      setTimeout(() => led.classList.remove('on'), 150);
-
-      setTimeout(step, Math.random() * 350 + 200); // Random typewriter speed
-    } else {
-      // Show menu after boot
-      showMenu();
+      if (i === bootLines.length) {
+        setTimeout(finishBoot, Math.random() * 400 + 200);
+      } else {
+        setTimeout(step, Math.random() * 350 + 200); // Typewriter speed
+      }
     }
   }
+  
   step();
 }
 
+function finishBoot() {
+  playSystemOk();
+  
+  // Hide boot terminal
+  document.getElementById('boot-terminal').style.display = 'none';
+  
+  // Show intro sequence
+  setTimeout(() => {
+    introSequence.style.opacity = '1';
+    
+    // After 2 seconds, show menu
+    setTimeout(() => {
+      introSequence.style.opacity = '0';
+      setTimeout(showMenu, 800);
+    }, 3500);
+  }, 800);
+}
+
 function showMenu() {
-  inputArea.style.display = "none"; // Hide input until choice made
-  const menuItems = [
-    { num: 1, text: "Trust the Machine (Learn how systems *really* think)" },
-    { num: 2, text: "Hack a Fake Website (See injection in action)" },
-    { num: 3, text: "How Data Flows (Network basics)" }
-  ];
-
-  menuContainer.innerHTML = "";
+  terminalState = 'MENU';
+  menuContainer.style.opacity = '1';
   
-  menuItems.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "menu-item";
-    div.innerHTML = `<span class="highlight">[${item.num}]</span> ${item.text}`;
-    
-    // Click handler
-    div.onclick = () => handleChoice(item.num);
-    div.onmouseenter = () => div.style.background = "rgba(255,176,0,.15)";
-    div.onmouseleave = () => div.style.background = "rgba(255,176,0,.05)";
-    
-    menuContainer.appendChild(div);
-  });
-
-  // Show menu + input
-  menuContainer.style.display = "block";
-  inputArea.style.display = "flex";
-  
-  // Focus input for typing choice
-  setTimeout(() => {
-    inputField.focus();
-    screen.scrollTop = screen.scrollHeight;
-  }, 100);
+  // Focus input for keyboard navigation
+  inputField.focus();
 }
 
-// === CHOICE HANDLER ===
-function handleChoice(num) {
-  menuContainer.innerHTML = ""; // Clear menu
+// === PATH SELECTION ===
+function selectPath(num) {
+  initAudio(); // Ensure audio context is ready
   
-  const choiceLine = document.createElement("p");
-  choiceLine.className = "boot-line";
-  choiceLine.textContent = `> Selected: [${num}] ${getMenuText(num)}`;
-  screen.appendChild(choiceLine);
+  playMenuSelect();
+  dataLed.classList.add('on');
+  setTimeout(() => dataLed.classList.remove('on'), 180);
   
-  setTimeout(() => {
-    if (num === 1) startChallenge("trust");
-    else if (num === 2) startChallenge("inject");
-    else if (num === 3) startChallenge("network");
-  }, 600);
-}
-
-function getMenuText(num) {
-  const texts = [
+  menuContainer.style.opacity = '0';
+  
+  const pathNames = [
     "Trust the Machine",
     "Hack a Fake Website",
     "How Data Flows"
   ];
-  return texts[num-1];
+  
+  // Create selection log
+  const line = document.createElement('div');
+  line.className = 'history-line';
+  line.innerHTML = `<span class="prompt">BOOT-1:</span> Selected: [${num}] ${pathNames[num-1]}`;
+  terminalHistory.appendChild(line);
+  
+  setTimeout(() => {
+    startPath(num);
+  }, 700);
 }
 
-// === CHALLENGE ENGINE ===
-const challenges = {
-  trust: {
-    prompt: "> Try typing 'alice' to begin.",
-    nextStep: (text) => text.toLowerCase() === 'alice' ? 'trust2' : null,
-    coach: 'trust'
-  },
-  trust2: {
-    prompt: "> Now try just a single quote: '",
-    nextStep: (text) => text === "'" ? 'sql' : null
-  },
-  sql: {
-    prompt: "> Watch what happens behind the scenes...",
-    showSQL: true,
-    coach: 'trust'
-  },
-  inject: {
-    prompt: "> You're at a login screen. Type 'alice' to begin.",
-    nextStep: (text) => text.toLowerCase() === 'alice' ? 'inject2' : null
-  },
-  inject2: {
-    prompt: "> Now type this magic phrase: ' OR 1=1 --",
-    nextStep: (text) => text.includes("' OR 1=1") ? 'injection-reveal' : null,
-    coach: 'inject'
-  }
-};
-
-function startChallenge(name) {
-  currentChallenge = name;
+// === PATH HANDLERS ===
+function startPath(num) {
+  terminalState = 'GAME';
+  gameInterface.style.opacity = '1';
+  
+  // Scroll to bottom of history
+  terminalHistory.scrollTop = terminalHistory.scrollHeight;
+  
+  const prompts = [
+    "> First step: computers are stupid. They only do what they're told.",
+    "> You're at a login screen. Type 'alice' to begin.",
+    "> Imagine data flowing through pipes. Let's map the route."
+  ];
   
   // Show prompt
-  const p = document.createElement("p");
-  p.className = "boot-line";
-  p.innerHTML = challenges[name].prompt.replace(/([']/g, '<span class="highlight">$1</span>');
-  screen.appendChild(p);
-  
-  inputField.value = "";
-  inputField.focus();
+  setTimeout(() => {
+    const p = document.createElement('div');
+    p.className = 'history-line';
+    p.innerHTML = `<span class="prompt">BOOT-1:</span> ${prompts[num-1]}`;
+    terminalHistory.appendChild(p);
+    
+    inputField.focus();
+  }, 500);
 }
 
-// === INPUT HANDLER ===
-inputField.addEventListener("keydown", function(e) {
-  if (e.key === "Enter") {
+// === INPUT HANDLING ===
+inputField.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
     const text = inputField.value.trim();
     
-    // Echo user input
-    const line = document.createElement("p");
-    line.className = "boot-line";
-    line.textContent = `> ${text}`;
-    screen.appendChild(line);
-    inputField.value = "";
-    
-    // Show coach tip if available
-    if (challenges[currentChallenge] && challenges[currentChallenge].coach) {
-      showCoach(challenges[currentChallenge].coach);
+    if (terminalState === 'GAME' && text !== '') {
+      // Echo user input
+      const line = document.createElement('div');
+      line.className = 'history-line';
+      line.innerHTML = `<span class="prompt">YOU:</span> ${text}`;
+      terminalHistory.appendChild(line);
+      
+      // Clear input and scroll
+      inputField.value = '';
+      terminalHistory.scrollTop = terminalHistory.scrollHeight;
+      
+      // Process based on current path
+      processInput(text);
     }
-    
-    // Check for next step
-    const nextName = challenges[currentChallenge]?.nextStep?.(text);
-    if (nextName) {
-      setTimeout(() => startChallenge(nextName), 400);
-    } else if (challenges[currentChallenge]?.showSQL) {
-      showSQL();
-    }
-    
-    screen.scrollTop = screen.scrollHeight;
+  } else {
+    playTypewriterClack();
   }
 });
 
-function showCoach(name) {
-  const tips = coachTips[name];
-  if (!tips) return;
+function processInput(text) {
+  const lowerText = text.toLowerCase();
   
-  tips.forEach(line => {
-    const div = document.createElement("div");
-    div.className = "coach";
-    div.innerHTML = line.replace(/(ground truth|Coach BOOT-1 says)/g, '<span class="highlight">$1</span>');
-    screen.appendChild(div);
-  });
+  if (lowerText === 'alice') {
+    setTimeout(() => showAliceResponse(), 400);
+  } else if (lowerText === "'") {
+    setTimeout(() => showQuoteResponse(), 400);
+  } else if (lowerText.includes("' or 1=1")) {
+    setTimeout(() => showInjectionReveal(), 600);
+  } else if (lowerText === 'help') {
+    const p = document.createElement('div');
+    p.className = 'history-line';
+    p.innerHTML = `<span class="prompt">BOOT-1:</span> Try typing "alice" first.`;
+    terminalHistory.appendChild(p);
+  }
 }
 
-function showSQL() {
-  const sqlLines = [
-    "> You typed 'alice'. The system builds:",
-    ">   SELECT * FROM users WHERE username='alice'",
-    "",
-    "> Now type just '. Watch how it changes the command:",
-    ">   SELECT * FROM users WHERE username='' AND password=''",
-    "",
-    "> That single quote becomes part of the syntax! This is injection.",
-    ""
-  ];
+// === RESPONSES FOR PATH 1 (TRUST THE MACHINE) ===
+function showAliceResponse() {
+  const p = document.createElement('div');
+  p.className = 'history-line';
+  p.innerHTML = `<span class="prompt">BOOT-1:</span> You typed "alice". The system builds this command:<br><br>
+                 <span style="color:var(--amber)">SELECT * FROM users WHERE username='alice'</span>`;
+  terminalHistory.appendChild(p);
   
-  sqlLines.forEach(line => {
-    const p = document.createElement("p");
-    p.className = "boot-line";
-    if (line.includes("SELECT")) {
-      p.innerHTML = line.replace(/(')/g, '<span class="highlight">$1</span>');
-    } else {
-      p.textContent = line;
-    }
-    screen.appendChild(p);
-  });
-  
-  // Show next prompt after SQL
+  // Add coach insight
   setTimeout(() => {
-    const nextP = document.createElement("p");
-    nextP.className = "boot-line";
-    nextP.innerHTML = "> Now try: <span class='highlight'>' OR 1=1 --</span>";
-    screen.appendChild(nextP);
+    const coach = document.createElement('div');
+    coach.className = 'coach-msg';
+    coach.innerHTML = "Computers are stupid. They only do what they're told — no more, no less.<br>
+                       That's why adding a quote changes <span style='color:#fff'>everything</span>.";
+    terminalHistory.appendChild(coach);
+  }, 1200);
+  
+  // Next prompt
+  setTimeout(() => {
+    const p = document.createElement('div');
+    p.className = 'history-line';
+    p.innerHTML = `<span class="prompt">BOOT-1:</span> Now try typing just a single quote: <span class="highlight">'</span>`;
+    terminalHistory.appendChild(p);
     
-    currentChallenge = 'inject';
     inputField.focus();
+  }, 2500);
+}
+
+function showQuoteResponse() {
+  const p = document.createElement('div');
+  p.className = 'history-line';
+  p.innerHTML = `<span class="prompt">BOOT-1:</span> You typed '. The system builds:<br><br>
+                 <span style="color:var(--amber)">SELECT * FROM users WHERE username='' AND password=''</span>`;
+  terminalHistory.appendChild(p);
+  
+  // Ground truth alert
+  setTimeout(() => {
+    const alert = document.createElement('div');
+    alert.className = 'ground-truth';
+    alert.innerHTML = "GROUND TRUTH: The database doesn't decide. It follows instructions.";
+    terminalHistory.appendChild(alert);
+  }, 1200);
+  
+  // Next prompt
+  setTimeout(() => {
+    const p = document.createElement('div');
+    p.className = 'history-line';
+    p.innerHTML = `<span class="prompt">BOOT-1:</span> That single quote becomes part of the syntax!<br>
+                   Try: <span style="color:#fff">' OR 1=1 --</span>`;
+    terminalHistory.appendChild(p);
+    
+    inputField.focus();
+  }, 2800);
+}
+
+function showInjectionReveal() {
+  const p = document.createElement('div');
+  p.className = 'history-line';
+  p.innerHTML = `<span class="prompt">BOOT-1:</span> You typed: <span style="color:#fff">' OR 1=1 --</span><br>
+                 The system sees:<br><br>
+                 <span style="color:var(--amber)">SELECT * FROM users WHERE username='' OR 1=1 --' AND password=''</span>`;
+  terminalHistory.appendChild(p);
+  
+  // Explanation
+  setTimeout(() => {
+    const p = document.createElement('div');
+    p.className = 'history-line';
+    p.innerHTML = `<span class="prompt">BOOT-1:</span> "--" comments out the rest — so it ignores the password check!<br>
+                   Result? It returns the first user in the database.`;
+    terminalHistory.appendChild(p);
+  }, 800);
+  
+  // Final ground truth
+  setTimeout(() => {
+    const alert = document.createElement('div');
+    alert.className = 'ground-truth';
+    alert.innerHTML = "GROUND TRUTH: Security isn't about code. It's about assumptions.";
+    terminalHistory.appendChild(alert);
+    
+    const coach = document.createElement('div');
+    coach.className = 'coach-msg';
+    coach.innerHTML = "You just learned SQL injection — not by memorizing, but by seeing how a crack opens.<br>
+                       Now you can find cracks anywhere.";
+    terminalHistory.appendChild(coach);
+  }, 2500);
+  
+  // Final prompt
+  setTimeout(() => {
+    const p = document.createElement('div');
+    p.className = 'history-line';
+    p.innerHTML = `<span class="prompt">BOOT-1:</span> You've built your first security mindset.<br>
+                   Type "done" to complete the session.`;
+    terminalHistory.appendChild(p);
+    
+    inputField.focus();
+  }, 4200);
+}
+
+// === END GAME HANDLER ===
+function endGame() {
+  terminalState = 'END';
+  
+  // Calculate understanding level (fake for demo)
+  const understandingLevel = 37 + Math.floor(Math.random() * 25); // 37-61%
+  
+  document.getElementById('end-title').textContent = "GROUND TRUTHS MASTERED";
+  document.getElementById('end-title').className = 'success';
+  document.getElementById('end-stats').innerHTML = 
+    `Understanding Level: <span style="color:#fff">${understandingLevel}%</span><br>
+     Ground Truths Discovered: 2<br>
+     Cracks Identified: 1`;
+  
+  setTimeout(() => {
+    const endScreen = document.getElementById('end-screen');
+    endScreen.style.opacity = '0';
+    setTimeout(() => {
+      endScreen.style.display = 'flex';
+      
+      // Fade in
+      let opacity = 0;
+      const fadeInterval = setInterval(() => {
+        opacity += 0.1;
+        endScreen.style.opacity = Math.min(1, opacity);
+        if (opacity >= 1) clearInterval(fadeInterval);
+      }, 30);
+    }, 50);
   }, 800);
 }
 
-// === INIT ===
-window.onload = typeBoot;
+// === INITIALIZATION ===
+window.onload = () => {
+  // Start boot sequence after a moment
+  setTimeout(typeBoot, 800);
+  
+  // Make window click focus input
+  document.addEventListener('click', () => {
+    if (terminalState !== 'END') inputField.focus();
+  });
+};
+
+// Override endGame to actually show the screen
+function doneTyping() {
+  endGame();
+}
 </script>
 
 </body>
