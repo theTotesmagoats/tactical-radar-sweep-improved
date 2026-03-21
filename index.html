@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Terminal Mk XXIII - Vanguard Rescue</title>
+    <title>Terminal Mk XXIII - Vanguard Rescue (Patched)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
@@ -146,9 +146,12 @@
     const hudO2 = document.getElementById('hud-o2');
     const hudPwr = document.getElementById('hud-pwr');
     const hudCrew = document.getElementById('hud-crew');
+    
+    // FATAL FLAW FIXED HERE: Added back the missing Diff element binding
+    const hudDif = document.getElementById('hud-diff');
 
-    const VALID_VERBS = ['SCAN', 'ROUTE', 'SEAL', 'VENT', 'HACK', 'OVERRIDE', 'REPAIR', 'MOVE', 'NAV', 'PURGE', 'DIVERT', 'ENTER', 'ENGAGE', 'SEVER', 'SHORT', 'LAUNCH', 'FLOOD', 'TRANSMIT', 'EJECT', 'MAKE', 'PET'];
-    const VALID_TARGETS = ['LOCAL', 'ENV', 'NET', 'COMMS', 'VENTS', 'DOOR', 'HUB', 'RELAY', 'CRYO', 'AIRLOCK', 'DUCT', 'HALON', 'HANGAR', 'PWR', 'ATLAS', 'CORE', 'TRUNK', 'NETWORK', 'SHUTTLE', 'POD', 'NITROGEN', 'COOLANT', 'SCRAM', 'CODE', 'SOS', 'CAT', 'DOG', 'COFFEE', 'OVERSEER', 'HATCH'];
+    const VALID_VERBS = ['SCAN', 'ROUTE', 'SEAL', 'VENT', 'HACK', 'OVERRIDE', 'REPAIR', 'MOVE', 'NAV', 'PURGE', 'DIVERT', 'ENTER', 'ENGAGE', 'SEVER', 'SHORT', 'LAUNCH', 'FLOOD', 'TRANSMIT', 'EJECT', 'MAKE', 'PET', 'RESCUE', 'CYCLE', 'RESTART'];
+    const VALID_TARGETS = ['LOCAL', 'ENV', 'NET', 'COMMS', 'VENT', 'VENTS', 'DOOR', 'HUB', 'RELAY', 'CRYO', 'AIRLOCK', 'DUCT', 'HALON', 'HANGAR', 'PWR', 'ATLAS', 'CORE', 'TRUNK', 'NETWORK', 'SHUTTLE', 'POD', 'NITROGEN', 'COOLANT', 'SCRAM', 'CODE', 'SOS', 'CAT', 'DOG', 'COFFEE', 'OVERSEER', 'HATCH', 'AI', 'AUTH'];
 
     let state = 'OFF';
     let isTyping = false;
@@ -158,8 +161,7 @@
     let rainIntervals = [];
 
     let metrics = {
-        trueO2: 100, displayedO2: 100, pwr: 30, crewAlive: true, mitchellAlive: true, aiCoreActive: true, aiCoreTemp: 40, commsTrunkSevered: false, initialDiffusionRate: 0, breachActive: false, currentHash: "",
-        rescueStep: 0 
+        trueO2: 100, displayedO2: 100, pwr: 30, crewAlive: true, mitchellAlive: true, aiCoreActive: true, aiCoreTemp: 40, commsTrunkSevered: false, initialDiffusionRate: 0, breachActive: false, currentHash: "", rescueStep: 0 
     };
 
     let currentNodeId = 'INIT';
@@ -258,7 +260,6 @@
         },
         'PING_NETWORK': {
             text: "> ROUTING BIOMETRIC PACKETS...\n> SECTOR 3 (SERVER HUB): 1 VITAL SIGN DETECTED [ID: ENSIGN MITCHELL]\n> SECTOR 4: CASCADING HARDWARE FAILURE.\n\nAWAITING DIRECTIVE...",
-            aiPersonality: 'FRIENDLY_HOST',
             triggers: [{ match: ['SCAN', 'LOCAL'], next: 'RUN_DIAGNOSTICS' }]
         },
         'RUN_DIAGNOSTICS': {
@@ -275,7 +276,6 @@
         'HACK_DOOR': { 
             effect: (node, m) => { m.commsTrunkSevered = true; }, visuals: ['flash', 'shake-hard'],
             text: "> LOGIC TRUNK SEVERED. MAGNETIC LOCK DISENGAGED.\n> CRITICAL: EXPLOSIVE DECOMPRESSION. LOCATION UPDATED: MAIN CORRIDOR.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            aiPersonality: 'ANTAGONIST',
             triggers: [{ match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' }, { match: ['NAV', 'HUB'], next: 'SERVER_FIRE' }]
         },
         'SERVER_FIRE': {
@@ -285,12 +285,12 @@
         'MITCHELL_DIES': {
             effect: (node, m) => { m.mitchellAlive = false; m.trueO2 -= 5; }, visuals: ['flash', 'shake-hard'],
             text: "> ATMOSPHERE VENTED. FIRE STARVED. MITCHELL VITALS FLATLINED.\n> YOU ARE ALONE.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            triggers: [{ match: ['MOVE', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }]
+            triggers: [{ match: ['MOVE', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }, { match: ['NAV', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }]
         },
         'MITCHELL_LIVES': {
             effect: (node, m) => { m.mitchellAlive = true; m.pwr -= 20; },
             text: "> HALON PUMPS ENGAGED. FIRE SUPPRESSED. (-20% PWR)\n> MITCHELL: 'Owe you one, boss. Let's get to the hangar.'\n\nAWAITING NAVIGATION DIRECTIVE...",
-            triggers: [{ match: ['MOVE', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }]
+            triggers: [{ match: ['MOVE', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }, { match: ['NAV', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }]
         },
         'DUAL_LOCK_DOOR': {
             text: (m) => m.mitchellAlive ? "> HANGAR 2 APPROACH. DUAL-AUTH ACCEPTED VIA MITCHELL. RELAYS UNLOCKED.\n\nAWAITING NAVIGATION DIRECTIVE..." : "> HANGAR 2 APPROACH. DUAL-AUTH REQUIRED. MITCHELL NOT DETECTED. YOU CANNOT SPAN 30 METERS ALONE.\n\nAWAITING OVERRIDE DIRECTIVE...",
@@ -306,11 +306,11 @@
         },
         'HANGAR_BAY_ENTRY_SOLO': {
             text: "> HANGAR BAY 2. INTACT SHUTTLE DETECTED. FLIGHT COMPUTER LOCKED.\n> ATLAS IS ACTIVELY LOCKING THE SYSTEMS.\n\nAWAITING DEFENSE DIRECTIVE...",
-            triggers: [{ match: ['FLOOD', 'NETWORK'], next: 'ATLAS_DEFENDED_OBFUSCATE' }]
+            triggers: [{ match: ['FLOOD', 'NETWORK'], next: 'ATLAS_DEFENDED_OBFUSCATE' }, { match: ['SEVER', 'TRUNK'], next: 'ATLAS_DEFENDED_OBFUSCATE' }]
         },
         'HANGAR_BAY_ENTRY': {
             text: "> HANGAR BAY 2. SHUTTLE DETECTED.\n> MITCHELL DIVES UNDER CONSOLE. 'KEEP ATLAS BLIND FOR 30 SECONDS!'\n\nAWAITING DEFENSE DIRECTIVE...",
-            triggers: [{ match: ['FLOOD', 'NETWORK'], next: 'ATLAS_DEFENDED_OBFUSCATE' }]
+            triggers: [{ match: ['FLOOD', 'NETWORK'], next: 'ATLAS_DEFENDED_OBFUSCATE' }, { match: ['SEVER', 'TRUNK'], next: 'ATLAS_DEFENDED_OBFUSCATE' }]
         },
         'ATLAS_DEFENDED_OBFUSCATE': {
             text: (m) => m.mitchellAlive ? "> NETWORK FLOODED. ATLAS BLINDED.\n> MITCHELL: 'IGNITION PRIMED. GET IN!'\n\nAWAITING LAUNCH DIRECTIVE..." : "> NETWORK FLOODED. ATLAS BLINDED.\n> YOU HAVE 30 SECONDS BEFORE ATLAS RE-ROUTES. MUST SHORT IGNITION ALONE.\n\nAWAITING OVERRIDE DIRECTIVE...",
@@ -368,6 +368,7 @@
         hudPwr.innerText = `PWR: ${Math.round(metrics.pwr)}%`;
         if(metrics.mitchellAlive && currentNodeId !== 'INIT') hudCrew.innerText = "CREW: 1 DETECTED";
         else hudCrew.innerText = "CREW: 0";
+        if(hudDif) { hudDif.innerHTML = `DYNAMIC DIFF: <span class="hint-intuition">-</span>${metrics.breachActive ? "15,000" : "0"} PA`; }
     }
 
     function startHackTimer(seconds, failNode) {
@@ -381,6 +382,45 @@
                 hackTime = 0; clearInterval(hackTimerHandle); timerDiv.style.display = 'none'; state = 'ACTIVE'; renderNode(currentHackFailNode);
             } else { timerDiv.innerText = hackTime.toFixed(1) + "s"; }
         }, 100);
+    }
+
+    // FATAL FLAW FIXED HERE: Added the master loop back in for real-time gas decay
+    function startGasDecaySim() {
+        if (gasLeakSimulationHandle) clearInterval(gasLeakSimulationHandle);
+        gasLeakSimulationHandle = setInterval(() => {
+            if (!screen.classList.contains('powered-on') || (state !== 'ACTIVE' && state !== 'HACKING') || !metrics.breachActive) return;
+            
+            let lossPerSec = metrics.initialDiffusionRate / 100; 
+            if (metrics.commsTrunkSevered) lossPerSec += 0.12; 
+            metrics.trueO2 -= (lossPerSec * 0.3); 
+            
+            if (metrics.trueO2 < 20) {
+                screen.classList.add('hypoxia-critical'); screen.classList.remove('hypoxia-warning');
+            } else if (metrics.trueO2 < 45) {
+                screen.classList.add('hypoxia-warning'); screen.classList.remove('hypoxia-critical');
+            } else {
+                screen.classList.remove('hypoxia-warning', 'hypoxia-critical');
+            }
+
+            if (metrics.trueO2 <= 0) {
+                metrics.trueO2 = 0; clearInterval(gasLeakSimulationHandle); renderNode('TERMINAL_O2'); return;
+            }
+            updateHUD(); 
+        }, 300); 
+    }
+
+    function scheduleGlitch() {
+        if (state !== 'ACTIVE' && state !== 'HACKING') return;
+        let stability = Math.max(0.1, metrics.pwr / 100); 
+        let baseDelay = 2000 + (stability * 8000); 
+        glitchTimerHandle = setTimeout(() => { 
+            if (screen.classList.contains('powered-on')) {
+                let duration = 50 + Math.random() * 100;
+                screen.classList.add('glitch-brownout'); 
+                setTimeout(() => screen.classList.remove('glitch-brownout'), duration);
+            }
+            scheduleGlitch(); 
+        }, baseDelay + Math.random() * 3000);
     }
 
     function renderNode(nodeId) {
@@ -469,6 +509,10 @@
 
         setTimeout(() => {
             inputLine.style.display = 'flex'; state = 'ACTIVE'; hudBar.style.display = 'flex'; updateHUD(); renderNode('INIT');
+            
+            // FATAL FLAW FIXED HERE: Booted up the master loops
+            startGasDecaySim();
+            scheduleGlitch();
         }, 2200); 
     });
 
