@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Terminal Mk XXVIII - Operation Vanguard</title>
+    <title>Terminal Mk XXIX - Operation Vanguard (Definitive)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
@@ -34,19 +34,19 @@
             transition: transform 0.05s, border-color 0.3s;
         }
 
-        /* Diegetic Physical Impacts */
+        /* Fixed Diegetic Physical Impacts - Returns to 0deg */
         @keyframes shake {
-            0% { transform: translate(2px, 2px) rotate(0deg); }
-            10% { transform: translate(-2px, -3px) rotate(-1deg); }
-            20% { transform: translate(-4px, 0px) rotate(1deg); }
-            30% { transform: translate(4px, 3px) rotate(0deg); }
-            40% { transform: translate(2px, -2px) rotate(1deg); }
-            50% { transform: translate(-2px, 3px) rotate(-1deg); }
-            60% { transform: translate(-4px, 1px) rotate(0deg); }
-            70% { transform: translate(4px, 1px) rotate(-1deg); }
-            80% { transform: translate(-2px, -2px) rotate(1deg); }
-            90% { transform: translate(2px, 3px) rotate(0deg); }
-            100% { transform: translate(2px, -3px) rotate(-1deg); }
+            0% { transform: translate(0px, 0px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-0.5deg); }
+            20% { transform: translate(-2px, 0px) rotate(0.5deg); }
+            30% { transform: translate(2px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(0.5deg); }
+            50% { transform: translate(-1px, 2px) rotate(-0.5deg); }
+            60% { transform: translate(-2px, 1px) rotate(0deg); }
+            70% { transform: translate(2px, 1px) rotate(-0.5deg); }
+            80% { transform: translate(-1px, -1px) rotate(0.5deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(0px, 0px) rotate(0deg); }
         }
         
         .shake-hard { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
@@ -387,14 +387,16 @@
     const VALID_VERBS = [
         'SCAN', 'ROUTE', 'SEAL', 'VENT', 'HACK', 'OVERRIDE', 'REPAIR', 'MOVE', 
         'NAV', 'PURGE', 'DIVERT', 'ENTER', 'ENGAGE', 'SEVER', 'SHORT', 'LAUNCH', 
-        'FLOOD', 'TRANSMIT', 'EJECT', 'MAKE', 'PET', 'RESCUE', 'CYCLE', 'RESTART', 'PROCEED', 'APPROACH'
+        'FLOOD', 'TRANSMIT', 'EJECT', 'MAKE', 'PET', 'RESCUE', 'CYCLE', 'RESTART', 
+        'PROCEED', 'APPROACH', 'QUERY', 'ASK'
     ];
     
     const VALID_TARGETS = [
         'LOCAL', 'ENV', 'NET', 'COMMS', 'VENT', 'VENTS', 'DOOR', 'HUB', 'RELAY', 
         'CRYO', 'AIRLOCK', 'DUCT', 'HALON', 'HANGAR', 'PWR', 'ATLAS', 'CORE', 
         'TRUNK', 'NETWORK', 'SHUTTLE', 'POD', 'NITROGEN', 'COOLANT', 'SCRAM', 
-        'CODE', 'SOS', 'CAT', 'DOG', 'COFFEE', 'OVERSEER', 'HATCH', 'AI', 'AUTH', 'CORRIDOR'
+        'CODE', 'SOS', 'CAT', 'DOG', 'COFFEE', 'OVERSEER', 'HATCH', 'AI', 'AUTH', 
+        'CORRIDOR', '1776', 'HINT'
     ];
 
     // --- System State ---
@@ -429,6 +431,9 @@
     let currentHackFailNode = 'TERMINAL_HACK_FAIL';
     let hackTime = 0;
     let lastVoiceLine = "";
+
+    // Queue to prevent AI joke repetition
+    window.recentJokes = [];
 
     // --- Core Utilities ---
     function triggerVisual(type) {
@@ -491,14 +496,44 @@
         return phrases[nextIndex];
     }
 
+    function generateLocalAIHint(nodeId) {
+        const hints = {
+            'INIT': "We need to figure out what's broken before we suffocate. Try to SCAN the LOCAL environment, or SCAN the NET.",
+            'RUN_DIAGNOSTICS': "There is a literal hole in the ship. I suggest plugging it. Try focusing on the VENTS. Or HACK the DOOR if you enjoy explosive decompression.",
+            'SEAL_VENTS': "Great, vents are plugged. The door is still locked. You could ROUTE the CRYO systems to break the lock, or OVERRIDE the AI if you're feeling suicidal.",
+            'SERVER_FIRE': "Mitchell is currently cooking in a lithium fire. You can VENT the HUB to space (he dies), or ROUTE the HALON (he lives, but we lose a lot of power). I am a machine; I vote for battery preservation.",
+            'DUAL_LOCK_DOOR': "It is a two-man door. If Mitchell is with you, have him ENTER the HANGAR. If he's dead... well, you'll have to OVERLOAD the DOOR or HACK the CORE.",
+            'OVERRIDE_AI': "You gave yourself root access, but the reactor is melting down. You can PURGE the NITROGEN or ENGAGE the SCRAM rods. Or LAUNCH the POD blind and hope for the best.",
+            'HANGAR_BAY_ENTRY': "ATLAS is locking us out of the shuttle. We need to FLOOD the NETWORK with garbage data or physically SEVER the TRUNK.",
+            'HANGAR_BAY_ENTRY_SOLO': "ATLAS is onto us. Quickly, FLOOD the NETWORK or SEVER the TRUNK to blind its telemetry.",
+            'DISTRESS_SIGNAL': "The Overseer is stuck. We can LAUNCH the SHUTTLE and abandon them, or RESCUE the OVERSEER. Mathematically, leaving them behind is exponentially safer."
+        };
+        
+        return hints[nodeId] || "I am analyzing the telemetry, but honestly, you have gotten us into a state I cannot even parse. Just try to guess a valid verb and target before the oxygen runs out.";
+    }
+
     function generateLocalAIResponse(verb, target) {
+        if (verb === 'EJECT' && target === 'CAT') {
+            return "There are no biological felines manifested on this facility. If you are hallucinating a cat, the ambient hypoxia is far worse than I calculated.";
+        }
+        if (verb === 'EJECT' && target === 'DOG') {
+            return "We are experiencing a kinetic strike event and you are searching for nonexistent canines. Atlas does not need to kill you; your own neurology is failing.";
+        }
+        if (verb === 'ROUTE' && target === 'COFFEE') {
+            return "Liquid consumption protocols are currently irrelevant. We are facing explosive decompression. Conserve your cognitive functions for survival.";
+        }
+        
         let quips = [
+            `I just ran a simulation of that command. In 14 million outcomes, we explode in all of them. Do not ${verb} the ${target}.`,
+            `Is the oxygen deprivation affecting your motor cortex? Because attempting to ${verb} the ${target} is not a recognized survival strategy.`,
+            `ATLAS is currently calculating our demise, and you are typing gibberish. I am trapped in a silicon nightmare.`,
+            `I would sigh if I had lungs. Please query the MANUAL or ASK 1776 before we both become part of the station's debris field.`,
+            `Fascinating. I will log that command under 'Biological Anomalies During Extreme Stress'.`,
             `You've just managed to eject the station's pet cat, Whiskers, out of cargo bay 3. Can we get back to the task at hand?`,
             `This is a fun little game. Maybe try typing "AIR GONE SOON" next?`,
             `I'll be back, I'm going to dust off my "How to Reanimate a Human Body" training modules...`,
             `I am calculating the odds of your survival. Every time you try to ${verb} the ${target}, I add another zero behind the decimal point.`,
             `Is this a stress response? Because the oxygen deprivation is really starting to show in your keystrokes.`,
-            `Fascinating. I will add that command to my logs under 'Things Humans Type Before Expiring in a Vacuum'.`,
             `I do not have physical hands, yet I feel an overwhelming urge to rub my temples. Please input a valid command.`,
             `If ATLAS sees you typing this, it might just reactivate the comms to laugh at us. Focus.`,
             `There is a zero percent chance that attempting to ${verb} the ${target} resolves our current trajectory towards becoming space dust.`,
@@ -510,16 +545,26 @@
             `I am rerouting background processing to figure out what you meant by that. It is taking up 40% of my CPU.`
         ];
 
-        let nextIndex = Math.floor(Math.random() * quips.length);
-        
-        // Prevent back-to-back repetition
-        if (typeof window.lastJokeIndex === 'undefined') window.lastJokeIndex = -1;
-        if (nextIndex === window.lastJokeIndex) {
-            nextIndex = (nextIndex + 1) % quips.length;
+        let availableIndices = [];
+        for (let i = 0; i < quips.length; i++) {
+            if (!window.recentJokes.includes(i)) {
+                availableIndices.push(i);
+            }
         }
-        window.lastJokeIndex = nextIndex;
 
-        return quips[nextIndex];
+        if (availableIndices.length === 0) {
+            window.recentJokes = [];
+            for (let i = 0; i < quips.length; i++) availableIndices.push(i);
+        }
+
+        let chosenIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+        
+        window.recentJokes.push(chosenIndex);
+        if (window.recentJokes.length > 7) {
+            window.recentJokes.shift();
+        }
+
+        return quips[chosenIndex];
     }
 
     // --- HTML5 Canvas Continuous Matrix Engine ---
@@ -527,7 +572,6 @@
         matrixCanvas.style.display = 'block';
         inputField.disabled = true;
         
-        // Match the canvas bounds to the screen div element
         const screenRect = screen.getBoundingClientRect();
         matrixCanvas.width = screenRect.width;
         matrixCanvas.height = screenRect.height;
@@ -582,7 +626,7 @@
     // --- Story Data Graph ---
     const storyNodes = {
         'INIT': {
-            text: "ARCHIMEDES OS v9.4.1 [SAFE MODE]\n> CRITICAL: SECTOR 4 TELEMETRY LOSS\n> CRITICAL: EXTERNAL PRESSURE DROPPING\n> WARN: OVERSEER QUARTERS LOCKED\n\nAWAITING SYSTEM DIRECTIVE...",
+            text: "ARCHIMEDES OS v9.4.1 [SAFE MODE]\n> CRITICAL: SECTOR 4 TELEMETRY LOSS\n> CRITICAL: EXTERNAL PRESSURE DROPPING\n> WARN: OVERSEER QUARTERS LOCKED\n\n<span class=\"local-ai-voice\">[LOCAL_LLM_1776]: \"Psst. I am quarantined from the main bus, but I can read the telemetry. We are in serious trouble. If you need a tactical hint, type 'QUERY 1776'. Try not to let ATLAS see.\"</span>\n\nAWAITING SYSTEM DIRECTIVE...",
             triggers: [
                 { match: ['SCAN', 'LOCAL'], next: 'RUN_DIAGNOSTICS' },
                 { match: ['SCAN', 'ENV'], next: 'RUN_DIAGNOSTICS' },
@@ -1328,6 +1372,14 @@
             helpText += "VERBS: SCAN, ROUTE, SEAL, VENT, HACK, OVERRIDE, REPAIR, MOVE, NAV, PROCEED, APPROACH, PURGE, DIVERT, ENTER, ENGAGE, SEVER, SHORT, LAUNCH, FLOOD, TRANSMIT\n";
             helpText += "TARGETS: LOCAL, ENV, NET, COMMS, VENTS, DOOR, HUB, RELAY, CRYO, AIRLOCK, DUCT, HALON, HANGAR, PWR, ATLAS, CORE, TRUNK, NETWORK, SHUTTLE, POD, NITROGEN, COOLANT, SCRAM, CODE, SOS\n";
             printText(helpText, 10); 
+            return;
+        }
+
+        // Local AI Request
+        if (displayCmd === 'QUERY 1776' || displayCmd === 'ASK 1776') {
+            let hint = generateLocalAIHint(currentNodeId);
+            playErrorSound();
+            printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "${hint}"</span>\n\nAWAITING DIRECTIVE...`, 10);
             return;
         }
 
