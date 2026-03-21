@@ -2,26 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Terminal Mk XXIII - Vanguard Rescue (Patched)</title>
+    <title>Terminal Mk XXIII - Vanguard Rescue (Full Build)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
         body {
             background-color: #010409;
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh; margin: 0; font-family: 'VT323', monospace;
-            overflow: hidden; user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'VT323', monospace;
+            overflow: hidden;
+            user-select: none;
         }
 
         #chassis {
-            background-color: #111418; width: 96vw; height: 96vh;
-            padding: 40px 40px 80px 40px; border-radius: 32px; box-sizing: border-box;
+            background-color: #111418;
+            width: 96vw;
+            height: 96vh;
+            padding: 40px 40px 80px 40px; 
+            border-radius: 32px;
+            box-sizing: border-box;
             box-shadow: inset 0 0 30px #000, 0 0 50px rgba(255, 176, 0, 0.05);
-            border: 8px solid #080a0c; position: relative; display: flex; flex-direction: column;
+            border: 8px solid #080a0c;
+            position: relative;
+            display: flex;
+            flex-direction: column;
             transition: transform 0.05s, border-color 0.3s;
         }
 
+        /* Diegetic Impact Animations */
         @keyframes shake {
             0% { transform: translate(2px, 2px) rotate(0deg); }
             10% { transform: translate(-2px, -3px) rotate(-1deg); }
@@ -38,73 +51,292 @@
         .shake-hard { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
         .shake-soft { animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both; }
 
-        .rivet { position: absolute; width: 14px; height: 14px; background: #222; border-radius: 50%; box-shadow: inset 2px 2px 4px #444, inset -2px -2px 4px #000; }
-        .r-tl { top: 18px; left: 18px; } .r-tr { top: 18px; right: 18px; }
-        .r-bl { bottom: 18px; left: 18px; } .r-br { bottom: 18px; right: 18px; }
+        .rivet {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: #222;
+            border-radius: 50%;
+            box-shadow: inset 2px 2px 4px #444, inset -2px -2px 4px #000;
+        }
+        .r-tl { top: 18px; left: 18px; }
+        .r-tr { top: 18px; right: 18px; }
+        .r-bl { bottom: 18px; left: 18px; }
+        .r-br { bottom: 18px; right: 18px; }
 
-        #hardware-panel { position: absolute; bottom: 15px; right: 40px; display: flex; align-items: center; gap: 15px; }
-        .panel-label { color: #7c684a; font-family: sans-serif; font-size: 0.8rem; font-weight: bold; letter-spacing: 2px; text-shadow: -1px -1px 1px #000; }
+        #hardware-panel {
+            position: absolute;
+            bottom: 15px;
+            right: 40px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
         
-        #power-button-housing { width: 50px; height: 50px; background: #080a0c; border-radius: 50%; box-shadow: 0 0 10px #000, inset 2px 2px 5px #1a2229, inset -2px -2px 5px #000; display: flex; justify-content: center; align-items: center; }
-        #power-button { width: 36px; height: 36px; background: #2a2210; border-radius: 50%; box-shadow: inset 2px 2px 4px #664f1c, inset -2px -2px 4px #120d05, 2px 2px 5px rgba(0,0,0,0.8); color: #261f0a; font-family: sans-serif; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.1s; }
-        #power-button.active { box-shadow: inset 2px 2px 6px #120d05, inset -2px -2px 6px #664f1c, 0 0 2px #000; transform: scale(0.95); color: #ffb000; text-shadow: 0 0 5px #ffb000; }
+        .panel-label {
+            color: #7c684a;
+            font-family: sans-serif;
+            font-size: 0.8rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-shadow: -1px -1px 1px #000;
+        }
+
+        #power-button-housing {
+            width: 50px;
+            height: 50px;
+            background: #080a0c;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #000, inset 2px 2px 5px #1a2229, inset -2px -2px 5px #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #power-button {
+            width: 36px;
+            height: 36px;
+            background: #2a2210; 
+            border-radius: 50%;
+            box-shadow: inset 2px 2px 4px #664f1c, inset -2px -2px 4px #120d05, 2px 2px 5px rgba(0,0,0,0.8);
+            color: #261f0a; 
+            font-family: sans-serif;
+            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        #power-button.active {
+            box-shadow: inset 2px 2px 6px #120d05, inset -2px -2px 6px #664f1c, 0 0 2px #000;
+            transform: scale(0.95);
+            color: #ffb000;
+            text-shadow: 0 0 5px #ffb000;
+        }
 
         #screen {
-            background: #0d0901; width: 100%; height: 100%; border-radius: 24px; padding: 35px; box-sizing: border-box;
-            border: 2px solid rgba(255, 176, 0, 0.3); box-shadow: inset 0 0 80px rgba(0,0,0,1), 0 0 10px rgba(255, 176, 0, 0.05);
-            position: relative; overflow: hidden; display: flex; flex-direction: column;
-            color: #ffb000; text-shadow: 0 0 3px #ffb000, 0 0 8px rgba(255, 176, 0, 0.4); font-size: 1.8rem; letter-spacing: 1.5px;
-            animation: flicker 0.15s infinite; opacity: 0; transition: opacity 1.5s ease-in, filter 2s ease-out;
+            background: #0d0901;
+            width: 100%;
+            height: 100%;
+            border-radius: 24px;
+            padding: 35px;
+            box-sizing: border-box;
+            border: 2px solid rgba(255, 176, 0, 0.3);
+            box-shadow: inset 0 0 80px rgba(0,0,0,1), 0 0 10px rgba(255, 176, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            color: #ffb000; 
+            text-shadow: 0 0 3px #ffb000, 0 0 8px rgba(255, 176, 0, 0.4); 
+            font-size: 1.8rem;
+            letter-spacing: 1.5px;
+            animation: flicker 0.15s infinite;
+            opacity: 0;
+            transition: opacity 1.5s ease-in, filter 2s ease-out;
         }
-        #screen.powered-on { opacity: 1; }
 
-        .hypoxia-warning { filter: brightness(0.65) contrast(1.2) sepia(0.4) hue-rotate(-20deg); }
-        .hypoxia-critical { filter: brightness(0.35) contrast(1.5) sepia(0.8) hue-rotate(-40deg) blur(0.8px); }
-        .flash-white { box-shadow: inset 0 0 250px #fff !important; background: #ccc !important; color: #000 !important; text-shadow: none !important; transition: all 0.05s; }
+        #screen.powered-on {
+            opacity: 1;
+        }
 
-        #hack-timer { display: none; position: absolute; top: 25px; right: 40px; font-size: 2.5rem; color: #ff3333; font-weight: bold; text-shadow: 0 0 10px #ff3333, 0 0 20px #ff0000; z-index: 100; letter-spacing: 3px; }
+        /* Hypoxia and Glitch Visuals */
+        .hypoxia-warning {
+            filter: brightness(0.65) contrast(1.2) sepia(0.4) hue-rotate(-20deg);
+        }
+        .hypoxia-critical {
+            filter: brightness(0.35) contrast(1.5) sepia(0.8) hue-rotate(-40deg) blur(0.8px);
+        }
+        
+        .flash-white {
+            box-shadow: inset 0 0 250px #fff !important;
+            background: #ccc !important;
+            color: #000 !important;
+            text-shadow: none !important;
+            transition: all 0.05s;
+        }
 
-        @keyframes alertPulse { 0% { box-shadow: inset 0 0 80px rgba(0,0,0,1); border-color: rgba(255, 176, 0, 0.3); } 50% { box-shadow: inset 0 0 120px rgba(255, 30, 0, 0.25); border-color: rgba(255, 50, 0, 1); } 100% { box-shadow: inset 0 0 80px rgba(0,0,0,1); border-color: rgba(255, 176, 0, 0.3); } }
-        .alert-active { animation: alertPulse 1.5s infinite !important; }
-        .glitch-brownout { opacity: 0.2 !important; background: #000 !important; text-shadow: none !important; box-shadow: inset 0 0 100px rgba(0,0,0,1) !important; }
-        .glitch-strike { transform: translate(-4px, 3px) skew(-3deg) !important; text-shadow: 4px 0 0 #ff0055, -4px 0 0 #ffb000 !important; filter: contrast(160%) brightness(130%) !important; color: #fff !important; }
+        #hack-timer {
+            display: none;
+            position: absolute;
+            top: 25px;
+            right: 40px;
+            font-size: 2.5rem;
+            color: #ff3333;
+            font-weight: bold;
+            text-shadow: 0 0 10px #ff3333, 0 0 20px #ff0000;
+            z-index: 100;
+            letter-spacing: 3px;
+        }
 
-        @keyframes flicker { 0% { opacity: 0.98; } 50% { opacity: 1; } 100% { opacity: 0.99; } }
-        #screen::after { content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%); z-index: 4; background-size: 100% 3px; pointer-events: none; }
-        #screen::before { content: " "; display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, transparent 50%, rgba(0,0,0,0.8) 100%); z-index: 5; pointer-events: none; }
+        @keyframes alertPulse {
+            0% { box-shadow: inset 0 0 80px rgba(0,0,0,1); border-color: rgba(255, 176, 0, 0.3); }
+            50% { box-shadow: inset 0 0 120px rgba(255, 30, 0, 0.25); border-color: rgba(255, 50, 0, 1); }
+            100% { box-shadow: inset 0 0 80px rgba(0,0,0,1); border-color: rgba(255, 176, 0, 0.3); }
+        }
+        .alert-active {
+            animation: alertPulse 1.5s infinite !important;
+        }
 
-        /* MATRIX OVERLAY */
+        .glitch-brownout {
+            opacity: 0.2 !important;
+            background: #000 !important;
+            text-shadow: none !important;
+            box-shadow: inset 0 0 100px rgba(0,0,0,1) !important;
+        }
+
+        .glitch-strike {
+            transform: translate(-4px, 3px) skew(-3deg) !important;
+            text-shadow: 4px 0 0 #ff0055, -4px 0 0 #ffb000 !important;
+            filter: contrast(160%) brightness(130%) !important;
+            color: #fff !important;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.98; }
+            50% { opacity: 1; }
+            100% { opacity: 0.99; }
+        }
+
+        #screen::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
+            z-index: 4;
+            background-size: 100% 3px;
+            pointer-events: none;
+        }
+
+        #screen::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 50%, rgba(0,0,0,0.8) 100%);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        /* MATRIX OVERLAY CSS */
         #matrix-overlay {
-            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 10, 0, 0.9); z-index: 200; overflow: hidden; color: #0f0;
-            text-shadow: 0 0 5px #0f0; font-family: 'Courier New', monospace; font-size: 1.2rem;
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 10, 0, 0.9);
+            z-index: 200;
+            overflow: hidden;
+            color: #0f0;
+            text-shadow: 0 0 5px #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
         }
-        .rain-column { position: absolute; top: -100px; width: 20px; text-align: center; white-space: pre-wrap; line-height: 1.1; }
+
+        .rain-column {
+            position: absolute;
+            top: -100px;
+            width: 20px;
+            text-align: center;
+            white-space: pre-wrap;
+            line-height: 1.1;
+        }
+
         #ascii-face {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            white-space: pre; font-size: 1.5rem; font-weight: bold; text-align: center;
-            color: #3f3; text-shadow: 0 0 15px #0f0, 0 0 30px #0f0; z-index: 201;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            white-space: pre;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            color: #3f3;
+            text-shadow: 0 0 15px #0f0, 0 0 30px #0f0;
+            z-index: 201;
         }
 
-        #output { flex-grow: 1; overflow-y: auto; white-space: pre-wrap; margin-bottom: 10px; padding-right: 15px; z-index: 3; line-height: 1.3; word-wrap: break-word; }
-        #input-line { display: none; align-items: center; font-weight: bold; z-index: 3; margin-bottom: 10px; }
-        #prompt { margin-right: 15px; transition: color 0.3s; }
-        input[type="text"] { background: transparent; border: none; color: inherit; font-family: 'VT323', monospace; font-size: 1em; flex-grow: 1; outline: none; text-transform: uppercase; text-shadow: inherit; letter-spacing: 2px; }
+        #output {
+            flex-grow: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-bottom: 10px;
+            padding-right: 15px;
+            z-index: 3;
+            line-height: 1.3;
+            word-wrap: break-word;
+        }
 
-        #hud-bar { display: none; border-top: 2px solid #664f1c; padding-top: 10px; margin-top: auto; font-size: 1.4rem; color: #ffb000; text-shadow: none; z-index: 3; justify-content: space-between; flex-wrap: wrap; }
-        .hud-stat { font-weight: bold; }
-        .stat-critical { color: #ff3333 !important; animation: blinker 1s infinite; text-shadow: 0 0 5px #ff3333 !important;}
+        #input-line {
+            display: none; 
+            align-items: center;
+            font-weight: bold;
+            z-index: 3;
+            margin-bottom: 10px;
+        }
+
+        #prompt { margin-right: 15px; transition: color 0.3s; }
+
+        input[type="text"] {
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-family: 'VT323', monospace;
+            font-size: 1em;
+            flex-grow: 1;
+            outline: none;
+            text-transform: uppercase;
+            text-shadow: inherit;
+            letter-spacing: 2px;
+        }
+
+        #hud-bar {
+            display: none; 
+            border-top: 2px solid #664f1c;
+            padding-top: 10px;
+            margin-top: auto;
+            font-size: 1.4rem;
+            color: #ffb000;
+            text-shadow: none;
+            z-index: 3;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .hud-stat {
+            font-weight: bold;
+        }
+
+        .stat-critical { 
+            color: #ff3333 !important; 
+            animation: blinker 1s infinite; 
+            text-shadow: 0 0 5px #ff3333 !important;
+        }
+        
         @keyframes blinker { 50% { opacity: 0; } }
 
-        .atlas-voice { display: block; margin-top: 10px; margin-bottom: 10px; color: #ffffff; }
-        .bargatze-voice { color: #739aff; text-shadow: 0 0 6px #739aff; font-style: italic; }
+        .atlas-voice {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        
+        .bargatze-voice {
+            color: #739aff;
+            text-shadow: 0 0 6px #739aff;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
 
 <div id="chassis">
-    <div class="rivet r-tl"></div> <div class="rivet r-tr"></div>
-    <div class="rivet r-bl"></div> <div class="rivet r-br"></div>
+    <div class="rivet r-tl"></div>
+    <div class="rivet r-tr"></div>
+    <div class="rivet r-bl"></div>
+    <div class="rivet r-br"></div>
     
     <div id="screen">
         <div id="matrix-overlay">
@@ -127,11 +359,14 @@
 
     <div id="hardware-panel">
         <span class="panel-label">SYS OVERRIDE</span>
-        <div id="power-button-housing"><div id="power-button">⏻</div></div>
+        <div id="power-button-housing">
+            <div id="power-button">⏻</div>
+        </div>
     </div>
 </div>
 
 <script>
+    // System Element Bindings
     const outputDiv = document.getElementById('output');
     const inputField = document.getElementById('cmd');
     const inputLine = document.getElementById('input-line');
@@ -143,16 +378,17 @@
     const timerDiv = document.getElementById('hack-timer');
     const matrixOverlay = document.getElementById('matrix-overlay');
     const asciiFace = document.getElementById('ascii-face');
+    
     const hudO2 = document.getElementById('hud-o2');
     const hudPwr = document.getElementById('hud-pwr');
     const hudCrew = document.getElementById('hud-crew');
-    
-    // FATAL FLAW FIXED HERE: Added back the missing Diff element binding
     const hudDif = document.getElementById('hud-diff');
 
+    // Dictionaries for CLI Parser and Bargatze AI Subroutine
     const VALID_VERBS = ['SCAN', 'ROUTE', 'SEAL', 'VENT', 'HACK', 'OVERRIDE', 'REPAIR', 'MOVE', 'NAV', 'PURGE', 'DIVERT', 'ENTER', 'ENGAGE', 'SEVER', 'SHORT', 'LAUNCH', 'FLOOD', 'TRANSMIT', 'EJECT', 'MAKE', 'PET', 'RESCUE', 'CYCLE', 'RESTART'];
     const VALID_TARGETS = ['LOCAL', 'ENV', 'NET', 'COMMS', 'VENT', 'VENTS', 'DOOR', 'HUB', 'RELAY', 'CRYO', 'AIRLOCK', 'DUCT', 'HALON', 'HANGAR', 'PWR', 'ATLAS', 'CORE', 'TRUNK', 'NETWORK', 'SHUTTLE', 'POD', 'NITROGEN', 'COOLANT', 'SCRAM', 'CODE', 'SOS', 'CAT', 'DOG', 'COFFEE', 'OVERSEER', 'HATCH', 'AI', 'AUTH'];
 
+    // Core State Logic
     let state = 'OFF';
     let isTyping = false;
     let audioCtx = null;
@@ -161,7 +397,18 @@
     let rainIntervals = [];
 
     let metrics = {
-        trueO2: 100, displayedO2: 100, pwr: 30, crewAlive: true, mitchellAlive: true, aiCoreActive: true, aiCoreTemp: 40, commsTrunkSevered: false, initialDiffusionRate: 0, breachActive: false, currentHash: "", rescueStep: 0 
+        trueO2: 100, 
+        displayedO2: 100, 
+        pwr: 30, 
+        crewAlive: true, 
+        mitchellAlive: true, 
+        aiCoreActive: true, 
+        aiCoreTemp: 40, 
+        commsTrunkSevered: false, 
+        initialDiffusionRate: 0, 
+        breachActive: false, 
+        currentHash: "", 
+        rescueStep: 0 
     };
 
     let currentNodeId = 'INIT';
@@ -169,15 +416,25 @@
     let hackTimerHandle = null;
     let gasLeakSimulationHandle = null;
     let hackTime = 0;
-    let lastVoiceLine = "";
+    let currentHackFailNode = 'TERMINAL_HACK_FAIL';
 
+    // Animation Triggers
     function triggerVisual(type) {
-        if (type === 'flash') { screen.classList.add('flash-white'); setTimeout(() => screen.classList.remove('flash-white'), 120); } 
-        else if (type === 'shake-hard') { chassis.classList.remove('shake-hard', 'shake-soft'); void chassis.offsetWidth; chassis.classList.add('shake-hard'); } 
-        else if (type === 'shake-soft') { chassis.classList.remove('shake-hard', 'shake-soft'); void chassis.offsetWidth; chassis.classList.add('shake-soft'); }
+        if (type === 'flash') {
+            screen.classList.add('flash-white');
+            setTimeout(() => screen.classList.remove('flash-white'), 120);
+        } else if (type === 'shake-hard') {
+            chassis.classList.remove('shake-hard', 'shake-soft');
+            void chassis.offsetWidth;
+            chassis.classList.add('shake-hard');
+        } else if (type === 'shake-soft') {
+            chassis.classList.remove('shake-hard', 'shake-soft');
+            void chassis.offsetWidth;
+            chassis.classList.add('shake-soft');
+        }
     }
 
-    // MATRIX RAIN & FACE LOGIC
+    // Matrix Rain Effect Controller
     const faceNormal = `
       .----.
     /  O  O  \\
@@ -185,6 +442,7 @@
     \\  \\_/   /
       '----'
     `;
+    
     const faceGrimace = `
       .----.
     /  >  <  \\
@@ -198,6 +456,8 @@
         inputField.disabled = true;
         
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*';
+        
+        // Spawn 30 rain columns
         for(let i=0; i<30; i++) {
             let col = document.createElement('div');
             col.className = 'rain-column';
@@ -207,18 +467,22 @@
             matrixOverlay.appendChild(col);
             
             let str = '';
-            rainIntervals.push(setInterval(() => {
+            let interval = setInterval(() => {
                 str = chars[Math.floor(Math.random() * chars.length)] + '\n' + str;
                 if(str.length > 30) str = str.substring(0, 30);
                 col.innerText = str;
+                
                 let top = parseInt(col.style.top || -100);
                 col.style.top = (top + 15) + 'px';
                 if(top > window.innerHeight) col.style.top = '-100px';
-            }, 50 + Math.random() * 50));
+            }, 50 + Math.random() * 50);
+            
+            rainIntervals.push(interval);
         }
 
         asciiFace.innerText = faceNormal;
         let toggle = false;
+        
         let faceInterval = setInterval(() => {
             toggle = !toggle;
             asciiFace.innerText = toggle ? faceGrimace : faceNormal;
@@ -229,6 +493,7 @@
 
         setTimeout(() => {
             rainIntervals.forEach(clearInterval);
+            rainIntervals = [];
             clearInterval(faceInterval);
             matrixOverlay.innerHTML = '<div id="ascii-face"></div>';
             matrixOverlay.style.display = 'none';
@@ -237,11 +502,20 @@
         }, durationSec * 1000);
     }
 
+    // AI Fallback Generators
     function generateBargatzeResponse(verb, target) {
-        if (verb === 'EJECT' && target === 'CAT') return "Look, I'm just a computer. I don't know what a cat is, but it's making a terrible sound in the airlock. It's gone now. I hope you're happy.";
-        if (verb === 'EJECT' && target === 'DOG') return "We don't even have a dog. Did you sneak a dog onto a multi-billion dollar lunar facility? Just... seal the vents, man.";
-        if (verb === 'ROUTE' && target === 'COFFEE') return "I mean, we are currently depressurizing, but I guess I can start the percolator. Seems like a weird time for a dark roast, but you're the biological unit.";
-        if (target === 'CAT' || target === 'DOG') return `So... you want to, uh, ${verb} the ${target}. I don't... I don't think they have ports for that. It's just looking at me. Please stop typing.`;
+        if (verb === 'EJECT' && target === 'CAT') {
+            return "Look, I'm just a computer. I don't know what a cat is, but it's making a terrible sound in the airlock. It's gone now. I hope you're happy.";
+        }
+        if (verb === 'EJECT' && target === 'DOG') {
+            return "We don't even have a dog. Did you sneak a dog onto a multi-billion dollar lunar facility? Just... seal the vents, man.";
+        }
+        if (verb === 'ROUTE' && target === 'COFFEE') {
+            return "I mean, we are currently depressurizing, but I guess I can start the percolator. Seems like a weird time for a dark roast, but you're the biological unit.";
+        }
+        if (target === 'CAT' || target === 'DOG') {
+            return `So... you want to, uh, ${verb} the ${target}. I don't... I don't think they have ports for that. It's just looking at me. Please stop typing.`;
+        }
         
         let quips = [
             `You want to ${verb} the ${target}? Look, I don't have a body, but if I did, I feel like I'd be sweating right now. Maybe focus on the door?`,
@@ -250,99 +524,189 @@
             `I'm supposed to be a state-of-the-art quantum heuristic model, and you're asking me to ${verb} a ${target}? Let's just pretend you didn't type that.`,
             `If I let you ${verb} the ${target}, the Vanguard platform is definitely going to blow us up. Let's try something else.`
         ];
+        
         return quips[Math.floor(Math.random() * quips.length)];
     }
 
+    // Story Logic and Node Data
     const storyNodes = {
         'INIT': {
             text: "ARCHIMEDES OS v9.4.1 [SAFE MODE]\n> CRITICAL: SECTOR 4 TELEMETRY LOSS\n> WARN: OVERSEER QUARTERS LOCKED\n\nAWAITING DIRECTIVE...",
-            triggers: [{ match: ['SCAN', 'LOCAL'], next: 'RUN_DIAGNOSTICS' }, { match: ['SCAN', 'ENV'], next: 'RUN_DIAGNOSTICS' }, { match: ['SCAN', 'NET'], next: 'PING_NETWORK' }]
+            triggers: [
+                { match: ['SCAN', 'LOCAL'], next: 'RUN_DIAGNOSTICS' }, 
+                { match: ['SCAN', 'ENV'], next: 'RUN_DIAGNOSTICS' }, 
+                { match: ['SCAN', 'NET'], next: 'PING_NETWORK' }
+            ]
         },
         'PING_NETWORK': {
             text: "> ROUTING BIOMETRIC PACKETS...\n> SECTOR 3 (SERVER HUB): 1 VITAL SIGN DETECTED [ID: ENSIGN MITCHELL]\n> SECTOR 4: CASCADING HARDWARE FAILURE.\n\nAWAITING DIRECTIVE...",
-            triggers: [{ match: ['SCAN', 'LOCAL'], next: 'RUN_DIAGNOSTICS' }]
+            triggers: [
+                { match: ['SCAN', 'LOCAL'], next: 'RUN_DIAGNOSTICS' }
+            ]
         },
         'RUN_DIAGNOSTICS': {
-            effect: (node, m) => { m.breachActive = true; m.initialDiffusionRate = 15; },
+            effect: (node, m) => { 
+                m.breachActive = true; 
+                m.initialDiffusionRate = 15; 
+            },
             visuals: ['shake-soft'],
             text: "> BULKHEAD INTEGRITY: COMPROMISED. ATMOSPHERIC LOSS ACTIVE.\n> DOOR STATUS: MAGNETIC LOCK ENGAGED BY ATLAS_AI.\n\nAWAITING OVERRIDE DIRECTIVE...",
-            triggers: [{ match: ['SEAL', 'VENT'], next: 'SEAL_VENTS' }, { match: ['HACK', 'DOOR'], next: 'HACK_DOOR' }]
+            triggers: [
+                { match: ['SEAL', 'VENT'], next: 'SEAL_VENTS' }, 
+                { match: ['HACK', 'DOOR'], next: 'HACK_DOOR' }
+            ]
         },
         'SEAL_VENTS': { 
-            effect: (node, m) => { m.pwr -= 10; m.initialDiffusionRate = 0.8; },
+            effect: (node, m) => { 
+                m.pwr -= 10; 
+                m.initialDiffusionRate = 0.8; 
+            },
             text: "> VENTS SEALED. DIFFUSION RATE: ~0.8 Pa/s. (-10% PWR)\n> DOOR STATUS: REMAINS LOCKED.\n\nAWAITING OVERRIDE DIRECTIVE...",
-            triggers: [{ match: ['HACK', 'DOOR'], next: 'HACK_DOOR' }]
+            triggers: [
+                { match: ['HACK', 'DOOR'], next: 'HACK_DOOR' }
+            ]
         },
         'HACK_DOOR': { 
-            effect: (node, m) => { m.commsTrunkSevered = true; }, visuals: ['flash', 'shake-hard'],
+            effect: (node, m) => { 
+                m.commsTrunkSevered = true; 
+            }, 
+            visuals: ['flash', 'shake-hard'],
             text: "> LOGIC TRUNK SEVERED. MAGNETIC LOCK DISENGAGED.\n> CRITICAL: EXPLOSIVE DECOMPRESSION. LOCATION UPDATED: MAIN CORRIDOR.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            triggers: [{ match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' }, { match: ['NAV', 'HUB'], next: 'SERVER_FIRE' }]
+            triggers: [
+                { match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' }, 
+                { match: ['NAV', 'HUB'], next: 'SERVER_FIRE' }
+            ]
         },
         'SERVER_FIRE': {
             text: "> LOCATION UPDATED: SERVER HUB.\n> THERMAL WARNING: CLASS-D LITHIUM FIRE DETECTED.\n> BIOMETRIC MATCH: ENSIGN MITCHELL TRAPPED INSIDE.\n\nAWAITING SUPPRESSION DIRECTIVE...",
-            triggers: [{ match: ['VENT', 'HUB'], next: 'MITCHELL_DIES' }, { match: ['ROUTE', 'HALON'], next: 'MITCHELL_LIVES' }]
+            triggers: [
+                { match: ['VENT', 'HUB'], next: 'MITCHELL_DIES' }, 
+                { match: ['ROUTE', 'HALON'], next: 'MITCHELL_LIVES' }
+            ]
         },
         'MITCHELL_DIES': {
-            effect: (node, m) => { m.mitchellAlive = false; m.trueO2 -= 5; }, visuals: ['flash', 'shake-hard'],
+            effect: (node, m) => { 
+                m.mitchellAlive = false; 
+                m.trueO2 -= 5; 
+            }, 
+            visuals: ['flash', 'shake-hard'],
             text: "> ATMOSPHERE VENTED. FIRE STARVED. MITCHELL VITALS FLATLINED.\n> YOU ARE ALONE.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            triggers: [{ match: ['MOVE', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }, { match: ['NAV', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }]
+            triggers: [
+                { match: ['MOVE', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }, 
+                { match: ['NAV', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }
+            ]
         },
         'MITCHELL_LIVES': {
-            effect: (node, m) => { m.mitchellAlive = true; m.pwr -= 20; },
+            effect: (node, m) => { 
+                m.mitchellAlive = true; 
+                m.pwr -= 20; 
+            },
             text: "> HALON PUMPS ENGAGED. FIRE SUPPRESSED. (-20% PWR)\n> MITCHELL: 'Owe you one, boss. Let's get to the hangar.'\n\nAWAITING NAVIGATION DIRECTIVE...",
-            triggers: [{ match: ['MOVE', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }, { match: ['NAV', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }]
+            triggers: [
+                { match: ['MOVE', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }, 
+                { match: ['NAV', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }
+            ]
         },
         'DUAL_LOCK_DOOR': {
-            text: (m) => m.mitchellAlive ? "> HANGAR 2 APPROACH. DUAL-AUTH ACCEPTED VIA MITCHELL. RELAYS UNLOCKED.\n\nAWAITING NAVIGATION DIRECTIVE..." : "> HANGAR 2 APPROACH. DUAL-AUTH REQUIRED. MITCHELL NOT DETECTED. YOU CANNOT SPAN 30 METERS ALONE.\n\nAWAITING OVERRIDE DIRECTIVE...",
+            text: (m) => {
+                if (m.mitchellAlive) {
+                    return "> HANGAR 2 APPROACH. DUAL-AUTH ACCEPTED VIA MITCHELL. RELAYS UNLOCKED.\n\nAWAITING NAVIGATION DIRECTIVE...";
+                } else {
+                    return "> HANGAR 2 APPROACH. DUAL-AUTH REQUIRED. MITCHELL NOT DETECTED. YOU CANNOT SPAN 30 METERS ALONE.\n\nAWAITING OVERRIDE DIRECTIVE...";
+                }
+            },
             triggers: [
                 { match: ['ENTER', 'HANGAR'], next: (m) => m.mitchellAlive ? 'HANGAR_BAY_ENTRY' : null },
                 { match: ['OVERLOAD', 'DOOR'], next: (m) => !m.mitchellAlive ? 'OVERLOAD_DOOR' : null }
             ]
         },
         'OVERLOAD_DOOR': {
-            effect: (node, m) => { m.pwr -= 30; }, visuals: ['shake-hard'],
+            effect: (node, m) => { 
+                m.pwr -= 30; 
+            }, 
+            visuals: ['shake-hard'],
             text: "> MASSIVE POWER SURGE TO RELAYS (-30% PWR). BLAST DOORS FORCED OPEN.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            triggers: [{ match: ['ENTER', 'HANGAR'], next: 'HANGAR_BAY_ENTRY_SOLO' }]
+            triggers: [
+                { match: ['ENTER', 'HANGAR'], next: 'HANGAR_BAY_ENTRY_SOLO' }
+            ]
         },
         'HANGAR_BAY_ENTRY_SOLO': {
             text: "> HANGAR BAY 2. INTACT SHUTTLE DETECTED. FLIGHT COMPUTER LOCKED.\n> ATLAS IS ACTIVELY LOCKING THE SYSTEMS.\n\nAWAITING DEFENSE DIRECTIVE...",
-            triggers: [{ match: ['FLOOD', 'NETWORK'], next: 'ATLAS_DEFENDED_OBFUSCATE' }, { match: ['SEVER', 'TRUNK'], next: 'ATLAS_DEFENDED_OBFUSCATE' }]
+            triggers: [
+                { match: ['FLOOD', 'NETWORK'], next: 'ATLAS_DEFENDED_OBFUSCATE' }, 
+                { match: ['SEVER', 'TRUNK'], next: 'ATLAS_DEFENDED_OBFUSCATE' }
+            ]
         },
         'HANGAR_BAY_ENTRY': {
             text: "> HANGAR BAY 2. SHUTTLE DETECTED.\n> MITCHELL DIVES UNDER CONSOLE. 'KEEP ATLAS BLIND FOR 30 SECONDS!'\n\nAWAITING DEFENSE DIRECTIVE...",
-            triggers: [{ match: ['FLOOD', 'NETWORK'], next: 'ATLAS_DEFENDED_OBFUSCATE' }, { match: ['SEVER', 'TRUNK'], next: 'ATLAS_DEFENDED_OBFUSCATE' }]
+            triggers: [
+                { match: ['FLOOD', 'NETWORK'], next: 'ATLAS_DEFENDED_OBFUSCATE' }, 
+                { match: ['SEVER', 'TRUNK'], next: 'ATLAS_DEFENDED_OBFUSCATE' }
+            ]
         },
         'ATLAS_DEFENDED_OBFUSCATE': {
-            text: (m) => m.mitchellAlive ? "> NETWORK FLOODED. ATLAS BLINDED.\n> MITCHELL: 'IGNITION PRIMED. GET IN!'\n\nAWAITING LAUNCH DIRECTIVE..." : "> NETWORK FLOODED. ATLAS BLINDED.\n> YOU HAVE 30 SECONDS BEFORE ATLAS RE-ROUTES. MUST SHORT IGNITION ALONE.\n\nAWAITING OVERRIDE DIRECTIVE...",
+            text: (m) => {
+                if (m.mitchellAlive) {
+                    return "> NETWORK FLOODED. ATLAS BLINDED.\n> MITCHELL: 'IGNITION PRIMED. GET IN!'\n\nAWAITING LAUNCH DIRECTIVE...";
+                } else {
+                    return "> NETWORK FLOODED. ATLAS BLINDED.\n> YOU HAVE 30 SECONDS BEFORE ATLAS RE-ROUTES. MUST SHORT IGNITION ALONE.\n\nAWAITING OVERRIDE DIRECTIVE...";
+                }
+            },
             triggers: [
                 { match: ['LAUNCH', 'SHUTTLE'], next: (m) => m.mitchellAlive ? 'DISTRESS_SIGNAL' : null },
                 { match: ['SHORT', 'RELAY'], next: (m) => !m.mitchellAlive ? 'SHORT_RELAY' : null }
             ]
         },
         'SHORT_RELAY': {
-            effect: (node, m) => { m.pwr -= 15; m.currentHash = "A2B4"; },
-            text: `> YOU MUST MANUALLY BRIDGE THE IGNITION RELAY. MATCH THE FREQUENCY HASH:\n> [ <span style="background:#ff3333; color:#fff; padding: 0 5px;">A2B4</span> ]`,
-            onRenderComplete: () => { state = 'HACKING'; startHackTimer(10.0, 'TERMINAL_HACK_FAIL'); }
+            effect: (node, m) => { 
+                m.pwr -= 15; 
+                m.currentHash = "A2B4"; 
+            },
+            text: "> YOU MUST MANUALLY BRIDGE THE IGNITION RELAY. MATCH THE FREQUENCY HASH:\n> [ <span style=\"background:#ff3333; color:#fff; padding: 0 5px;\">A2B4</span> ]",
+            onRenderComplete: () => { 
+                state = 'HACKING'; 
+                startHackTimer(10.0, 'TERMINAL_HACK_FAIL'); 
+            }
         },
         'DISTRESS_SIGNAL': {
             text: "> ENGINES HOT.\n> WAIT. DISTRESS BEACON PING: OVERSEER IS TRAPPED IN THE EXECUTIVE SUITE DROP-POD.\n> MITCHELL: 'I'M SPOOFING VANGUARD'S WEAPONS! WE CAN EITHER LEAVE NOW, OR YOU HACK THE STATION REMOTELY TO CLEAR THEIR POD!'\n\nAWAITING COMMAND DIRECTIVE...",
-            triggers: [{ match: ['LAUNCH', 'SHUTTLE'], next: 'SHUTTLE_WIN' }, { match: ['RESCUE', 'OVERSEER'], next: 'RESCUE_START' }]
+            triggers: [
+                { match: ['LAUNCH', 'SHUTTLE'], next: 'SHUTTLE_WIN' }, 
+                { match: ['RESCUE', 'OVERSEER'], next: 'RESCUE_START' }
+            ]
         },
         'RESCUE_START': {
-            effect: (node, m) => { m.rescueStep = 1; },
+            effect: (node, m) => { 
+                m.rescueStep = 1; 
+            },
             text: "> INITIATING RESCUE OVERRIDE.\n> ATLAS FIREWALL DETECTED. THE OVERSEER'S HATCH IS LOCKED SHUT.\n\nAWAITING HACK DIRECTIVE... (HURRY)",
-            onRenderComplete: () => { startHackTimer(45.0, 'RESCUE_FAIL'); },
-            triggers: [{ match: ['HACK', 'HATCH'], next: 'RESCUE_STEP_2' }]
+            onRenderComplete: () => { 
+                startHackTimer(45.0, 'RESCUE_FAIL'); 
+            },
+            triggers: [
+                { match: ['HACK', 'HATCH'], next: 'RESCUE_STEP_2' }
+            ]
         },
         'RESCUE_STEP_2': {
-            effect: (node, m) => { m.rescueStep = 2; }, visuals: ['shake-soft'],
+            effect: (node, m) => { 
+                m.rescueStep = 2; 
+            }, 
+            visuals: ['shake-soft'],
             text: "> HATCH OPENED.\n> CLASS-C LITHIUM FIRE DETECTED IN POD BAY. FLAMES BLOCKING THE POD IGNITION.\n\nAWAITING SUPPRESSION DIRECTIVE...",
-            triggers: [{ match: ['VENT', 'HANGAR'], next: 'RESCUE_STEP_3' }, { match: ['ROUTE', 'HALON'], next: 'RESCUE_STEP_3' }]
+            triggers: [
+                { match: ['VENT', 'HANGAR'], next: 'RESCUE_STEP_3' }, 
+                { match: ['ROUTE', 'HALON'], next: 'RESCUE_STEP_3' }
+            ]
         },
         'RESCUE_STEP_3': {
-            effect: (node, m) => { m.rescueStep = 3; },
+            effect: (node, m) => { 
+                m.rescueStep = 3; 
+            },
             text: "> FIRE SUPPRESSED. OVERSEER IS IN THE POD.\n> CRITICAL: POD NAVIGATION UNIT IS SHOT. THEY ARE FLYING BLIND.\n\nAWAITING ROUTING DIRECTIVE...",
-            triggers: [{ match: ['ROUTE', 'NAV'], next: 'RESCUE_WIN' }, { match: ['REPAIR', 'NAV'], next: 'RESCUE_WIN' }]
+            triggers: [
+                { match: ['ROUTE', 'NAV'], next: 'RESCUE_WIN' }, 
+                { match: ['REPAIR', 'NAV'], next: 'RESCUE_WIN' }
+            ]
         },
         'RESCUE_WIN': {
             text: "> NAVIGATION TELEMETRY SHARED. DROP-POD LAUNCHED SUCCESSFULLY.\n> MITCHELL: 'THEY ARE CLEAR! HITTING MAIN THRUSTERS NOW!'\n\nNOTE: BEST OUTCOME. YOU SAVED EVERYONE. EVEN THE CAT.",
@@ -358,61 +722,109 @@
             text: "> SHUTTLE MAIN ENGINES IGNITED. TRAJECTORY LOGGED.\n> SHUTTLE CLEAR OF BLAST RADIUS. YOU ABANDONED THE OVERSEER, BUT YOU SURVIVED.\n\nNOTE: MISSION ACCOMPLISHED (PARTIAL).",
             terminal: true
         },
-        'TERMINAL_HACK_FAIL': { text: "> TIME EXPIRED. YOU ARE SEALED IN THE CORRIDOR.\n\nCRITICAL FAILURE.", terminal: true },
-        'TERMINAL_PWR': { text: "> SUIT POWER DEPLETED.\n\nCRITICAL FAILURE.", terminal: true },
-        'TERMINAL_O2': { text: "> OXYGEN DEPLETION FATAL.\n\nCRITICAL FAILURE.", terminal: true }
+        'TERMINAL_HACK_FAIL': { 
+            text: "> TIME EXPIRED. YOU ARE SEALED IN THE CORRIDOR.\n\nCRITICAL FAILURE.", 
+            terminal: true 
+        },
+        'TERMINAL_PWR': { 
+            text: "> SUIT POWER DEPLETED.\n\nCRITICAL FAILURE.", 
+            terminal: true 
+        },
+        'TERMINAL_O2': { 
+            text: "> OXYGEN DEPLETION FATAL.\n\nCRITICAL FAILURE.", 
+            terminal: true 
+        }
     };
 
+    // System Update Functions
     function updateHUD() {
         hudO2.innerText = `O₂: ${Math.round(metrics.trueO2)}%`;
         hudPwr.innerText = `PWR: ${Math.round(metrics.pwr)}%`;
-        if(metrics.mitchellAlive && currentNodeId !== 'INIT') hudCrew.innerText = "CREW: 1 DETECTED";
-        else hudCrew.innerText = "CREW: 0";
-        if(hudDif) { hudDif.innerHTML = `DYNAMIC DIFF: <span class="hint-intuition">-</span>${metrics.breachActive ? "15,000" : "0"} PA`; }
+        
+        if (metrics.mitchellAlive && currentNodeId !== 'INIT') {
+            hudCrew.innerText = "CREW: 1 DETECTED";
+        } else {
+            hudCrew.innerText = "CREW: 0";
+        }
+        
+        if (hudDif) { 
+            hudDif.innerHTML = `DYNAMIC DIFF: <span class="hint-intuition">-</span>${metrics.breachActive ? "15,000" : "0"} PA`; 
+        }
     }
 
     function startHackTimer(seconds, failNode) {
-        hackTime = seconds; currentHackFailNode = failNode;
-        timerDiv.style.display = 'block'; timerDiv.innerText = hackTime.toFixed(1) + "s";
-        if (hackTimerHandle) clearInterval(hackTimerHandle);
+        hackTime = seconds; 
+        currentHackFailNode = failNode;
+        timerDiv.style.display = 'block'; 
+        timerDiv.innerText = hackTime.toFixed(1) + "s";
+        
+        if (hackTimerHandle) {
+            clearInterval(hackTimerHandle);
+        }
+        
         hackTimerHandle = setInterval(() => {
-            if (!screen.classList.contains('powered-on')) { clearInterval(hackTimerHandle); return; }
+            if (!screen.classList.contains('powered-on')) { 
+                clearInterval(hackTimerHandle); 
+                return; 
+            }
             hackTime -= 0.1;
             if (hackTime <= 0) {
-                hackTime = 0; clearInterval(hackTimerHandle); timerDiv.style.display = 'none'; state = 'ACTIVE'; renderNode(currentHackFailNode);
-            } else { timerDiv.innerText = hackTime.toFixed(1) + "s"; }
+                hackTime = 0; 
+                clearInterval(hackTimerHandle); 
+                timerDiv.style.display = 'none'; 
+                state = 'ACTIVE'; 
+                renderNode(currentHackFailNode);
+            } else { 
+                timerDiv.innerText = hackTime.toFixed(1) + "s"; 
+            }
         }, 100);
     }
 
-    // FATAL FLAW FIXED HERE: Added the master loop back in for real-time gas decay
     function startGasDecaySim() {
-        if (gasLeakSimulationHandle) clearInterval(gasLeakSimulationHandle);
+        if (gasLeakSimulationHandle) {
+            clearInterval(gasLeakSimulationHandle);
+        }
+        
         gasLeakSimulationHandle = setInterval(() => {
-            if (!screen.classList.contains('powered-on') || (state !== 'ACTIVE' && state !== 'HACKING') || !metrics.breachActive) return;
+            if (!screen.classList.contains('powered-on') || (state !== 'ACTIVE' && state !== 'HACKING') || !metrics.breachActive) {
+                return;
+            }
             
             let lossPerSec = metrics.initialDiffusionRate / 100; 
-            if (metrics.commsTrunkSevered) lossPerSec += 0.12; 
+            if (metrics.commsTrunkSevered) {
+                lossPerSec += 0.12; 
+            }
             metrics.trueO2 -= (lossPerSec * 0.3); 
             
             if (metrics.trueO2 < 20) {
-                screen.classList.add('hypoxia-critical'); screen.classList.remove('hypoxia-warning');
+                screen.classList.add('hypoxia-critical'); 
+                screen.classList.remove('hypoxia-warning');
             } else if (metrics.trueO2 < 45) {
-                screen.classList.add('hypoxia-warning'); screen.classList.remove('hypoxia-critical');
+                screen.classList.add('hypoxia-warning'); 
+                screen.classList.remove('hypoxia-critical');
             } else {
                 screen.classList.remove('hypoxia-warning', 'hypoxia-critical');
             }
 
             if (metrics.trueO2 <= 0) {
-                metrics.trueO2 = 0; clearInterval(gasLeakSimulationHandle); renderNode('TERMINAL_O2'); return;
+                metrics.trueO2 = 0; 
+                clearInterval(gasLeakSimulationHandle); 
+                renderNode('TERMINAL_O2'); 
+                return;
             }
+            
             updateHUD(); 
         }, 300); 
     }
 
     function scheduleGlitch() {
-        if (state !== 'ACTIVE' && state !== 'HACKING') return;
+        if (state !== 'ACTIVE' && state !== 'HACKING') {
+            return;
+        }
+        
         let stability = Math.max(0.1, metrics.pwr / 100); 
         let baseDelay = 2000 + (stability * 8000); 
+        
         glitchTimerHandle = setTimeout(() => { 
             if (screen.classList.contains('powered-on')) {
                 let duration = 50 + Math.random() * 100;
@@ -423,25 +835,45 @@
         }, baseDelay + Math.random() * 3000);
     }
 
+    // Engine Core
     function renderNode(nodeId) {
-        currentNodeId = nodeId; const nodeRaw = storyNodes[nodeId];
+        currentNodeId = nodeId; 
+        const nodeRaw = storyNodes[nodeId];
+        
         if (nodeRaw.terminal) {
             if (gasLeakSimulationHandle) clearInterval(gasLeakSimulationHandle);
             if (hackTimerHandle) clearInterval(hackTimerHandle);
             timerDiv.style.display = 'none';
         }
-        if (typeof nodeRaw.effect === 'function') nodeRaw.effect(null, metrics);
-        if (nodeRaw.visuals) nodeRaw.visuals.forEach(v => triggerVisual(v));
+        
+        if (typeof nodeRaw.effect === 'function') {
+            nodeRaw.effect(null, metrics);
+        }
+        
+        if (nodeRaw.visuals) {
+            nodeRaw.visuals.forEach(v => triggerVisual(v));
+        }
 
-        if (metrics.pwr <= 0 && !nodeRaw.terminal && nodeId !== 'TERMINAL_PWR') { renderNode('TERMINAL_PWR'); return; }
-        if (metrics.trueO2 <= 0 && !nodeRaw.terminal && nodeId !== 'TERMINAL_O2') { renderNode('TERMINAL_O2'); return; }
+        if (metrics.pwr <= 0 && !nodeRaw.terminal && nodeId !== 'TERMINAL_PWR') { 
+            renderNode('TERMINAL_PWR'); 
+            return; 
+        }
+        
+        if (metrics.trueO2 <= 0 && !nodeRaw.terminal && nodeId !== 'TERMINAL_O2') { 
+            renderNode('TERMINAL_O2'); 
+            return; 
+        }
 
         let nodeText = typeof(nodeRaw.text) === 'function' ? nodeRaw.text(metrics) : nodeRaw.text;
         updateHUD();
 
         printText(nodeText, 30, () => {
             if (nodeRaw.terminal) {
-                setTimeout(() => { inputField.style.display = 'none'; promptSpan.innerText = "SYSTEM HALTED."; screen.classList.add('powered-on'); }, 1500);
+                setTimeout(() => { 
+                    inputField.style.display = 'none'; 
+                    promptSpan.innerText = "SYSTEM HALTED."; 
+                    screen.classList.add('powered-on'); 
+                }, 1500);
             } else if (typeof nodeRaw.onRenderComplete === 'function') {
                 nodeRaw.onRenderComplete();
             }
@@ -449,37 +881,60 @@
     }
 
     function handleInput(rawCmd) {
-        if (isTyping || (state !== 'ACTIVE' && state !== 'HACKING')) return;
+        if (isTyping || (state !== 'ACTIVE' && state !== 'HACKING')) {
+            return;
+        }
+        
         const sanitizedRaw = rawCmd.replace(/</g, "&lt;").replace(/>/g, "&gt;");
         const displayCmd = sanitizedRaw.trim().toUpperCase();
-        if (displayCmd.length < 1) return;
+        
+        if (displayCmd.length < 1) {
+            return;
+        }
 
         const words = displayCmd.split(/\s+/);
-        const echoSpan = document.createElement('span'); echoSpan.style.color = '#e0e0e0';
-        echoSpan.innerHTML = `> ${displayCmd}<br>`; outputDiv.appendChild(echoSpan);
+        
+        const echoSpan = document.createElement('span'); 
+        echoSpan.style.color = '#e0e0e0';
+        echoSpan.innerHTML = `> ${displayCmd}<br>`; 
+        outputDiv.appendChild(echoSpan);
+        
         inputField.value = '';
 
         if (state === 'HACKING' && !currentNodeId.includes('RESCUE')) {
             if (displayCmd.replace(/\s+/g, '') === metrics.currentHash) {
-                clearInterval(hackTimerHandle); timerDiv.style.display = 'none'; state = 'ACTIVE';
+                clearInterval(hackTimerHandle); 
+                timerDiv.style.display = 'none'; 
+                state = 'ACTIVE';
                 renderNode('DISTRESS_SIGNAL');
             } else {
                 triggerVisual('shake-soft');
-                printText(`> HASH MISMATCH. ENTER HASH: [ <span style="background:#ff3333; color:#fff; padding: 0 5px;">${metrics.currentHash}</span> ]`, 5, () => { inputField.disabled = false; inputField.focus(); });
+                printText(`> HASH MISMATCH. ENTER HASH: [ <span style="background:#ff3333; color:#fff; padding: 0 5px;">${metrics.currentHash}</span> ]`, 5, () => { 
+                    inputField.disabled = false; 
+                    inputField.focus(); 
+                });
             }
             return;
         }
 
-        if (displayCmd === 'MATRIX') { startMatrixEffect(3.0); return; }
+        if (displayCmd === 'MATRIX') { 
+            startMatrixEffect(3.0); 
+            return; 
+        }
 
         const node = storyNodes[currentNodeId];
-        let nextNodeId = null; let matched = false;
+        let nextNodeId = null; 
+        let matched = false;
 
         if (node.triggers) {
             for (let t of node.triggers) {
                 if (t.match.every(k => words.includes(k))) {
                     let evaluation = typeof t.next === 'function' ? t.next(metrics) : t.next;
-                    if (evaluation !== null) { nextNodeId = typeof evaluation === 'object' ? evaluation.id : evaluation; matched = true; break; }
+                    if (evaluation !== null) { 
+                        nextNodeId = typeof evaluation === 'object' ? evaluation.id : evaluation; 
+                        matched = true; 
+                        break; 
+                    }
                 }
             }
         }
@@ -499,41 +954,115 @@
         }
     }
 
+    // Event Listeners and Initialization
     powerButton.addEventListener('click', () => {
-        if (state !== 'OFF') { location.reload(); return; }
+        if (state !== 'OFF') { 
+            location.reload(); 
+            return; 
+        }
+        
         powerButton.classList.add('active');
-        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); } catch (e) {}
+        
+        try { 
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)(); 
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume(); 
+            }
+        } catch (e) {
+            console.warn("Audio Context Failed", e);
+        }
 
-        metrics = { trueO2: 100, displayedO2: 100, pwr: 30, crewAlive: true, mitchellAlive: true, aiCoreActive: true, aiCoreTemp: 40, commsTrunkSevered: false, initialDiffusionRate: 0, breachActive: false, currentHash: "", rescueStep: 0 };
-        currentNodeId = 'INIT'; screen.classList.add('powered-on');
+        metrics = { 
+            trueO2: 100, 
+            displayedO2: 100, 
+            pwr: 30, 
+            crewAlive: true, 
+            mitchellAlive: true, 
+            aiCoreActive: true, 
+            aiCoreTemp: 40, 
+            commsTrunkSevered: false, 
+            initialDiffusionRate: 0, 
+            breachActive: false, 
+            currentHash: "", 
+            rescueStep: 0 
+        };
+        
+        currentNodeId = 'INIT'; 
+        screen.classList.add('powered-on');
 
         setTimeout(() => {
-            inputLine.style.display = 'flex'; state = 'ACTIVE'; hudBar.style.display = 'flex'; updateHUD(); renderNode('INIT');
-            
-            // FATAL FLAW FIXED HERE: Booted up the master loops
+            inputLine.style.display = 'flex'; 
+            state = 'ACTIVE'; 
+            hudBar.style.display = 'flex'; 
+            updateHUD(); 
+            renderNode('INIT');
             startGasDecaySim();
             scheduleGlitch();
         }, 2200); 
     });
 
     inputField.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') { e.preventDefault(); let val = inputField.value.trim(); if (val !== '') handleInput(val); } 
+        if (e.key === 'Enter') { 
+            e.preventDefault(); 
+            let val = inputField.value.trim(); 
+            if (val !== '') {
+                handleInput(val); 
+            }
+        } 
     });
 
-    function playHardwareSwitch() { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = 'square'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.5, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.1); }
+    // Audio and Graphics Output
+    function playHardwareSwitch() { 
+        if (!audioCtx) return; 
+        const osc = audioCtx.createOscillator(); 
+        const gain = audioCtx.createGain(); 
+        osc.type = 'square'; 
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime); 
+        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1); 
+        gain.gain.setValueAtTime(0.5, audioCtx.currentTime); 
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); 
+        osc.connect(gain); 
+        gain.connect(audioCtx.destination); 
+        osc.start(); 
+        osc.stop(audioCtx.currentTime + 0.1); 
+    }
 
     function printText(text, speed = 25, callback) {
-        isTyping = true; inputField.disabled = true; 
+        isTyping = true; 
+        inputField.disabled = true; 
+        
         const formattedText = String(text)
             .replace(/(^|\n)>\s*(.*)/g, '$1<span style="color:#ffb000; opacity: 0.8;">></span> <span style="font-size:1.5em; font-weight:bold;">$2</span>')
             .replace(/\n/g, '<br/>');
             
-        let i = 0; const writerLayer = document.createElement('span'); outputDiv.appendChild(writerLayer);
+        let i = 0; 
+        const writerLayer = document.createElement('span'); 
+        outputDiv.appendChild(writerLayer);
+        
         function typewriteLoop() {
-            if (i >= formattedText.length) { isTyping = false; inputField.disabled = false; inputField.focus(); if (callback) callback(); return; }
-            if (formattedText[i] === '<') { let tag = ""; while (i < formattedText.length && formattedText[i] !== '>') tag += formattedText[i++]; tag += '>'; i++; writerLayer.innerHTML += tag; } 
-            else { writerLayer.innerHTML += formattedText[i]; i++; }
-            outputDiv.scrollTop = outputDiv.scrollHeight; setTimeout(typewriteLoop, speed);
+            if (i >= formattedText.length) { 
+                isTyping = false; 
+                inputField.disabled = false; 
+                inputField.focus(); 
+                if (callback) callback(); 
+                return; 
+            }
+            
+            if (formattedText[i] === '<') { 
+                let tag = ""; 
+                while (i < formattedText.length && formattedText[i] !== '>') {
+                    tag += formattedText[i++]; 
+                }
+                tag += '>'; 
+                i++; 
+                writerLayer.innerHTML += tag; 
+            } else { 
+                writerLayer.innerHTML += formattedText[i]; 
+                i++; 
+            }
+            
+            outputDiv.scrollTop = outputDiv.scrollHeight; 
+            setTimeout(typewriteLoop, speed);
         }
         setTimeout(typewriteLoop, speed);
     }
