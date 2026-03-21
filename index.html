@@ -143,6 +143,9 @@
     const timerDiv = document.getElementById('hack-timer');
     const matrixOverlay = document.getElementById('matrix-overlay');
     const asciiFace = document.getElementById('ascii-face');
+    const hudO2 = document.getElementById('hud-o2');
+    const hudPwr = document.getElementById('hud-pwr');
+    const hudCrew = document.getElementById('hud-crew');
 
     const VALID_VERBS = ['SCAN', 'ROUTE', 'SEAL', 'VENT', 'HACK', 'OVERRIDE', 'REPAIR', 'MOVE', 'NAV', 'PURGE', 'DIVERT', 'ENTER', 'ENGAGE', 'SEVER', 'SHORT', 'LAUNCH', 'FLOOD', 'TRANSMIT', 'EJECT', 'MAKE', 'PET'];
     const VALID_TARGETS = ['LOCAL', 'ENV', 'NET', 'COMMS', 'VENTS', 'DOOR', 'HUB', 'RELAY', 'CRYO', 'AIRLOCK', 'DUCT', 'HALON', 'HANGAR', 'PWR', 'ATLAS', 'CORE', 'TRUNK', 'NETWORK', 'SHUTTLE', 'POD', 'NITROGEN', 'COOLANT', 'SCRAM', 'CODE', 'SOS', 'CAT', 'DOG', 'COFFEE', 'OVERSEER', 'HATCH'];
@@ -219,7 +222,7 @@
             asciiFace.innerText = toggle ? faceGrimace : faceNormal;
             asciiFace.style.textShadow = toggle ? '0 0 20px #f00' : '0 0 15px #0f0';
             asciiFace.style.color = toggle ? '#f55' : '#3f3';
-            if(toggle && audioCtx) playHardwareSwitch(); // Use glitch sound
+            if(toggle && audioCtx) playHardwareSwitch(); 
         }, 300);
 
         setTimeout(() => {
@@ -246,17 +249,6 @@
             `If I let you ${verb} the ${target}, the Vanguard platform is definitely going to blow us up. Let's try something else.`
         ];
         return quips[Math.floor(Math.random() * quips.length)];
-    }
-
-    function getAtlasVoice(type, nodeId) {
-        let phrases = [];
-        if (type === 'FRIENDLY_HOST') phrases.push("I am here to help. Let us get these systems back online.");
-        else if (type === 'ANTAGONIST') phrases.push("You are a biological vulnerability. I am excising you from the equation.");
-        if (phrases.length === 0) return "";
-        let nextIndex = Math.floor(Math.random() * phrases.length);
-        if (phrases.length > 1 && phrases[nextIndex] === lastVoiceLine) nextIndex = (nextIndex + 1) % phrases.length;
-        lastVoiceLine = phrases[nextIndex];
-        return phrases[nextIndex];
     }
 
     const storyNodes = {
@@ -329,7 +321,7 @@
         },
         'SHORT_RELAY': {
             effect: (node, m) => { m.pwr -= 15; m.currentHash = "A2B4"; },
-            text: "> YOU MUST MANUALLY BRIDGE THE IGNITION RELAY. MATCH THE FREQUENCY HASH:\n> [ <span style="background:#ff3333; color:#fff; padding: 0 5px;">A2B4</span> ]",
+            text: `> YOU MUST MANUALLY BRIDGE THE IGNITION RELAY. MATCH THE FREQUENCY HASH:\n> [ <span style="background:#ff3333; color:#fff; padding: 0 5px;">A2B4</span> ]`,
             onRenderComplete: () => { state = 'HACKING'; startHackTimer(10.0, 'TERMINAL_HACK_FAIL'); }
         },
         'DISTRESS_SIGNAL': {
@@ -455,7 +447,6 @@
         if (matched && nextNodeId && storyNodes[nextNodeId]) {
             renderNode(nextNodeId);
         } else {
-            // Bargatze Fallback Logic
             let foundVerb = words.find(w => VALID_VERBS.includes(w));
             let foundTarget = words.find(w => VALID_TARGETS.includes(w));
             
@@ -488,7 +479,11 @@
     function playHardwareSwitch() { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = 'square'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.5, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.1); }
 
     function printText(text, speed = 25, callback) {
-        isTyping = true; inputField.disabled = true; const formattedText = String(text).replace(/\n/g, '<br/>').replace(/>\s*(.*)/g, `<br><span style="color:#ffb000; opacity: 0.8;">></span> <span style="font-size:1.5em; font-weight:bold;">$1</span>`);
+        isTyping = true; inputField.disabled = true; 
+        const formattedText = String(text)
+            .replace(/(^|\n)>\s*(.*)/g, '$1<span style="color:#ffb000; opacity: 0.8;">></span> <span style="font-size:1.5em; font-weight:bold;">$2</span>')
+            .replace(/\n/g, '<br/>');
+            
         let i = 0; const writerLayer = document.createElement('span'); outputDiv.appendChild(writerLayer);
         function typewriteLoop() {
             if (i >= formattedText.length) { isTyping = false; inputField.disabled = false; inputField.focus(); if (callback) callback(); return; }
