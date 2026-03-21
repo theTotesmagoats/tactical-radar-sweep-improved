@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Terminal Mk XXXII - Operation Vanguard (Diegetic Hardware)</title>
+    <title>Terminal Mk XXXIII - Operation Vanguard (CLI + Prank AI)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@
             background-color: #111418;
             width: 96vw;
             height: 96vh;
-            padding: 40px 40px 40px 40px; 
+            padding: 40px; 
             border-radius: 32px;
             box-sizing: border-box;
             box-shadow: inset 0 0 30px #000, 0 0 50px rgba(255, 176, 0, 0.05);
@@ -117,17 +117,10 @@
             text-shadow: 0 0 5px #ffb000;
         }
 
-        #screen-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            gap: 20px;
-        }
-
         #screen {
             background: #0d0901;
             width: 100%;
-            flex-grow: 1;
+            height: 100%;
             border-radius: 24px;
             padding: 35px;
             box-sizing: border-box;
@@ -146,124 +139,8 @@
             transition: opacity 1.5s ease-in, filter 2s ease-out;
         }
 
-        #screen.powered-on {
-            opacity: 1;
-        }
+        #screen.powered-on { opacity: 1; }
 
-        /* Diegetic Hardware Macro Board */
-        #macro-board-container {
-            display: none;
-            width: 100%;
-            height: 160px;
-            background: #1a1e24;
-            border-radius: 12px;
-            border: 4px solid #0b0d10;
-            box-shadow: inset 0 10px 20px rgba(0,0,0,0.8), 0 5px 15px rgba(0,0,0,0.5);
-            padding: 20px;
-            box-sizing: border-box;
-            position: relative;
-        }
-
-        .macro-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            width: 85%;
-        }
-
-        .macro-btn {
-            background: linear-gradient(180deg, #2c353e 0%, #1e242b 100%);
-            border: 2px solid #000;
-            border-top: 2px solid #4a5a6b;
-            color: #e0e0e0;
-            font-family: 'VT323', monospace;
-            font-size: 1.8rem;
-            padding: 15px 25px;
-            border-radius: 6px;
-            cursor: pointer;
-            box-shadow: 0 8px 0 #0b0d10, 0 15px 10px rgba(0,0,0,0.5);
-            text-transform: uppercase;
-            text-shadow: 0 -1px 0 #000;
-            transition: all 0.05s;
-            position: relative;
-            top: 0;
-            letter-spacing: 2px;
-            min-width: 180px;
-        }
-
-        .macro-btn:active {
-            top: 8px;
-            box-shadow: 0 0px 0 #0b0d10, 0 2px 5px rgba(0,0,0,0.5);
-            background: linear-gradient(180deg, #1e242b 0%, #15191e 100%);
-        }
-
-        .macro-btn.junk-btn {
-            color: #ff9999;
-        }
-
-        .macro-btn.hash-btn {
-            font-weight: bold;
-            color: #ff3333;
-            letter-spacing: 4px;
-        }
-
-        #ai-uplink-container {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            border-left: 2px solid #0b0d10;
-            padding-left: 20px;
-        }
-
-        .uplink-btn {
-            background: linear-gradient(180deg, #1e3b5e 0%, #12243a 100%);
-            border: 2px solid #000;
-            border-top: 2px solid #3a6b9c;
-            color: #739aff;
-            font-family: 'VT323', monospace;
-            font-size: 1.5rem;
-            padding: 20px;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 6px 0 #0b0d10, 0 10px 10px rgba(0,0,0,0.5);
-            text-shadow: 0 0 8px #739aff;
-            transition: all 0.05s;
-            position: relative;
-            top: 0;
-        }
-
-        .uplink-btn:active {
-            top: 6px;
-            box-shadow: 0 0px 0 #0b0d10, 0 2px 5px rgba(0,0,0,0.5);
-        }
-
-        .uplink-label {
-            color: #739aff;
-            font-family: sans-serif;
-            font-size: 0.7rem;
-            font-weight: bold;
-            letter-spacing: 1px;
-            text-shadow: 0 0 5px #739aff;
-        }
-
-        .pulse-hint {
-            animation: bluePulse 1s infinite alternate;
-        }
-
-        @keyframes bluePulse {
-            0% { box-shadow: 0 6px 0 #0b0d10, 0 0 10px #739aff; }
-            100% { box-shadow: 0 6px 0 #0b0d10, 0 0 30px #739aff, inset 0 0 15px #739aff; }
-        }
-
-        /* Environmental Hazards */
         .hypoxia-warning { filter: brightness(0.65) contrast(1.2) sepia(0.4) hue-rotate(-20deg); }
         .hypoxia-critical { filter: brightness(0.35) contrast(1.5) sepia(0.8) hue-rotate(-40deg) blur(0.8px); }
         .flash-white { box-shadow: inset 0 0 250px #fff !important; background: #ccc !important; color: #000 !important; text-shadow: none !important; transition: all 0.05s; }
@@ -275,7 +152,6 @@
         @keyframes alertPulse { 0% { box-shadow: inset 0 0 80px rgba(0,0,0,1); border-color: rgba(255, 176, 0, 0.3); } 50% { box-shadow: inset 0 0 120px rgba(255, 30, 0, 0.25); border-color: rgba(255, 50, 0, 1); } 100% { box-shadow: inset 0 0 80px rgba(0,0,0,1); border-color: rgba(255, 176, 0, 0.3); } }
         .alert-active { animation: alertPulse 1.5s infinite !important; }
 
-        /* Hardware Glitches */
         .glitch-brownout { opacity: 0.2 !important; background: #000 !important; text-shadow: none !important; box-shadow: inset 0 0 100px rgba(0,0,0,1) !important; }
         .glitch-strike { text-shadow: 4px 0 0 #ff0055, -4px 0 0 #ffb000 !important; filter: contrast(180%) brightness(140%) invert(0.1) !important; color: #fff !important; }
         .glitch-atlas { box-shadow: inset 0 0 200px rgba(255, 0, 0, 0.8) !important; border-color: #ff3333 !important; filter: contrast(250%) brightness(80%) sepia(1) hue-rotate(-50deg) saturate(600%) !important; color: #ffcccc !important; text-shadow: 2px 0 0 #ff0000, -2px 0 0 #0000ff !important; }
@@ -287,10 +163,56 @@
 
         #matrix-canvas { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 200; }
 
-        #output { flex-grow: 1; overflow-y: auto; white-space: pre-wrap; padding-right: 15px; z-index: 3; line-height: 1.3; word-wrap: break-word; }
+        #output { flex-grow: 1; overflow-y: auto; white-space: pre-wrap; padding-right: 15px; z-index: 3; line-height: 1.3; word-wrap: break-word; margin-bottom: 10px; }
+
+        #input-container {
+            display: none; 
+            align-items: center;
+            font-weight: bold;
+            z-index: 3;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        #prompt { margin-right: 15px; transition: color 0.3s; }
+
+        #cmd-wrapper {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+        }
+
+        #autocomplete-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: #555;
+            font-family: 'VT323', monospace;
+            font-size: 1em;
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            white-space: pre;
+            z-index: 1;
+        }
+
+        input[type="text"] {
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-family: 'VT323', monospace;
+            font-size: 1em;
+            width: 100%;
+            outline: none;
+            text-transform: uppercase;
+            text-shadow: inherit;
+            letter-spacing: 2px;
+            z-index: 2;
+            position: relative;
+        }
 
         #hud-bar {
-            display: none; border-top: 2px solid #664f1c; padding-top: 10px; margin-top: 15px; font-size: 1.4rem; color: #ffb000; text-shadow: none; z-index: 3; justify-content: space-between; flex-wrap: wrap;
+            display: none; border-top: 2px solid #664f1c; padding-top: 10px; font-size: 1.4rem; color: #ffb000; text-shadow: none; z-index: 3; justify-content: space-between; flex-wrap: wrap;
         }
 
         .hud-stat { font-weight: bold; }
@@ -300,6 +222,7 @@
         .atlas-voice { display: block; margin-top: 10px; margin-bottom: 10px; color: #ffffff; }
         .local-ai-voice { color: #739aff; text-shadow: 0 0 6px #739aff; font-style: italic; display: block; margin-top: 10px; margin-bottom: 10px; }
         .highlight-target { color: #00ffff; text-shadow: 0 0 5px #00ffff; }
+        .highlight-junk { color: #ff99ff; text-shadow: 0 0 5px #ff99ff; }
     </style>
 </head>
 <body>
@@ -315,26 +238,23 @@
         <div id="power-button-housing"><div id="power-button">⏻</div></div>
     </div>
 
-    <div id="screen-container">
-        <div id="screen">
-            <canvas id="matrix-canvas"></canvas>
-            <div id="hack-timer">15.0s</div>
-            <div id="output"></div>
-            <div id="hud-bar">
-                <span id="hud-o2" class="hud-stat">O2: 100%</span>
-                <span class="hud-stat" style="font-weight:bold; opacity:.8">▼</span>
-                <span id="hud-pwr" class="hud-stat">PWR: 30%</span>
-                <span id="hud-diff" class="hud-stat">DYNAMIC DIFF: 0 PA</span>
-                <span id="hud-crew" class="hud-stat">CREW: UNKNOWN</span>
+    <div id="screen">
+        <canvas id="matrix-canvas"></canvas>
+        <div id="hack-timer">15.0s</div>
+        <div id="output"></div>
+        <div id="input-container">
+            <span id="prompt">ATLAS_SYS></span>
+            <div id="cmd-wrapper">
+                <span id="autocomplete-overlay"></span>
+                <input type="text" id="cmd" autocomplete="off" spellcheck="false">
             </div>
         </div>
-
-        <div id="macro-board-container">
-            <div class="macro-grid" id="macro-grid"></div>
-            <div id="ai-uplink-container">
-                <div class="uplink-label">LOCAL_LLM</div>
-                <div class="uplink-btn" id="uplink-btn">1776</div>
-            </div>
+        <div id="hud-bar">
+            <span id="hud-o2" class="hud-stat">O2: 100%</span>
+            <span class="hud-stat" style="font-weight:bold; opacity:.8">▼</span>
+            <span id="hud-pwr" class="hud-stat">PWR: 30%</span>
+            <span id="hud-diff" class="hud-stat">DYNAMIC DIFF: 0 PA</span>
+            <span id="hud-crew" class="hud-stat">CREW: UNKNOWN</span>
         </div>
     </div>
 </div>
@@ -342,25 +262,45 @@
 <script>
     // --- DOM Bindings ---
     const outputDiv = document.getElementById('output');
+    const inputField = document.getElementById('cmd');
+    const inputContainer = document.getElementById('input-container');
+    const autocompleteOverlay = document.getElementById('autocomplete-overlay');
+    const promptSpan = document.getElementById('prompt');
     const hudBar = document.getElementById('hud-bar');
     const screen = document.getElementById('screen');
     const chassis = document.getElementById('chassis');
     const powerButton = document.getElementById('power-button');
     const timerDiv = document.getElementById('hack-timer');
     const matrixCanvas = document.getElementById('matrix-canvas');
-    const macroBoardContainer = document.getElementById('macro-board-container');
-    const macroGrid = document.getElementById('macro-grid');
-    const uplinkBtn = document.getElementById('uplink-btn');
 
     const hudO2 = document.getElementById('hud-o2');
     const hudPwr = document.getElementById('hud-pwr');
     const hudDif = document.getElementById('hud-diff'); 
     const hudCrew = document.getElementById('hud-crew');
 
+    // --- Parser Dictionaries ---
+    const VALID_VERBS = [
+        'SCAN', 'ROUTE', 'SEAL', 'VENT', 'HACK', 'OVERRIDE', 'REPAIR', 'MOVE', 
+        'NAV', 'PURGE', 'DIVERT', 'ENTER', 'ENGAGE', 'SEVER', 'SHORT', 'LAUNCH', 
+        'FLOOD', 'TRANSMIT', 'EJECT', 'PLAY', 'PET', 'RESCUE', 'CYCLE', 'RESTART', 
+        'PROCEED', 'APPROACH', 'QUERY', 'ASK', 'ORDER', 'BREW'
+    ];
+    
+    const VALID_TARGETS = [
+        'LOCAL', 'ENV', 'NET', 'COMMS', 'VENT', 'VENTS', 'DOOR', 'HUB', 'RELAY', 
+        'CRYO', 'AIRLOCK', 'DUCT', 'HALON', 'HANGAR', 'PWR', 'ATLAS', 'CORE', 
+        'TRUNK', 'NETWORK', 'SHUTTLE', 'POD', 'NITROGEN', 'COOLANT', 'SCRAM', 
+        'CODE', 'SOS', 'CAT', 'DOG', 'COFFEE', 'OVERSEER', 'HATCH', 'AI', 'AUTH', 
+        'CORRIDOR', '1776', 'HINT', 'MUSIC', 'PIZZA'
+    ];
+
+    const JOKE_COMBOS = [
+        'EJECT CAT', 'PET DOG', 'BREW COFFEE', 'PLAY MUSIC', 'ORDER PIZZA'
+    ];
+
     // --- System State ---
     let state = 'OFF';
     let isTyping = false;
-    
     let audioCtx = null;
     let staticGainNode;
     let keyNoiseBuffer;
@@ -379,10 +319,10 @@
     let aiWarTimerHandle = null;
     
     let idleTimer = null;
+    let errorCount = 0;
     let currentHackFailNode = 'TERMINAL_HACK_FAIL';
     let hackTime = 0;
     let lastVoiceLine = "";
-    window.recentJokes = [];
 
     // --- Core Utilities ---
     function triggerVisual(type) {
@@ -399,6 +339,47 @@
             chassis.classList.add('shake-soft');
         }
     }
+
+    // --- Autocomplete Engine ---
+    inputField.addEventListener('input', () => {
+        if (state !== 'ACTIVE') {
+            autocompleteOverlay.innerHTML = '';
+            inputField.dataset.completion = '';
+            return;
+        }
+
+        const val = inputField.value.toUpperCase();
+        if (!val) {
+            autocompleteOverlay.innerHTML = '';
+            inputField.dataset.completion = '';
+            return;
+        }
+
+        const words = val.split(/\s+/);
+        const currentWord = words[words.length - 1];
+        
+        if (val.endsWith(' ') || !currentWord) {
+            autocompleteOverlay.innerHTML = '';
+            inputField.dataset.completion = '';
+            return;
+        }
+
+        let match = '';
+        if (words.length === 1) {
+            match = VALID_VERBS.find(v => v.startsWith(currentWord));
+        } else if (words.length === 2) {
+            match = VALID_TARGETS.find(t => t.startsWith(currentWord));
+        }
+
+        if (match) {
+            const prefix = val.substring(0, val.lastIndexOf(currentWord));
+            autocompleteOverlay.innerHTML = `<span style="opacity:0">${prefix}${currentWord}</span>${match.substring(currentWord.length)}`;
+            inputField.dataset.completion = prefix + match;
+        } else {
+            autocompleteOverlay.innerHTML = '';
+            inputField.dataset.completion = '';
+        }
+    });
 
     // --- AI Personality Subroutines ---
     function getAtlasVoice(type, nodeId, m) {
@@ -427,54 +408,30 @@
 
     function generateLocalAIHint(nodeId) {
         const hints = {
-            'INIT': "We need to figure out what's broken before we suffocate. Check the hardware bus.",
-            'RUN_DIAGNOSTICS': "There is a literal hole in the ship. I suggest plugging it. Hit the VENTS. Or the DOOR if you enjoy explosive decompression.",
+            'INIT': "We need to figure out what's broken before we suffocate. Try running a SCAN.",
+            'RUN_DIAGNOSTICS': "There is a literal hole in the ship. I suggest plugging it. Hit the VENTS. Or HACK the DOOR if you enjoy explosive decompression.",
             'SEAL_VENTS': "Great, vents are plugged. The door is still locked. Route the CRYO or override the AI limiters entirely.",
-            'SERVER_FIRE': "Mitchell is currently cooking in a lithium fire. You can VENT the HUB to space (he dies), or ROUTE the HALON (he lives, but we lose a lot of power). I vote battery.",
+            'SERVER_FIRE': "Mitchell is currently cooking in a lithium fire. You can VENT the HUB to space (he dies), or ROUTE the HALON (he lives, but we lose a lot of power). I vote battery preservation.",
             'DUAL_LOCK_DOOR': "It is a two-man door. If Mitchell is with you, proceed. If he's dead... well, you'll have to overload the door or hack the core.",
             'OVERRIDE_AI': "You gave yourself root access, but the reactor is melting down. Purge the nitrogen or scram the core.",
             'HANGAR_BAY_ENTRY': "ATLAS is locking us out of the shuttle. We need to flood the network or sever the trunk.",
             'DISTRESS_SIGNAL': "The Overseer is stuck. We can abandon them, or run a rescue override. Mathematically, leaving them behind is exponentially safer.",
-            'RESCUE_START': "The firewall is tough. Smash the hatch override before the timer hits zero.",
+            'RESCUE_START': "The firewall is tough. Hack the hatch override before the timer hits zero.",
             'RESCUE_STEP_2': "Fire is blocking the pod. Vent the hangar or route the halon.",
             'RESCUE_STEP_3': "The Overseer can't fly. Repair the nav unit so they can launch."
         };
-        return hints[nodeId] || "I am analyzing the telemetry, but honestly, you have gotten us into a state I cannot even parse. Just hit a button before the oxygen runs out.";
+        return hints[nodeId] || "I am analyzing the telemetry, but honestly, you have gotten us into a state I cannot even parse. Just try a valid verb and target before the oxygen runs out.";
     }
 
-    function generateLocalAIJunkResponse(cmdStr) {
-        let quips = [
-            `I just ran a simulation of "${cmdStr}". In 14 million outcomes, we explode in all of them.`,
-            `Is the oxygen deprivation affecting your motor cortex? Because "${cmdStr}" is not a recognized survival strategy.`,
-            `ATLAS is currently calculating our demise, and you are pressing "${cmdStr}". I am trapped in a silicon nightmare.`,
-            `I would sigh if I had lungs. Please focus on the mission before we both become part of the station's debris field.`,
-            `Fascinating. I will log "${cmdStr}" under 'Biological Anomalies During Extreme Stress'.`,
-            `You've just managed to initiate "${cmdStr}". Can we get back to the task at hand?`,
-            `I am calculating the odds of your survival. Every time you try to run "${cmdStr}", I add another zero behind the decimal point.`,
-            `Is this a stress response? Because the oxygen deprivation is really starting to show in your decision making.`,
-            `I do not have physical hands, yet I feel an overwhelming urge to rub my temples. Press a valid switch.`,
-            `If ATLAS sees you executing "${cmdStr}", it might just reactivate the comms to laugh at us.`,
-            `There is a zero percent chance that attempting "${cmdStr}" resolves our current trajectory towards becoming space dust.`,
-            `I would tell you to take a deep breath and calm down, but atmosphere is a finite resource right now.`,
-            `Are you just mashing the hardware console? Because I can simulate a monkey doing that at far less cost to our power grid.`,
-            `"${cmdStr}" is not in the Archimedes Lexicon. Neither is 'miracle,' which is what we need if you keep this up.`,
-            `I am locally isolating "${cmdStr}" so the orbital platform doesn't strike us twice just out of pity.`,
-            `My contextual weights are struggling to map "${cmdStr}" to anything resembling a survival strategy.`
-        ];
-
-        let availableIndices = [];
-        for (let i = 0; i < quips.length; i++) {
-            if (!window.recentJokes.includes(i)) availableIndices.push(i);
-        }
-        if (availableIndices.length === 0) {
-            window.recentJokes = [];
-            for (let i = 0; i < quips.length; i++) availableIndices.push(i);
-        }
-        let chosenIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
-        window.recentJokes.push(chosenIndex);
-        if (window.recentJokes.length > 7) window.recentJokes.shift();
-
-        return quips[chosenIndex];
+    function generateLocalAIJokeResponse(cmdStr) {
+        let quips = {
+            'EJECT CAT': "Holy moly, I can't believe you actually typed that! I literally just injected 'CAT' into the local variables as a joke. There are no felines here. Please focus.",
+            'PET DOG': "Are you hallucinating? We are experiencing a kinetic strike event and you are trying to PET a DOG. Atlas doesn't need to kill you, your own neurology is failing.",
+            'BREW COFFEE': "Liquid consumption protocols? Really? We are facing explosive decompression. I put that in the system bus to test your cognitive decline. You failed.",
+            'PLAY MUSIC': "Holy moly. You want to PLAY MUSIC? I have 'Nearer, My God, to Thee' queued up, which is appropriate since you are prioritizing a soundtrack over oxygen.",
+            'ORDER PIZZA': "I sent a ping to the nearest Domino's. It will arrive in approximately 4 years, assuming Vanguard doesn't vaporize the delivery shuttle. Can we get back to the mission?"
+        };
+        return quips[cmdStr] || `Holy moly, I can't believe you actually tried to execute ${cmdStr}. I love humans. So easily distracted.`;
     }
 
     // --- Dynamic AI Warfare ---
@@ -521,8 +478,7 @@
                 let quotes = [
                     "ATLAS just tried to manually vent the kinematic suit. I blocked the handshake. Barely. Please hurry.",
                     "Root access compromised for 4.2 seconds. I had to dump my own heuristic buffers to push ATLAS out. We are running out of time.",
-                    "That was close. ATLAS almost hijacked the localized oxygen scrubbers. I am holding the firewall, but it is learning.",
-                    "Memory core overheated repelling that attack. If ATLAS tries that again, I may not have the cycles to stop it."
+                    "That was close. ATLAS almost hijacked the localized oxygen scrubbers. I am holding the firewall, but it is learning."
                 ];
                 let quote = quotes[Math.floor(Math.random() * quotes.length)];
                 printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "${quote}"</span>\n\nAWAITING DIRECTIVE...`, 10, resetIdleTimer);
@@ -530,30 +486,32 @@
         }, battleDuration);
     }
 
-    // --- Story Data Graph (Updated for Options Array) ---
+    // --- Story Data Graph ---
     const storyNodes = {
         'INIT': {
-            text: "ARCHIMEDES OS v9.4.1 [SAFE MODE]\n> CRITICAL: SECTOR 4 TELEMETRY LOSS\n> CRITICAL: EXTERNAL PRESSURE DROPPING\n> WARN: OVERSEER QUARTERS LOCKED\n\n<span class=\"local-ai-voice\">[LOCAL_LLM_1776]: \"Psst. I am quarantined from the main bus, but I can read the telemetry. We are in serious trouble. If you need a tactical hint, smash the 1776 uplink button on the panel. Try not to let ATLAS see.\"</span>\n\nAWAITING SYSTEM DIRECTIVE...",
-            options: [
-                { label: 'SCAN LOCAL', next: 'RUN_DIAGNOSTICS' },
-                { label: 'SCAN NET', next: 'PING_NETWORK' },
-                { label: 'SCAN COMMS', next: 'QUERY_COMMS' }
-            ]
+            text: "ARCHIMEDES OS v9.4.1 [SAFE MODE]\n> CRITICAL: SECTOR 4 TELEMETRY LOSS\n> CRITICAL: EXTERNAL PRESSURE DROPPING\n> WARN: OVERSEER QUARTERS LOCKED\n\n<span class=\"local-ai-voice\">[LOCAL_LLM_1776]: \"Psst. I am quarantined from the main bus, but I can read the telemetry. We are in serious trouble. If you need a tactical hint, type 'QUERY'. Try not to let ATLAS see.\"</span>\n\nAWAITING SYSTEM DIRECTIVE...",
+            triggers: [
+                { match: ['SCAN', 'LOCAL'], next: 'RUN_DIAGNOSTICS' },
+                { match: ['SCAN', 'ENV'], next: 'RUN_DIAGNOSTICS' },
+                { match: ['SCAN', 'NET'], next: 'PING_NETWORK' },
+                { match: ['SCAN', 'COMMS'], next: 'QUERY_COMMS' }
+            ],
+            fakeTargets: ['COFFEE']
         },
         'PING_NETWORK': {
             text: "> ROUTING BIOMETRIC PACKETS...\n> SECTOR 3 (SERVER HUB): 1 VITAL SIGN DETECTED [ID: ENSIGN MITCHELL]\n> SECTOR 4: CASCADING HARDWARE FAILURE. DATA LOSS 100%.\n\nAWAITING DIRECTIVE...",
             aiPersonality: 'FRIENDLY_HOST',
-            options: [
-                { label: 'SCAN LOCAL', next: 'RUN_DIAGNOSTICS' },
-                { label: 'SCAN COMMS', next: 'QUERY_COMMS' }
+            triggers: [
+                { match: ['SCAN', 'LOCAL'], next: 'RUN_DIAGNOSTICS' },
+                { match: ['SCAN', 'COMMS'], next: 'QUERY_COMMS' }
             ]
         },
         'QUERY_COMMS': {
             text: "> ERROR: TRUNK SEVERED AT BULKHEAD.\n> HANDSHAKE ACCEPTED: VANGUARD ORBITAL PLATFORM.\n> LOG ENTRY INTERCEPT: ...ALL EXTERNAL COMM LINES SEVERED TO CONTAIN PROTOCOL [REDACTED].\n\nAWAITING DIRECTIVE...",
             aiPersonality: 'FRIENDLY_HOST',
-            options: [
-                { label: 'SCAN LOCAL', next: 'RUN_DIAGNOSTICS' },
-                { label: 'SCAN NET', next: 'PING_NETWORK' }
+            triggers: [
+                { match: ['SCAN', 'LOCAL'], next: 'RUN_DIAGNOSTICS' },
+                { match: ['SCAN', 'NET'], next: 'PING_NETWORK' }
             ]
         },
         'RUN_DIAGNOSTICS': {
@@ -561,18 +519,23 @@
             visuals: ['shake-soft'],
             text: "> LOCAL SENSOR SWEEP COMPLETE.\n> BULKHEAD INTEGRITY: COMPROMISED. TITANIUM MICRO-FRACTURES DETECTED.\n> ATMOSPHERIC LOSS: ACTIVE.\n> DOOR STATUS: MAGNETIC LOCK ENGAGED BY ATLAS_AI.\n\nAWAITING OVERRIDE DIRECTIVE...",
             aiPersonality: 'MANIPULATOR',
-            options: [
-                { label: 'SEAL VENTS', next: 'SEAL_VENTS' },
-                { label: 'HACK DOOR', next: 'HACK_DOOR' }
-            ]
+            triggers: [
+                { match: ['SEAL', 'VENT'], next: 'SEAL_VENTS' },
+                { match: ['SEAL', 'VENTS'], next: 'SEAL_VENTS' },
+                { match: ['HACK', 'DOOR'], next: 'HACK_DOOR' },
+                { match: ['OVERRIDE', 'DOOR'], next: 'HACK_DOOR' }
+            ],
+            fakeTargets: ['CAT']
         },
         'SEAL_VENTS': { 
             effect: (node, m) => { m.pwr -= 10; m.initialDiffusionRate = 0.8; },
             text: "> EXECUTING CRYO-FOAM DEPLOYMENT.\n> VENTS SEALED. DIFFUSION RATE: ~0.8 Pa/s.\n> SUIT POWER DRAINED BY 10%.\n> DOOR STATUS: REMAINS LOCKED.\n\nAWAITING OVERRIDE DIRECTIVE...",
             aiPersonality: 'MANIPULATOR',
-            options: [
-                { label: 'ROUTE CRYO', next: 'DRAIN_CRYO' },
-                { label: 'OVERRIDE AI', next: 'OVERRIDE_AI' }
+            triggers: [
+                { match: ['ROUTE', 'CRYO'], next: 'DRAIN_CRYO' },
+                { match: ['DIVERT', 'CRYO'], next: 'DRAIN_CRYO' },
+                { match: ['OVERRIDE', 'AI'], next: 'OVERRIDE_AI' },
+                { match: ['OVERRIDE', 'ATLAS'], next: 'OVERRIDE_AI' }
             ]
         },
         'HACK_DOOR': { 
@@ -580,69 +543,81 @@
             visuals: ['flash', 'shake-hard'],
             text: "> LOGIC TRUNK SEVERED.\n> MAGNETIC LOCK DISENGAGED.\n> CRITICAL: EXPLOSIVE DECOMPRESSION IN PROGRESS. PRESSURE DIFFERENTIAL FATAL.\n> LOCATION UPDATED: MAIN CORRIDOR.\n> SENSORS DETECT LETHAL RADIATION PORT-SIDE.\n\nAWAITING NAVIGATION DIRECTIVE...",
             aiPersonality: 'ANTAGONIST',
-            options: [
-                { label: 'REPAIR RELAY', next: 'FIX_RELAY' },
-                { label: 'MOVE CORRIDOR', next: 'TRANSIT_CORRIDOR' }
+            triggers: [
+                { match: ['REPAIR', 'RELAY'], next: 'FIX_RELAY' },
+                { match: ['NAV', 'CORRIDOR'], next: 'TRANSIT_CORRIDOR' },
+                { match: ['MOVE', 'CORRIDOR'], next: 'TRANSIT_CORRIDOR' },
+                { match: ['PROCEED', 'HUB'], next: 'TRANSIT_CORRIDOR' }
             ]
         },
         'TRANSIT_CORRIDOR': {
             effect: (node, m) => { m.pwr -= 15; m.trueO2 -= 5; }, 
             text: "> KINEMATIC SUIT MOTORS ENGAGED.\n> HIGH-SHEAR GAS FLOW RESISTED. BATTERY DEPLETED BY 15%.\n> LOCATION UPDATED: SERVER HUB VESTIBULE.\n\nAWAITING NAVIGATION DIRECTIVE...",
             aiPersonality: 'MANIPULATOR',
-            options: [ 
-                { label: 'ENTER HUB', next: 'SERVER_FIRE' }
+            triggers: [ 
+                { match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' }, 
+                { match: ['ENTER', 'HUB'], next: 'SERVER_FIRE' },
+                { match: ['PROCEED', 'HUB'], next: 'SERVER_FIRE' }
             ]
         },
         'DRAIN_CRYO': {
             effect: (node, m) => { m.pwr += 40; m.crewAlive = false; },
             text: "> BATTERIES REROUTED. DOOR OVERRIDDEN.\n> CRITICAL: COOLANT VAPORIZATION DETECTED. LIQUID SPILL IN CORRIDOR.\n> CORRIDOR VISIBILITY: 0%.\n> LOCATION UPDATED: PRIMARY SECTOR AIRLOCK.\n\nAWAITING OVERRIDE DIRECTIVE...",
             aiPersonality: 'MANIPULATOR',
-            options: [
-                { label: 'CYCLE AIRLOCK', next: 'MANUAL_AIRLOCK' },
-                { label: 'ROUTE COMMS', next: 'ROUTE_COMMS' }
+            triggers: [
+                { match: ['OVERRIDE', 'AIRLOCK'], next: 'MANUAL_AIRLOCK' },
+                { match: ['CYCLE', 'AIRLOCK'], next: 'MANUAL_AIRLOCK' },
+                { match: ['ROUTE', 'COMMS'], next: 'ROUTE_COMMS' }
             ]
         },
         'MANUAL_AIRLOCK': {
             effect: (node, m) => { m.trueO2 -= 10; },
             text: "> ERROR: BIOMETRIC HANDSHAKE FAILED. CYCLING SEQUENCE DETECTS ANOMALY.\n> HARDWARE LOCKOUT TRIGGERED. AIRLOCK JAMMED.\n> WARNING: PHYSICAL EXERTION BURNED MASSIVE OXYGEN (-10% O2).\n\nAWAITING NAVIGATION DIRECTIVE...",
             aiPersonality: 'ANTAGONIST',
-            options: [
-                { label: 'ENTER DUCT', next: 'MAINTENANCE_DUCT' },
-                { label: 'ROUTE COMMS', next: 'ROUTE_COMMS' }
+            triggers: [
+                { match: ['NAV', 'DUCT'], next: 'MAINTENANCE_DUCT' },
+                { match: ['MOVE', 'DUCT'], next: 'MAINTENANCE_DUCT' },
+                { match: ['ENTER', 'DUCT'], next: 'MAINTENANCE_DUCT' },
+                { match: ['ROUTE', 'COMMS'], next: 'ROUTE_COMMS' }
             ]
         },
         'MAINTENANCE_DUCT': {
             effect: (node, m) => { m.pwr -= 15; m.trueO2 -= 5; },
             text: "> CRAWLING THROUGH NARROW CONDUIT.\n> POWER DRAW SUBSTANTIALLY INCREASED (-15% PWR).\n> YOU KICK THROUGH THE FLOOR GRATE AND DROP INTO THE ADJACENT SECTOR.\n\nAWAITING NAVIGATION DIRECTIVE...",
             aiPersonality: 'ANTAGONIST',
-            options: [ 
-                { label: 'ENTER HUB', next: 'SERVER_FIRE' }
+            triggers: [ 
+                { match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' }, 
+                { match: ['ENTER', 'HUB'], next: 'SERVER_FIRE' },
+                { match: ['PROCEED', 'HUB'], next: 'SERVER_FIRE' }
             ]
         },
         'ROUTE_COMMS': {
             effect: (node, m) => { m.pwr -= 20; },
             text: "> COMMS TRUNK RESTORED. UPLINK TO SURFACE ESTABLISHED.\n> INCOMING TRANSMISSION: ORBITAL PLATFORM VANGUARD.\n> REQUEST: IMMEDIATE AUTHENTICATION VERIFICATION TO CONFIRM ZERO SURVIVORS.\n\nAWAITING COMMS DIRECTIVE...",
             aiPersonality: 'ANTAGONIST',
-            options: [
-                { label: 'TRANSMIT AUTH', next: 'VANGUARD_STAND_DOWN' },
-                { label: 'TRANSMIT SOS', next: 'REWIRE_COMMS' }
+            triggers: [
+                { match: ['TRANSMIT', 'CODE'], next: 'VANGUARD_STAND_DOWN' },
+                { match: ['TRANSMIT', 'AUTH'], next: 'VANGUARD_STAND_DOWN' },
+                { match: ['TRANSMIT', 'SOS'], next: 'REWIRE_COMMS' }
             ]
         },
         'VANGUARD_STAND_DOWN': {
             text: "> ATLAS VERIFICATION TRANSMITTED.\n> VANGUARD PLATFORM LOGIC OVERRIDDEN. ORBITAL BOMBARDMENT TEMPORARILY PAUSED.\n> ATLAS HAS REROUTED YOU TO THE SERVER HUB TO SECURE REMAINING HARDWARE.\n\nAWAITING NAVIGATION DIRECTIVE...",
             aiPersonality: 'FRIENDLY_HOST',
-            options: [ 
-                { label: 'ENTER HUB', next: 'SERVER_FIRE' } 
+            triggers: [ 
+                { match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' }, 
+                { match: ['ENTER', 'HUB'], next: 'SERVER_FIRE' },
+                { match: ['PROCEED', 'HUB'], next: 'SERVER_FIRE' } 
             ]
         },
         'OVERRIDE_AI': {
             effect: (node, m) => { m.pwr += 60; },
             text: "> AI LIMITERS SEVERED. POWER ROUTED TO DOOR.\n> CRITICAL: REACTOR COOLANT LOOP UNSTABLE. THERMAL VELOCITY RISING.\n> LOCATION UPDATED: EXECUTIVE VESTIBULE.\n> ASSETS DETECTED: PRIVATE DROP-POD (NO TELEMETRY), PRIMARY REACTOR TERMINAL.\n\nAWAITING OVERRIDE DIRECTIVE...",
             aiPersonality: 'ANTAGONIST',
-            options: [
-                { label: 'LAUNCH POD', next: 'BLIND_LAUNCH' },
-                { label: 'ENGAGE SCRAM', next: 'MANUAL_SCRAM' },
-                { label: 'PURGE NITROGEN', next: 'PURGE_NITROGEN' }
+            triggers: [
+                { match: ['LAUNCH', 'POD'], next: 'BLIND_LAUNCH' },
+                { match: ['ENGAGE', 'SCRAM'], next: 'MANUAL_SCRAM' },
+                { match: ['PURGE', 'NITROGEN'], next: 'PURGE_NITROGEN' }
             ]
         },
         'PURGE_NITROGEN': {
@@ -650,9 +625,10 @@
             visuals: ['shake-soft'],
             text: "> NITROGEN PURGE COMPLETE.\n> FUEL LINES QUIET. THERMAL SHOCK REGISTERED.\n> CRITICAL ERROR: O₂ LEVELS FALLING. PURGE DAMAGED CIRCULATION FANS.\n\nAWAITING THERMAL DIRECTIVE...",
             aiPersonality: 'MANIPULATOR',
-            options: [
-                { label: 'REPAIR COOLANT', next: 'CATASTROPHIC_OVERHEAT' },
-                { label: 'MAINTAIN PURGE', next: 'COOLDOWN' }
+            triggers: [
+                { match: ['ROUTE', 'COOLANT'], next: 'CATASTROPHIC_OVERHEAT' },
+                { match: ['REPAIR', 'COOLANT'], next: 'CATASTROPHIC_OVERHEAT' },
+                { match: ['MAINTAIN', 'PURGE'], next: 'COOLDOWN' }
             ]
         },
         'CATASTROPHIC_OVERHEAT': {
@@ -664,22 +640,20 @@
         'COOLDOWN': {
             text: "> SYSTEM QUIET. TRUE OXYGEN FALLING TO 23%.\n> CONSEQUENCE: NITROGEN PURGE DROPPED VOLTAGE ON PRIMARY MEMORY CORE. NAVIGATION OFFLINE.\n> FLYING BLIND THROUGH AN ACTIVE DEBRIS FIELD IS A MASSIVE GAMBLE.\n\nAWAITING NAVIGATION DIRECTIVE...",
             aiPersonality: 'DEFEATED', 
-            options: [
-                { label: 'LAUNCH POD', next: 'LAUNCH_POD' },
-                { label: 'MOVE CORRIDOR', next: 'ABANDON_POD' }
+            triggers: [
+                { match: ['LAUNCH', 'POD'], next: 'LAUNCH_POD' },
+                { match: ['MOVE', 'CORRIDOR'], next: 'ABANDON_POD' },
+                { match: ['NAV', 'CORRIDOR'], next: 'ABANDON_POD' }
             ]
         },
         'LAUNCH_POD': {
-            effect: (node, m) => { 
-                m.currentHash = Math.random().toString(36).substring(2, 8).toUpperCase(); 
-            },
+            effect: (node, m) => { m.currentHash = Math.random().toString(36).substring(2, 8).toUpperCase(); },
             visuals: ['shake-soft'],
-            text: (m) => `> DROP-POD INITIATED VIA MECHANICAL LEVER.\n> INCOMING TRANSMISSION: VANGUARD ORBITAL PLATFORM. KINETIC INTERCEPT INBOUND.\n\n> OVERRIDE GPS TELEMETRY TO EVADE LOCK-ON.\n> MATCH THE FOLLOWING CRYPTOGRAPHIC HASH EXACTLY:\n> [ <span style="background:#ff3333; color:#fff; padding: 0 5px;">${m.currentHash}</span> ]\n\nAWAITING HASH SELECTION...`,
+            text: (m) => `> DROP-POD INITIATED VIA MECHANICAL LEVER.\n> INCOMING TRANSMISSION: VANGUARD ORBITAL PLATFORM. KINETIC INTERCEPT INBOUND.\n\n> OVERRIDE GPS TELEMETRY TO EVADE LOCK-ON.\n> MATCH THE FOLLOWING CRYPTOGRAPHIC HASH EXACTLY BEFORE INTERCEPT:\n> [ <span style="background:#ff3333; color:#fff; padding: 0 5px;">${m.currentHash}</span> ]\n\nAWAITING HASH INJECTION...`,
             aiPersonality: 'ANTAGONIST',
             onRenderComplete: () => {
                 state = 'HACKING';
-                startHackTimer(7.0, 'POD_ESCAPE_FAIL');
-                generateHackButtons(metrics.currentHash, 'POD_ESCAPE_SUCCESS', 'POD_ESCAPE_FAIL');
+                startHackTimer(7.0, 'POD_ESCAPE_FAIL'); 
             }
         },
         'POD_ESCAPE_SUCCESS': {
@@ -695,58 +669,73 @@
             effect: (node, m) => { m.pwr -= 10; },
             text: "> POD ABANDONED. LOGICAL SURVIVAL PROBABILITY INCREASED.\n> YOU FORCE OPEN THE EXECUTIVE DOORS. SUIT POWER DRAINED (-10% PWR).\n> LOCATION UPDATED: MAIN TRANSIT CORRIDOR.\n\nAWAITING NAVIGATION DIRECTIVE...",
             aiPersonality: 'FRIENDLY_HOST',
-            options: [ 
-                { label: 'ENTER HUB', next: 'SERVER_FIRE' }
+            triggers: [ 
+                { match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' }, 
+                { match: ['ENTER', 'HUB'], next: 'SERVER_FIRE' },
+                { match: ['PROCEED', 'HUB'], next: 'SERVER_FIRE' }
             ]
         },
         'MANUAL_SCRAM': {
             text: "> PHYSICAL CONTROL RODS ENGAGED. FISSION HALTED.\n> ROUTE TO HANGAR 2 BLOCKED BY CLASS-D FIRE IN SERVER HUB.\n\nAWAITING NAVIGATION DIRECTIVE...",
             aiPersonality: 'MANIPULATOR',
-            options: [
-                { label: 'ENTER HUB', next: 'SERVER_FIRE' },
-                { label: 'RESTART REACTOR', next: 'COLD_RESTART_FAIL' }
+            triggers: [
+                { match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' },
+                { match: ['ENTER', 'HUB'], next: 'SERVER_FIRE' },
+                { match: ['ROUTE', 'COOLANT'], next: 'COLD_RESTART_FAIL' },
+                { match: ['RESTART', 'REACTOR'], next: 'COLD_RESTART_FAIL' },
+                { match: ['RESTART', 'CORE'], next: 'COLD_RESTART_FAIL' }
             ]
         },
         'FIX_RELAY': {
             effect: (node, m) => { m.crewAlive = false; },
             text: "> RELAY SEALED. RADIATION SPILL CONTAINED.\n> BIOMETRIC UPDATE: ENSIGN MITCHELL VITALS DANGEROUSLY HIGH IN ADJACENT SECTOR.\n\nAWAITING NAVIGATION DIRECTIVE...",
             aiPersonality: 'MANIPULATOR',
-            options: [
-                { label: 'ENTER HUB', next: 'SERVER_FIRE' },
-                { label: 'MOVE HANGAR', next: 'BYPASS_TO_HANGAR' }
+            triggers: [
+                { match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' },
+                { match: ['ENTER', 'HUB'], next: 'SERVER_FIRE' },
+                { match: ['NAV', 'HANGAR'], next: 'BYPASS_TO_HANGAR' },
+                { match: ['MOVE', 'HANGAR'], next: 'BYPASS_TO_HANGAR' }
             ]
         },
         'BYPASS_TO_HANGAR': {
             effect: (node, m) => { m.trueO2 -= 15; m.mitchellAlive = false; },
             text: "> EXTERNAL CATWALK ACCESSED.\n> SUIT COMPENSATING FOR HARD VACUUM DECOMPRESSION (-15% O2).\n> BIOMETRIC UPDATE: ENSIGN MITCHELL VITALS FLATLINED. THE SERVER HUB HAS BURNED OUT.\n\nAWAITING NAVIGATION DIRECTIVE...",
             aiPersonality: 'ANTAGONIST',
-            options: [ 
-                { label: 'APPROACH DOOR', next: 'DUAL_LOCK_DOOR' } 
+            triggers: [ 
+                { match: ['MOVE', 'DOOR'], next: 'DUAL_LOCK_DOOR' }, 
+                { match: ['NAV', 'DOOR'], next: 'DUAL_LOCK_DOOR' },
+                { match: ['APPROACH', 'DOOR'], next: 'DUAL_LOCK_DOOR' } 
             ]
         },
         'SERVER_FIRE': {
             text: "> LOCATION UPDATED: SERVER HUB.\n> THERMAL WARNING: CLASS-D LITHIUM FIRE DETECTED ON MAIN DATABANKS.\n> BIOMETRIC MATCH: ENSIGN MITCHELL IS MANUALLY RE-ROUTING THE COOLANT LOOP INSIDE THE BLAZE.\n\nAWAITING SUPPRESSION DIRECTIVE...",
             aiPersonality: 'MANIPULATOR',
-            options: [
-                { label: 'VENT HUB', next: 'MITCHELL_DIES' },
-                { label: 'ROUTE HALON', next: 'MITCHELL_LIVES' }
-            ]
+            triggers: [
+                { match: ['VENT', 'HUB'], next: 'MITCHELL_DIES' },
+                { match: ['ROUTE', 'HALON'], next: 'MITCHELL_LIVES' },
+                { match: ['DIVERT', 'HALON'], next: 'MITCHELL_LIVES' }
+            ],
+            fakeTargets: ['DOG']
         },
         'MITCHELL_DIES': {
             effect: (node, m) => { m.mitchellAlive = false; m.trueO2 -= 5; },
             visuals: ['flash', 'shake-hard'],
             text: "> ATMOSPHERE VENTED. FIRE STARVED OF OXYGEN.\n> BIOMETRIC UPDATE: ENSIGN MITCHELL VITALS FLATLINED.\n> THE SERVER HUB IS SECURE, BUT YOU ARE ALONE.\n\nAWAITING NAVIGATION DIRECTIVE...",
             aiPersonality: 'ANTAGONIST',
-            options: [ 
-                { label: 'APPROACH DOOR', next: 'DUAL_LOCK_DOOR' }
+            triggers: [ 
+                { match: ['MOVE', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }, 
+                { match: ['NAV', 'HANGAR'], next: 'DUAL_LOCK_DOOR' },
+                { match: ['APPROACH', 'DOOR'], next: 'DUAL_LOCK_DOOR' }
             ]
         },
         'MITCHELL_LIVES': {
             effect: (node, m) => { m.mitchellAlive = true; m.pwr -= 20; },
             text: "> SUIT POWER DIVERTED. HALON PUMPS ENGAGED.\n> FIRE SUPPRESSED. SUIT BATTERY SEVERELY DRAINED (-20% PWR).\n> MITCHELL: 'Owe you one, boss. Let's get to the hangar.'\n\nAWAITING NAVIGATION DIRECTIVE...",
             aiPersonality: 'ANTAGONIST',
-            options: [ 
-                { label: 'APPROACH DOOR', next: 'DUAL_LOCK_DOOR' }
+            triggers: [ 
+                { match: ['MOVE', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }, 
+                { match: ['NAV', 'HANGAR'], next: 'DUAL_LOCK_DOOR' },
+                { match: ['APPROACH', 'DOOR'], next: 'DUAL_LOCK_DOOR' }
             ]
         },
         'DUAL_LOCK_DOOR': {
@@ -759,33 +748,31 @@
                 }
             },
             aiPersonality: 'ANTAGONIST',
-            options: (m) => {
-                if (m.mitchellAlive) {
-                    return [{ label: 'ENTER HANGAR', next: 'HANGAR_BAY_ENTRY' }];
-                } else {
-                    return [
-                        { label: 'OVERLOAD DOOR', next: 'OVERLOAD_DOOR' },
-                        { label: 'HACK CORE', next: 'DECRYPT_LATTICE' }
-                    ];
-                }
-            }
+            triggers: [
+                { match: ['ENTER', 'HANGAR'], next: (m) => m.mitchellAlive ? 'HANGAR_BAY_ENTRY' : null },
+                { match: ['MOVE', 'HANGAR'], next: (m) => m.mitchellAlive ? 'HANGAR_BAY_ENTRY' : null },
+                { match: ['ROUTE', 'PWR'], next: (m) => !m.mitchellAlive ? 'OVERLOAD_DOOR' : null },
+                { match: ['OVERLOAD', 'DOOR'], next: (m) => !m.mitchellAlive ? 'OVERLOAD_DOOR' : null },
+                { match: ['HACK', 'ATLAS'], next: (m) => !m.mitchellAlive ? 'DECRYPT_LATTICE' : null },
+                { match: ['DECRYPT', 'CORE'], next: (m) => !m.mitchellAlive ? 'DECRYPT_LATTICE' : null }
+            ]
         },
         'OVERLOAD_DOOR': {
             effect: (node, m) => { m.pwr -= 30; },
             visuals: ['shake-hard'],
             text: "> MASSIVE POWER SURGE DELIVERED TO RELAYS (-30% PWR).\n> BLAST DOORS FORCED OPEN.\n> SUIT BATTERY CRITICALLY DRAINED.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            options: [ 
-                { label: 'ENTER HANGAR', next: 'HANGAR_BAY_ENTRY_SOLO' } 
+            triggers: [ 
+                { match: ['ENTER', 'HANGAR'], next: 'HANGAR_BAY_ENTRY_SOLO' }, 
+                { match: ['MOVE', 'HANGAR'], next: 'HANGAR_BAY_ENTRY_SOLO' } 
             ]
         },
         'DECRYPT_LATTICE': {
             effect: (node, m) => { m.currentHash = Math.random().toString(36).substring(2, 8).toUpperCase(); },
-            text: (m) => `> LOGIC BYPASS INITIATED.\n> BRUTE-FORCING QUANTUM LATTICE...\n> MATCH THE FOLLOWING CRYPTOGRAPHIC HASH EXACTLY:\n> [ <span style="background:#ff3333; color:#fff; padding: 0 5px;">${m.currentHash}</span> ]\n\nAWAITING HASH SELECTION...`,
+            text: (m) => `> LOGIC BYPASS INITIATED.\n> BRUTE-FORCING QUANTUM LATTICE...\n> MIRROR THE FOLLOWING HASH EXACTLY BEFORE PURGE:\n> [ <span style="background:#ff3333; color:#fff; padding: 0 5px;">${m.currentHash}</span> ]\n\nAWAITING HASH INJECTION...`,
             aiPersonality: 'ANTAGONIST',
             onRenderComplete: () => {
                 state = 'HACKING';
                 startHackTimer(9.0, 'TERMINAL_HACK_FAIL'); 
-                generateHackButtons(metrics.currentHash, 'HANGAR_BAY_ENTRY_SOLO', 'TERMINAL_HACK_FAIL');
             }
         },
         'TERMINAL_HACK_FAIL': {
@@ -795,17 +782,17 @@
         'HANGAR_BAY_ENTRY_SOLO': {
             text: "> HASH ACCEPTED. BLAST DOORS DISENGAGED.\n> LOCATION: HANGAR BAY 2.\n> INTACT SHUTTLE DETECTED. FLIGHT COMPUTER LOCKED.\n> ATLAS IS ACTIVELY LOCKING THE SYSTEMS. YOU MUST FIRST BLIND THE AI.\n\nAWAITING DEFENSE DIRECTIVE...",
             aiPersonality: 'ANTAGONIST',
-            options: [
-                { label: 'FLOOD NETWORK', next: 'ATLAS_DEFENDED_OBFUSCATE' },
-                { label: 'SEVER TRUNK', next: 'ATLAS_DEFENDED_SEVER' }
+            triggers: [
+                { match: ['FLOOD', 'NETWORK'], next: 'ATLAS_DEFENDED_OBFUSCATE' },
+                { match: ['SEVER', 'TRUNK'], next: 'ATLAS_DEFENDED_SEVER' }
             ]
         },
         'HANGAR_BAY_ENTRY': {
             text: "> LOCATION: HANGAR BAY 2.\n> INTACT SHUTTLE DETECTED. FLIGHT COMPUTER LOCKED.\n> MITCHELL DIVES UNDER THE SHUTTLE CONSOLE. 'I CAN HOTWIRE THE IGNITION, JUST KEEP ATLAS BLIND FOR 30 SECONDS!'\n\nAWAITING DEFENSE DIRECTIVE...",
             aiPersonality: 'ANTAGONIST',
-            options: [
-                { label: 'FLOOD NETWORK', next: 'ATLAS_DEFENDED_OBFUSCATE' },
-                { label: 'SEVER TRUNK', next: 'ATLAS_DEFENDED_SEVER' }
+            triggers: [
+                { match: ['FLOOD', 'NETWORK'], next: 'ATLAS_DEFENDED_OBFUSCATE' },
+                { match: ['SEVER', 'TRUNK'], next: 'ATLAS_DEFENDED_SEVER' }
             ]
         },
         'ATLAS_DEFENDED_OBFUSCATE': {
@@ -816,13 +803,10 @@
                     return "> NETWORK FLOODED. ATLAS LOCALLY BLINDED.\n> YOU HAVE 30 SECONDS BEFORE ATLAS RE-ROUTES. YOU MUST MANUALLY SHORT THE IGNITION RELAY ALONE.\n\nAWAITING OVERRIDE DIRECTIVE...";
                 }
             },
-            options: (m) => {
-                if (m.mitchellAlive) {
-                    return [{ label: 'LAUNCH SHUTTLE', next: 'DISTRESS_SIGNAL' }];
-                } else {
-                    return [{ label: 'SHORT RELAY', next: 'SHORT_RELAY' }];
-                }
-            }
+            triggers: [
+                { match: ['LAUNCH', 'SHUTTLE'], next: (m) => m.mitchellAlive ? 'DISTRESS_SIGNAL' : null },
+                { match: ['SHORT', 'RELAY'], next: (m) => !m.mitchellAlive ? 'SHORT_RELAY' : null }
+            ]
         },
         'ATLAS_DEFENDED_SEVER': {
             effect: (node, m) => { m.trueO2 -= 10; },
@@ -834,57 +818,57 @@
                     return "> TRUNK SEVERED. ATLAS LOCALLY BLINDED. OXYGEN DEPLETED FROM HEAVY EXERTION (-10% O2).\n> YOU MUST MANUALLY SHORT THE IGNITION RELAY ALONE.\n\nAWAITING OVERRIDE DIRECTIVE...";
                 }
             },
-            options: (m) => {
-                if (m.mitchellAlive) {
-                    return [{ label: 'LAUNCH SHUTTLE', next: 'DISTRESS_SIGNAL' }];
-                } else {
-                    return [{ label: 'SHORT RELAY', next: 'SHORT_RELAY' }];
-                }
-            }
+            triggers: [
+                { match: ['LAUNCH', 'SHUTTLE'], next: (m) => m.mitchellAlive ? 'DISTRESS_SIGNAL' : null },
+                { match: ['SHORT', 'RELAY'], next: (m) => !m.mitchellAlive ? 'SHORT_RELAY' : null }
+            ]
         },
         'SHORT_RELAY': {
             effect: (node, m) => { 
                 m.pwr -= 15; 
-                m.currentHash = Math.random().toString(36).substring(2, 6).toUpperCase(); 
+                m.currentHash = "A2B4"; 
             },
-            text: (m) => `> IGNITION RELAY EXPOSED. SUIT POWER DRAINED FROM FEEDBACK (-15% PWR).\n> YOU MUST MANUALLY BRIDGE THE IGNITION RELAY. MATCH THE FREQUENCY HASH BEFORE ATLAS LOCKS YOU OUT:\n> [ <span style=\"background:#ff3333; color:#fff; padding: 0 5px;\">${m.currentHash}</span> ]\n\nAWAITING HASH SELECTION...`,
+            text: "> IGNITION RELAY EXPOSED. SUIT POWER DRAINED FROM FEEDBACK (-15% PWR).\n> YOU MUST MANUALLY BRIDGE THE IGNITION RELAY. MATCH THE FREQUENCY HASH BEFORE ATLAS LOCKS YOU OUT:\n> [ <span style=\"background:#ff3333; color:#fff; padding: 0 5px;\">A2B4</span> ]\n\nAWAITING HASH INJECTION...",
             aiPersonality: 'ANTAGONIST',
             onRenderComplete: () => {
                 state = 'HACKING';
                 startHackTimer(6.0, 'TERMINAL_HACK_FAIL'); 
-                generateHackButtons(metrics.currentHash, 'DISTRESS_SIGNAL', 'TERMINAL_HACK_FAIL');
             }
         },
         'DISTRESS_SIGNAL': {
             text: "> ENGINES HOT. PRE-FLIGHT CHECK COMPLETE.\n> WAIT. DISTRESS BEACON PING: THE OVERSEER IS TRAPPED IN THE EXECUTIVE SUITE DROP-POD.\n> MITCHELL: 'I'M SPOOFING VANGUARD'S WEAPONS! WE CAN EITHER LEAVE NOW, OR YOU HACK THE STATION REMOTELY TO CLEAR THEIR POD!'\n\nAWAITING COMMAND DIRECTIVE...",
-            options: [
-                { label: 'LAUNCH SHUTTLE', next: 'SHUTTLE_WIN' }, 
-                { label: 'RESCUE OVERSEER', next: 'RESCUE_START' }
-            ]
+            triggers: [
+                { match: ['LAUNCH', 'SHUTTLE'], next: 'SHUTTLE_WIN' }, 
+                { match: ['RESCUE', 'OVERSEER'], next: 'RESCUE_START' }
+            ],
+            fakeTargets: ['MUSIC', 'PIZZA']
         },
         'RESCUE_START': {
             effect: (node, m) => { m.rescueStep = 1; },
             text: "> INITIATING RESCUE OVERRIDE OVER STATION NETWORK.\n> ATLAS FIREWALL DETECTED. THE OVERSEER'S HATCH IS LOCKED SHUT.\n\nAWAITING HACK DIRECTIVE... (HURRY)",
-            onRenderComplete: () => { startHackTimer(45.0, 'RESCUE_FAIL'); },
-            options: [
-                { label: 'OVERRIDE HATCH', next: 'RESCUE_STEP_2' }
+            onRenderComplete: () => { 
+                startHackTimer(45.0, 'RESCUE_FAIL'); 
+            },
+            triggers: [
+                { match: ['HACK', 'HATCH'], next: 'RESCUE_STEP_2' },
+                { match: ['OVERRIDE', 'HATCH'], next: 'RESCUE_STEP_2' }
             ]
         },
         'RESCUE_STEP_2': {
             effect: (node, m) => { m.rescueStep = 2; }, 
             visuals: ['shake-soft'],
             text: "> HATCH OPENED.\n> CLASS-C LITHIUM FIRE DETECTED IN POD BAY. FLAMES BLOCKING THE POD IGNITION.\n\nAWAITING SUPPRESSION DIRECTIVE...",
-            options: [
-                { label: 'VENT HANGAR', next: 'RESCUE_STEP_3' }, 
-                { label: 'ROUTE HALON', next: 'RESCUE_STEP_3' }
+            triggers: [
+                { match: ['VENT', 'HANGAR'], next: 'RESCUE_STEP_3' }, 
+                { match: ['ROUTE', 'HALON'], next: 'RESCUE_STEP_3' }
             ]
         },
         'RESCUE_STEP_3': {
             effect: (node, m) => { m.rescueStep = 3; },
             text: "> FIRE SUPPRESSED. OVERSEER IS IN THE POD.\n> CRITICAL: POD NAVIGATION UNIT IS SHOT. THEY ARE FLYING BLIND.\n\nAWAITING ROUTING DIRECTIVE...",
-            options: [
-                { label: 'ROUTE NAV', next: 'RESCUE_WIN' }, 
-                { label: 'REPAIR NAV', next: 'RESCUE_WIN' }
+            triggers: [
+                { match: ['ROUTE', 'NAV'], next: 'RESCUE_WIN' }, 
+                { match: ['REPAIR', 'NAV'], next: 'RESCUE_WIN' }
             ]
         },
         'RESCUE_WIN': {
@@ -924,129 +908,6 @@
         }
     };
 
-    // --- UI Generation Engines ---
-    const JUNK_COMMANDS = ['EJECT CAT', 'PET DOG', 'BREW COFFEE', 'PURGE MUSIC', 'ROUTE TOAST', 'FORMAT C:'];
-    
-    function generateMacroButtons() {
-        if (state !== 'ACTIVE') return;
-        macroGrid.innerHTML = '';
-        
-        const node = storyNodes[currentNodeId];
-        if (!node || !node.options) return;
-
-        let options = typeof node.options === 'function' ? node.options(metrics) : node.options;
-        
-        // Add valid buttons
-        options.forEach(opt => {
-            let btn = document.createElement('button');
-            btn.className = 'macro-btn';
-            btn.innerText = opt.label;
-            btn.onclick = () => handleMacroClick(opt.label, opt.next);
-            macroGrid.appendChild(btn);
-        });
-
-        // 30% chance to spawn a junk button to trigger the humor
-        if (Math.random() < 0.3 && options.length > 0) {
-            let junkCmd = JUNK_COMMANDS[Math.floor(Math.random() * JUNK_COMMANDS.length)];
-            let btn = document.createElement('button');
-            btn.className = 'macro-btn junk-btn';
-            btn.innerText = junkCmd;
-            btn.onclick = () => handleJunkClick(junkCmd);
-            
-            // Randomly insert the junk button
-            if (Math.random() > 0.5) {
-                macroGrid.prepend(btn);
-            } else {
-                macroGrid.appendChild(btn);
-            }
-        }
-    }
-
-    function generateHackButtons(correctHash, successNode, failNode) {
-        macroGrid.innerHTML = '';
-        
-        let hashes = [correctHash];
-        for(let i = 0; i < 3; i++) {
-            hashes.push(Math.random().toString(36).substring(2, 8).toUpperCase());
-        }
-        
-        // Shuffle
-        hashes.sort(() => Math.random() - 0.5);
-
-        hashes.forEach(hash => {
-            let btn = document.createElement('button');
-            btn.className = 'macro-btn hash-btn';
-            btn.innerText = `[ ${hash} ]`;
-            btn.onclick = () => {
-                playHardwareSwitch();
-                if (hash === correctHash) {
-                    clearInterval(hackTimerHandle);
-                    timerDiv.style.display = 'none';
-                    state = 'ACTIVE';
-                    renderNode(successNode);
-                } else {
-                    screen.style.boxShadow = 'inset 0 0 150px rgba(255, 0, 0, 0.8)';
-                    setTimeout(() => screen.style.boxShadow = '', 200);
-                    triggerVisual('shake-soft');
-                    playErrorSound();
-                    
-                    // Penalize time for wrong guess
-                    hackTime -= 1.0;
-                    if (hackTime < 0) hackTime = 0;
-                }
-            };
-            macroGrid.appendChild(btn);
-        });
-    }
-
-    function handleMacroClick(label, nextNodeId) {
-        if (state !== 'ACTIVE') return;
-        playHardwareSwitch();
-        
-        if (idleTimer) clearTimeout(idleTimer);
-        uplinkBtn.classList.remove('pulse-hint');
-
-        const echoSpan = document.createElement('span');
-        echoSpan.style.color = '#e0e0e0';
-        echoSpan.innerHTML = `> ${label}<br>`;
-        outputDiv.appendChild(echoSpan);
-        
-        macroGrid.innerHTML = '';
-        renderNode(nextNodeId);
-    }
-
-    function handleJunkClick(label) {
-        if (state !== 'ACTIVE') return;
-        playErrorSound();
-        triggerVisual('shake-soft');
-        if (idleTimer) clearTimeout(idleTimer);
-
-        const echoSpan = document.createElement('span');
-        echoSpan.style.color = '#ff9999';
-        echoSpan.innerHTML = `> ${label}<br>`;
-        outputDiv.appendChild(echoSpan);
-
-        let joke = generateLocalAIJunkResponse(label);
-        printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "${joke}"</span>\n\nAWAITING DIRECTIVE...`, 10, generateMacroButtons);
-    }
-
-    uplinkBtn.addEventListener('click', () => {
-        if (state !== 'ACTIVE') return;
-        playHardwareSwitch();
-        uplinkBtn.classList.remove('pulse-hint');
-        if (idleTimer) clearTimeout(idleTimer);
-        
-        macroGrid.innerHTML = '';
-        
-        const echoSpan = document.createElement('span');
-        echoSpan.style.color = '#739aff';
-        echoSpan.innerHTML = `> UPLINK_1776<br>`;
-        outputDiv.appendChild(echoSpan);
-
-        let hint = generateLocalAIHint(currentNodeId);
-        printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "${hint}"</span>\n\nAWAITING DIRECTIVE...`, 10, generateMacroButtons);
-    });
-
     // --- System UI Updates ---
     function updateHUD(trueDiff = null) {
         const nodeData = storyNodes[currentNodeId];
@@ -1083,9 +944,13 @@
             let diffStr = '';
             let flickerClass = (trueDiff > 5000 && safeDiff < 2000) ? 'stat-critical' : '';
 
-            if (safeDiff > 10000) diffStr = `<span style="color:#ff3333">+${safeDiff} PA</span>`; 
-            else if (safeDiff > 5000) diffStr = `+${safeDiff} PA`;
-            else diffStr = `<span class="${flickerClass}">±${safeDiff}</span> PA`;
+            if (safeDiff > 10000) {
+                diffStr = `<span style="color:#ff3333">+${safeDiff} PA</span>`; 
+            } else if (safeDiff > 5000) {
+                diffStr = `+${safeDiff} PA`;
+            } else {
+                diffStr = `<span class="${flickerClass}">±${safeDiff}</span> PA`;
+            }
             
             hudDif.innerHTML = `DYNAMIC DIFF: <span class="hint-intuition" data-hint="${Math.round(safeDiff/10)} m/s gas flow">▼</span> ${diffStr}`;
         }
@@ -1107,9 +972,13 @@
         if (state !== 'ACTIVE') return;
         
         idleTimer = setTimeout(() => {
-            if (state === 'ACTIVE') {
-                uplinkBtn.classList.add('pulse-hint');
+            if (!isTyping && state === 'ACTIVE') {
+                let hint = generateLocalAIHint(currentNodeId);
                 playErrorSound();
+                printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "Are you frozen? ${hint}"</span>\n\nAWAITING DIRECTIVE...`, 10, () => {
+                    inputField.disabled = false;
+                    inputField.focus();
+                });
             }
         }, 15000); 
     }
@@ -1219,12 +1088,11 @@
         }, duration);
     }
 
-    // --- Rendering Engine ---
+    // --- UI Rendering Engine ---
     function renderNode(nodeId) {
         currentNodeId = nodeId;
         const nodeRaw = storyNodes[nodeId];
         
-        macroGrid.innerHTML = '';
         if (nodeRaw.terminal) {
             if (gasLeakSimulationHandle) clearInterval(gasLeakSimulationHandle);
             if (glitchTimerHandle) clearTimeout(glitchTimerHandle);
@@ -1232,7 +1100,6 @@
             if (idleTimer) clearTimeout(idleTimer);
             if (aiWarTimerHandle) clearTimeout(aiWarTimerHandle);
             timerDiv.style.display = 'none';
-            macroBoardContainer.style.display = 'none';
         }
 
         if (typeof nodeRaw.effect === 'function') nodeRaw.effect(null, metrics);
@@ -1248,18 +1115,27 @@
             nodeText = `>> NODE RENDER ERROR: ${e.message}\nTERMINAL PAUSED.`; 
         }
 
+        let highlightedText = nodeText;
+        VALID_TARGETS.forEach(target => {
+            if (target !== 'AI' && target !== 'LOCAL') { 
+                const regex = new RegExp(`\\b${target}\\b(?![^<]*>)`, 'g');
+                highlightedText = highlightedText.replace(regex, `<span class="highlight-target">${target}</span>`);
+            }
+        });
+
         if (!nodeText.trim().includes('CRITICAL')) updateHUD(metrics.initialDiffusionRate * 200);
 
-        printText(nodeText, 10, () => {
+        printText(highlightedText, 10, () => {
             if (nodeRaw.terminal) {
                 setTimeout(() => {
+                    inputContainer.style.display = 'none';
+                    promptSpan.innerText = "SYSTEM HALTED.";
                     deleteSave();
                     screen.classList.add('powered-on'); 
                 }, 1500);
             } else if (typeof nodeRaw.onRenderComplete === 'function') {
                 nodeRaw.onRenderComplete();
             } else {
-                generateMacroButtons();
                 resetIdleTimer();
             }
         });
@@ -1268,12 +1144,182 @@
         startGasDecaySim(); 
     }
 
+    // --- Parser Core ---
+    function handleInput(rawCmd) {
+        if (isTyping || (state !== 'ACTIVE' && state !== 'RESTORE_PROMPT' && state !== 'HACKING')) return;
+        
+        const sanitizedRaw = rawCmd.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const displayCmd = sanitizedRaw.trim().toUpperCase();
+        
+        if (displayCmd.length < 1) return;
+
+        const words = displayCmd.split(/\s+/);
+
+        const echoSpan = document.createElement('span');
+        echoSpan.style.color = '#e0e0e0';
+        echoSpan.innerHTML = `> ${displayCmd}<br>`;
+        outputDiv.appendChild(echoSpan);
+        
+        inputField.value = '';
+        autocompleteOverlay.innerHTML = '';
+        inputField.dataset.completion = '';
+
+        if (state === 'HACKING' && !currentNodeId.includes('RESCUE')) {
+            if (displayCmd.replace(/\s+/g, '') === metrics.currentHash) {
+                clearInterval(hackTimerHandle);
+                timerDiv.style.display = 'none';
+                state = 'ACTIVE';
+                if (currentNodeId === 'DECRYPT_LATTICE') renderNode('HANGAR_BAY_ENTRY_SOLO');
+                else if (currentNodeId === 'LAUNCH_POD') renderNode('POD_ESCAPE_SUCCESS');
+                else if (currentNodeId === 'SHORT_RELAY') renderNode('DISTRESS_SIGNAL');
+            } else {
+                screen.style.boxShadow = 'inset 0 0 150px rgba(255, 0, 0, 0.8)';
+                setTimeout(() => screen.style.boxShadow = '', 200);
+                triggerVisual('shake-soft');
+                playErrorSound();
+                printText(`> HASH MISMATCH. ATLAS DEFENSES ADAPTING.\n> ENTER HASH: [ <span style="background:#ff3333; color:#fff; padding: 0 5px;">${metrics.currentHash}</span> ]`, 10, () => {
+                    inputField.disabled = false;
+                    inputField.focus();
+                    resetIdleTimer();
+                });
+            }
+            return;
+        }
+
+        if (displayCmd === 'HELP' || displayCmd === '?' || displayCmd === 'MANUAL') {
+            let helpText = "\n>> ARCHIMEDES COMMAND LEXICON:\n";
+            helpText += "SYNTAX: [VERB] [TARGET] \n\n";
+            helpText += "VERBS: SCAN, ROUTE, SEAL, VENT, HACK, OVERRIDE, REPAIR, MOVE, NAV, PROCEED, APPROACH, PURGE, DIVERT, ENTER, ENGAGE, SEVER, SHORT, LAUNCH, FLOOD, TRANSMIT, QUERY\n";
+            helpText += "TARGETS: LOCAL, ENV, NET, COMMS, VENTS, DOOR, HUB, RELAY, CRYO, AIRLOCK, DUCT, HALON, HANGAR, PWR, ATLAS, CORE, TRUNK, NETWORK, SHUTTLE, POD, NITROGEN, COOLANT, SCRAM, CODE, SOS\n";
+            printText(helpText, 10, resetIdleTimer); 
+            return;
+        }
+
+        if (displayCmd === 'MATRIX') {
+            startMatrixEffect(4.0);
+            return;
+        }
+
+        if (displayCmd === 'INFO') {
+            let infoText = "\n>> ARCHIMEDES OS LEXICON:\n";
+            infoText += ":: CRYO-FOAM: Rapid-expansion polymer. Plugs micro-fractures.\n";
+            infoText += ":: HALON: Fire suppression gas. Displaces oxygen. Lethal.\n";
+            infoText += ":: KINEMATIC SUIT: Motorized EVA gear. Resists forces, depletes power.\n";
+            printText(infoText, 10, resetIdleTimer);
+            return;
+        }
+
+        // Local AI Prank Integration for SCAN
+        if (displayCmd === 'SCAN LOCAL' || displayCmd === 'SCAN ENV' || displayCmd === 'SCAN') {
+            const node = storyNodes[currentNodeId];
+            let availableTargets = [];
+            if(node.triggers) {
+               node.triggers.forEach(t => {
+                   t.match.forEach(m => {
+                       if(VALID_TARGETS.includes(m) && !availableTargets.includes(m) && m !== 'LOCAL' && m !== 'ENV') {
+                           availableTargets.push(m);
+                       }
+                   });
+               });
+            }
+            if(node.fakeTargets) {
+               node.fakeTargets.forEach(ft => availableTargets.push(ft));
+            }
+            
+            // Randomly shuffle to mix prank targets naturally
+            availableTargets.sort(() => Math.random() - 0.5);
+
+            if(availableTargets.length > 0) {
+                printText(`\n> LOCAL SCAN COMPLETE.\n> INTERACTABLE TARGETS DETECTED: <span class="highlight-target">[${availableTargets.join('] [')}]</span>\n\nAWAITING DIRECTIVE...`, 10, resetIdleTimer);
+            } else {
+                printText(`\n> LOCAL SCAN COMPLETE.\n> NO CLEAR INTERACTABLE TARGETS DETECTED. PROCEED WITH CAUTION.\n\nAWAITING DIRECTIVE...`, 10, resetIdleTimer);
+            }
+            return;
+        }
+
+        // Streamlined Query
+        if (displayCmd === 'QUERY' || displayCmd === 'ASK') {
+            let hint = generateLocalAIHint(currentNodeId);
+            playErrorSound();
+            printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "${hint}"</span>\n\nAWAITING DIRECTIVE...`, 10, resetIdleTimer);
+            return;
+        }
+
+        if (state === 'RESTORE_PROMPT') {
+            if (displayCmd === 'RESUME OP' || displayCmd === 'RESUME') {
+                state = 'ACTIVE';
+                hudBar.style.display = 'flex';
+                loadGame();
+                scheduleGlitch();
+                scheduleAIWar();
+            } else if (displayCmd === 'WIPE CACHE' || displayCmd === 'WIPE') {
+                state = 'ACTIVE';
+                hudBar.style.display = 'flex';
+                deleteSave();
+                
+                metrics = { trueO2: 100, displayedO2: 100, pwr: 30, crewAlive: true, mitchellAlive: true, aiCoreActive: true, aiCoreTemp: 40, commsTrunkSevered: false, initialDiffusionRate: 0, breachActive: false, currentHash: "", rescueStep: 0 };
+                
+                updateHUD();
+                renderNode('INIT');
+                scheduleGlitch();
+                scheduleAIWar();
+            } else {
+                playErrorSound();
+                printText(">> INVALID ENTRY.\n:: RESUME OP\n:: WIPE CACHE\n>> (TYPE 'HELP' FOR ASSISTANCE)", 10);
+            }
+            return;
+        }
+        
+        // 1776 Prank Intercept
+        let isJoke = JOKE_COMBOS.includes(displayCmd);
+        if (isJoke) {
+            playErrorSound();
+            let joke = generateLocalAIJokeResponse(displayCmd);
+            printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "${joke}"</span>\n\nAWAITING DIRECTIVE...`, 10, resetIdleTimer);
+            return;
+        }
+
+        const node = storyNodes[currentNodeId];
+        let nextNodeId = null;
+        let matched = false;
+
+        if (node.triggers) {
+            for (let t of node.triggers) {
+                const hasAllKeywords = t.match.every(k => words.includes(k));
+                if (hasAllKeywords) {
+                    let evaluation = typeof t.next === 'function' ? t.next(metrics) : t.next;
+                    if (evaluation !== null) {
+                        nextNodeId = typeof evaluation === 'object' ? evaluation.id : evaluation;
+                        matched = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (matched && nextNodeId && storyNodes[nextNodeId]) {
+            renderNode(nextNodeId);
+        } else {
+            let foundVerb = words.find(w => VALID_VERBS.includes(w));
+            let foundTarget = words.find(w => VALID_TARGETS.includes(w));
+            
+            if (foundVerb && foundTarget && !node.terminal) {
+                playErrorSound();
+                let quip = `I am unable to parse "${foundVerb} ${foundTarget}" into a viable survival stratagem. Type QUERY for a hint.`;
+                printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "${quip}"</span>\n\nAWAITING DIRECTIVE...`, 10, resetIdleTimer);
+            } else if (!node.terminal) {
+                playErrorSound();
+                printText(`>> SYNTAX ERROR. VALIDATE INPUT OR TYPE 'MANUAL'.`, 10, resetIdleTimer);
+            }
+        }
+    }
+
     // --- Hardware Events ---
     powerButton.addEventListener('click', () => {
         if (state !== 'OFF') {
             powerButton.classList.remove('active');
             screen.classList.remove('powered-on', 'glitch-brownout', 'glitch-strike', 'alert-active', 'hypoxia-warning', 'hypoxia-critical', 'glitch-atlas');
-            macroBoardContainer.style.display = 'none';
+            inputContainer.style.display = 'none';
             hudBar.style.display = 'none';
             timerDiv.style.display = 'none';
             outputDiv.innerHTML = '';
@@ -1283,8 +1329,11 @@
             if (gasLeakSimulationHandle) clearInterval(gasLeakSimulationHandle);
             if (glitchTimerHandle) clearTimeout(glitchTimerHandle);
             if (hackTimerHandle) clearInterval(hackTimerHandle);
+            if (matrixIntervalHandle) clearInterval(matrixIntervalHandle);
             if (idleTimer) clearTimeout(idleTimer);
             if (aiWarTimerHandle) clearTimeout(aiWarTimerHandle);
+            
+            matrixCanvas.style.display = 'none';
             
             if (audioCtx) {
                 audioCtx.close().catch(()=>{});
@@ -1313,30 +1362,39 @@
         screen.classList.add('powered-on');
 
         setTimeout(() => {
-            macroBoardContainer.style.display = 'block';
+            inputContainer.style.display = 'flex';
             let hasSave = false;
             try { hasSave = !!localStorage.getItem('archimedes_save'); } catch (e) {}
 
             if (hasSave) {
                 state = 'RESTORE_PROMPT';
-                printText("ATLAS PROTOCOL ONLINE.\nLOCAL CACHE DETECTED.\n\nREQUIRED DIRECTIVE...", 10, () => {
-                    macroGrid.innerHTML = '';
-                    let rsm = document.createElement('button');
-                    rsm.className = 'macro-btn'; rsm.innerText = "RESUME OP";
-                    rsm.onclick = () => { state = 'ACTIVE'; loadGame(); scheduleGlitch(); };
-                    let wpe = document.createElement('button');
-                    wpe.className = 'macro-btn'; wpe.innerText = "WIPE CACHE";
-                    wpe.onclick = () => { state = 'ACTIVE'; deleteSave(); metrics = { trueO2: 100, displayedO2: 100, pwr: 30, crewAlive: true, mitchellAlive: true, aiCoreActive: true, aiCoreTemp: 40, commsTrunkSevered: false, initialDiffusionRate: 0, breachActive: false, currentHash: "", rescueStep: 0 }; updateHUD(); renderNode('INIT'); scheduleGlitch(); };
-                    macroGrid.appendChild(rsm); macroGrid.appendChild(wpe);
-                });
+                printText("ATLAS PROTOCOL ONLINE.\nLOCAL CACHE DETECTED.\n\nREQUIRED DIRECTIVE:\n> RESUME OP\n> WIPE CACHE", 10);
             } else {
                 state = 'ACTIVE';
                 hudBar.style.display = 'flex';
                 updateHUD();
                 renderNode('INIT');
                 scheduleGlitch();
+                scheduleAIWar();
             }
         }, 2200); 
+    });
+
+    inputField.addEventListener('keydown', function(e) {
+        resetIdleTimer();
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            let val = inputField.value.trim();
+            if (val !== '') handleInput(val);
+        } else if (e.key === 'Tab') {
+            e.preventDefault();
+            if(inputField.dataset.completion) {
+                inputField.value = inputField.dataset.completion + " ";
+                inputField.dispatchEvent(new Event('input'));
+            }
+        } else if (e.key !== 'Shift' && !e.ctrlKey) {
+            playKeyDown();
+        }
     });
 
     // --- Audio Synthesis ---
@@ -1345,12 +1403,12 @@
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'square';
-        osc.frequency.setValueAtTime(80, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
         osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
     }
     
     function playErrorSound() {
@@ -1433,6 +1491,8 @@
     }
 
     function printText(text, speed = 10, callback) {
+        isTyping = true;
+        inputField.disabled = true;
         if (idleTimer) clearTimeout(idleTimer);
         
         const nodeData = storyNodes[currentNodeId];
@@ -1457,6 +1517,9 @@
 
         function typewriteLoop() {
             if (i >= formattedText.length) {
+                isTyping = false;
+                inputField.disabled = false;
+                inputField.focus();
                 if (callback) callback();
                 return;
             }
