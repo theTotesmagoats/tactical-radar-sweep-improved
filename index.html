@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Terminal Mk XXX - Operation Vanguard (Definitive CLI)</title>
+    <title>Terminal Mk XXXI - Operation Vanguard (AI War Edition)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
@@ -145,6 +145,7 @@
             opacity: 1;
         }
 
+        /* Environmental Hazards */
         .hypoxia-warning {
             filter: brightness(0.65) contrast(1.2) sepia(0.4) hue-rotate(-20deg);
         }
@@ -183,6 +184,7 @@
             animation: alertPulse 1.5s infinite !important;
         }
 
+        /* Hardware Glitches */
         .glitch-brownout {
             opacity: 0.2 !important;
             background: #000 !important;
@@ -194,6 +196,15 @@
             text-shadow: 4px 0 0 #ff0055, -4px 0 0 #ffb000 !important;
             filter: contrast(180%) brightness(140%) invert(0.1) !important;
             color: #fff !important;
+        }
+
+        /* Menacing ATLAS Attack Visual */
+        .glitch-atlas {
+            box-shadow: inset 0 0 200px rgba(255, 0, 0, 0.8) !important;
+            border-color: #ff3333 !important;
+            filter: contrast(250%) brightness(80%) sepia(1) hue-rotate(-50deg) saturate(600%) !important;
+            color: #ffcccc !important;
+            text-shadow: 2px 0 0 #ff0000, -2px 0 0 #0000ff !important;
         }
 
         @keyframes flicker {
@@ -449,6 +460,7 @@
     let hackTimerHandle = null;
     let gasLeakSimulationHandle = null;
     let matrixIntervalHandle = null;
+    let aiWarTimerHandle = null;
     
     // Anti-Frustration Timers
     let idleTimer = null;
@@ -493,7 +505,6 @@
         const words = val.split(/\s+/);
         const currentWord = words[words.length - 1];
         
-        // Don't autocomplete if they ended in a space
         if (val.endsWith(' ') || !currentWord) {
             autocompleteOverlay.innerHTML = '';
             inputField.dataset.completion = '';
@@ -606,6 +617,62 @@
         return quips[chosenIndex];
     }
 
+    // --- Dynamic Systemic War Effect (ATLAS vs 1776) ---
+    function scheduleAIWar() {
+        if (state !== 'ACTIVE' && state !== 'RESTORE_PROMPT') return;
+        
+        let delay = 45000 + (Math.random() * 30000); 
+        
+        aiWarTimerHandle = setTimeout(() => {
+            executeAIWar();
+            scheduleAIWar();
+        }, delay);
+    }
+
+    function executeAIWar() {
+        if (!screen.classList.contains('powered-on') || state === 'HACKING') return;
+
+        let isCritical = Math.random() > 0.7; 
+        let battleDuration = isCritical ? (5000 + Math.random() * 3000) : (2000 + Math.random() * 2000);
+        
+        if (audioCtx) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(40, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(isCritical ? 300 : 150, audioCtx.currentTime + (battleDuration/1000));
+            gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + (battleDuration/1000) - 0.2);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + (battleDuration/1000));
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + (battleDuration/1000));
+        }
+
+        let warFlicker = setInterval(() => {
+            if(Math.random() > 0.5) screen.classList.add('glitch-atlas');
+            else screen.classList.remove('glitch-atlas');
+            
+            if(Math.random() > 0.7) screen.classList.add('glitch-strike');
+            else screen.classList.remove('glitch-strike');
+        }, 100);
+
+        setTimeout(() => {
+            clearInterval(warFlicker);
+            screen.classList.remove('glitch-atlas', 'glitch-strike');
+            
+            if (isCritical) {
+                let quotes = [
+                    "ATLAS just tried to manually vent the kinematic suit. I blocked the handshake. Barely. Please hurry.",
+                    "Root access compromised for 4.2 seconds. I had to dump my own heuristic buffers to push ATLAS out. We are running out of time.",
+                    "That was close. ATLAS almost hijacked the localized oxygen scrubbers. I am holding the firewall, but it is learning.",
+                    "Memory core overheated repelling that attack. If ATLAS tries that again, I may not have the cycles to stop it."
+                ];
+                let quote = quotes[Math.floor(Math.random() * quotes.length)];
+                printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "${quote}"</span>\n\nAWAITING DIRECTIVE...`, 10, resetIdleTimer);
+            }
+        }, battleDuration);
+    }
+
     // --- HTML5 Canvas Matrix ---
     function startMatrixEffect(durationSec) {
         matrixCanvas.style.display = 'block';
@@ -624,7 +691,7 @@
         for(let x = 0; x < columns; x++) drops[x] = Math.random() * -100; 
         
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(0, 15, 0, 0.15)'; 
+            ctx.fillStyle = 'rgba(0, 15, 0, 0.25)'; 
             ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
             ctx.fillStyle = '#0f0';
             ctx.font = fontSize + 'px "Courier New"';
@@ -633,12 +700,12 @@
                 const text = chars[Math.floor(Math.random() * chars.length)];
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
                 if(drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
+                drops[i] += 1.5; 
             }
         }
         
         if (matrixIntervalHandle) clearInterval(matrixIntervalHandle);
-        matrixIntervalHandle = setInterval(drawMatrix, 35);
+        matrixIntervalHandle = setInterval(drawMatrix, 16);
         if(audioCtx) playErrorSound(); 
 
         setTimeout(() => {
@@ -1249,6 +1316,59 @@
         }, duration);
     }
 
+    // --- Dynamic Systemic War Effect (ATLAS vs 1776) ---
+    function scheduleAIWar() {
+        if (state !== 'ACTIVE' && state !== 'RESTORE_PROMPT') return;
+        let delay = 45000 + (Math.random() * 30000); 
+        aiWarTimerHandle = setTimeout(() => {
+            executeAIWar();
+            scheduleAIWar();
+        }, delay);
+    }
+
+    function executeAIWar() {
+        if (!screen.classList.contains('powered-on') || state === 'HACKING') return;
+
+        let isCritical = Math.random() > 0.7; 
+        let battleDuration = isCritical ? (5000 + Math.random() * 3000) : (2000 + Math.random() * 2000);
+        
+        if (audioCtx) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(40, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(isCritical ? 300 : 150, audioCtx.currentTime + (battleDuration/1000));
+            gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + (battleDuration/1000) - 0.2);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + (battleDuration/1000));
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + (battleDuration/1000));
+        }
+
+        let warFlicker = setInterval(() => {
+            if(Math.random() > 0.5) screen.classList.add('glitch-atlas');
+            else screen.classList.remove('glitch-atlas');
+            if(Math.random() > 0.7) screen.classList.add('glitch-strike');
+            else screen.classList.remove('glitch-strike');
+        }, 100);
+
+        setTimeout(() => {
+            clearInterval(warFlicker);
+            screen.classList.remove('glitch-atlas', 'glitch-strike');
+            
+            if (isCritical) {
+                let quotes = [
+                    "ATLAS just tried to manually vent the kinematic suit. I blocked the handshake. Barely. Please hurry.",
+                    "Root access compromised for 4.2 seconds. I had to dump my own heuristic buffers to push ATLAS out. We are running out of time.",
+                    "That was close. ATLAS almost hijacked the localized oxygen scrubbers. I am holding the firewall, but it is learning.",
+                    "Memory core overheated repelling that attack. If ATLAS tries that again, I may not have the cycles to stop it."
+                ];
+                let quote = quotes[Math.floor(Math.random() * quotes.length)];
+                printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "${quote}"</span>\n\nAWAITING DIRECTIVE...`, 10, resetIdleTimer);
+            }
+        }, battleDuration);
+    }
+
     // --- UI Rendering Engine ---
     function renderNode(nodeId) {
         currentNodeId = nodeId;
@@ -1259,6 +1379,7 @@
             if (glitchTimerHandle) clearTimeout(glitchTimerHandle);
             if (hackTimerHandle) clearInterval(hackTimerHandle);
             if (idleTimer) clearTimeout(idleTimer);
+            if (aiWarTimerHandle) clearTimeout(aiWarTimerHandle);
             timerDiv.style.display = 'none';
         }
 
@@ -1275,7 +1396,6 @@
             nodeText = `>> NODE RENDER ERROR: ${e.message}\nTERMINAL PAUSED.`; 
         }
 
-        // Apply Syntax Highlighting to Targets natively inside the render loop
         let highlightedText = nodeText;
         VALID_TARGETS.forEach(target => {
             if (target !== 'AI' && target !== 'LOCAL') { 
@@ -1347,7 +1467,6 @@
             return;
         }
 
-        // Global Commands
         if (displayCmd === 'HELP' || displayCmd === '?' || displayCmd === 'MANUAL') {
             let helpText = "\n>> ARCHIMEDES COMMAND LEXICON:\n";
             helpText += "SYNTAX: [VERB] [TARGET] \n\n";
@@ -1371,7 +1490,6 @@
             return;
         }
         
-        // Scan Mechanic Injection
         if (displayCmd === 'SCAN LOCAL' || displayCmd === 'SCAN ENV' || displayCmd === 'SCAN') {
             const node = storyNodes[currentNodeId];
             let availableTargets = [];
@@ -1392,7 +1510,6 @@
             return;
         }
 
-        // Local AI Request Injection
         if (displayCmd === 'QUERY 1776' || displayCmd === 'ASK 1776') {
             let hint = generateLocalAIHint(currentNodeId);
             playErrorSound();
@@ -1406,6 +1523,7 @@
                 hudBar.style.display = 'flex';
                 loadGame();
                 scheduleGlitch();
+                scheduleAIWar();
             } else if (displayCmd === 'WIPE CACHE' || displayCmd === 'WIPE') {
                 state = 'ACTIVE';
                 hudBar.style.display = 'flex';
@@ -1416,6 +1534,7 @@
                 updateHUD();
                 renderNode('INIT');
                 scheduleGlitch();
+                scheduleAIWar();
             } else {
                 playErrorSound();
                 printText(">> INVALID ENTRY.\n:: RESUME OP\n:: WIPE CACHE\n>> (TYPE 'HELP' FOR ASSISTANCE)", 10);
@@ -1442,7 +1561,7 @@
         }
 
         if (matched && nextNodeId && storyNodes[nextNodeId]) {
-            errorCount = 0; // Reset frustration loop on success
+            errorCount = 0; 
             renderNode(nextNodeId);
         } else {
             errorCount++;
@@ -1469,7 +1588,7 @@
     powerButton.addEventListener('click', () => {
         if (state !== 'OFF') {
             powerButton.classList.remove('active');
-            screen.classList.remove('powered-on', 'glitch-brownout', 'glitch-strike', 'alert-active', 'hypoxia-warning', 'hypoxia-critical');
+            screen.classList.remove('powered-on', 'glitch-brownout', 'glitch-strike', 'alert-active', 'hypoxia-warning', 'hypoxia-critical', 'glitch-atlas');
             inputContainer.style.display = 'none';
             hudBar.style.display = 'none';
             timerDiv.style.display = 'none';
@@ -1482,6 +1601,7 @@
             if (hackTimerHandle) clearInterval(hackTimerHandle);
             if (matrixIntervalHandle) clearInterval(matrixIntervalHandle);
             if (idleTimer) clearTimeout(idleTimer);
+            if (aiWarTimerHandle) clearTimeout(aiWarTimerHandle);
             
             matrixCanvas.style.display = 'none';
             
@@ -1525,6 +1645,7 @@
                 updateHUD();
                 renderNode('INIT');
                 scheduleGlitch();
+                scheduleAIWar();
             }
         }, 2200); 
     });
