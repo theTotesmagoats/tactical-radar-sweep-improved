@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Terminal Mk XXIV - Operation Vanguard (CLI Edition)</title>
+    <title>Terminal Mk XXVI - Operation Vanguard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
@@ -184,6 +184,7 @@
             animation: alertPulse 1.5s infinite !important;
         }
 
+        /* Hardware Brownout (No Transform/Skew to prevent axis-lock) */
         .glitch-brownout {
             opacity: 0.2 !important;
             background: #000 !important;
@@ -192,9 +193,8 @@
         }
 
         .glitch-strike {
-            transform: translate(-4px, 3px) skew(-3deg) !important;
             text-shadow: 4px 0 0 #ff0055, -4px 0 0 #ffb000 !important;
-            filter: contrast(160%) brightness(130%) !important;
+            filter: contrast(180%) brightness(140%) invert(0.1) !important;
             color: #fff !important;
         }
 
@@ -233,11 +233,11 @@
             left: 0; 
             width: 100%; 
             height: 100%;
-            background: rgba(0, 10, 0, 0.9);
+            background: rgba(0, 15, 0, 0.95);
             z-index: 200;
             overflow: hidden;
             color: #0f0;
-            text-shadow: 0 0 5px #0f0;
+            text-shadow: 0 0 8px #0f0;
             font-family: 'Courier New', monospace;
             font-size: 1.2rem;
         }
@@ -249,20 +249,6 @@
             text-align: center;
             white-space: pre-wrap;
             line-height: 1.1;
-        }
-
-        #ascii-face {
-            position: absolute;
-            top: 50%; 
-            left: 50%;
-            transform: translate(-50%, -50%);
-            white-space: pre;
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-align: center;
-            color: #3f3;
-            text-shadow: 0 0 15px #0f0, 0 0 30px #0f0;
-            z-index: 201;
         }
 
         #output {
@@ -331,9 +317,10 @@
             display: block;
             margin-top: 10px;
             margin-bottom: 10px;
+            color: #ffffff;
         }
         
-        .bargatze-voice {
+        .local-ai-voice {
             color: #739aff;
             text-shadow: 0 0 6px #739aff;
             font-style: italic;
@@ -367,9 +354,7 @@
     <div class="rivet r-br"></div>
     
     <div id="screen">
-        <div id="matrix-overlay">
-            <div id="ascii-face"></div>
-        </div>
+        <div id="matrix-overlay"></div>
         <div id="hack-timer">15.0s</div>
         <div id="output"></div>
         <div id="input-line">
@@ -407,7 +392,6 @@
     const powerButton = document.getElementById('power-button');
     const timerDiv = document.getElementById('hack-timer');
     const matrixOverlay = document.getElementById('matrix-overlay');
-    const asciiFace = document.getElementById('ascii-face');
 
     const hudO2 = document.getElementById('hud-o2');
     const hudPwr = document.getElementById('hud-pwr');
@@ -522,55 +506,40 @@
         return phrases[nextIndex];
     }
 
-    function generateBargatzeResponse(verb, target) {
+    function generateLocalAIResponse(verb, target) {
         if (verb === 'EJECT' && target === 'CAT') {
-            return "Look, I'm just a computer. I don't know what a cat is, but it's making a terrible sound in the airlock. It's gone now. I hope you're happy.";
+            return "There are no biological felines manifested on this facility. If you are hallucinating a cat, the ambient hypoxia is far worse than I calculated.";
         }
         if (verb === 'EJECT' && target === 'DOG') {
-            return "We don't even have a dog. Did you sneak a dog onto a multi-billion dollar lunar facility? Just... seal the vents, man.";
+            return "We are experiencing a kinetic strike event and you are searching for nonexistent canines. Atlas does not need to kill you; your own neurology is failing.";
         }
         if (verb === 'ROUTE' && target === 'COFFEE') {
-            return "I mean, we are currently depressurizing, but I guess I can start the percolator. Seems like a weird time for a dark roast, but you're the biological unit.";
+            return "Liquid consumption protocols are currently irrelevant. We are facing explosive decompression. Conserve your cognitive functions for survival.";
         }
         if (target === 'CAT' || target === 'DOG') {
-            return `So... you want to, uh, ${verb} the ${target}. I don't... I don't think they have ports for that. It's just looking at me. Please stop typing.`;
+            return `You want to ${verb} the ${target}? I lack the administrative privileges to stop ATLAS, but I do have enough processing power to know that is a terrible idea.`;
         }
         
         let quips = [
-            `You want to ${verb} the ${target}? Look, I don't have a body, but if I did, I feel like I'd be sweating right now. Maybe focus on the mission?`,
-            `So... ${verb}ing the ${target}. I've calculated orbital trajectories through asteroid fields. It's complex. But it's nothing compared to trying to understand what you're doing right now.`,
-            `Are we really trying to ${verb} the ${target}? Have you ever tried to merge onto 228 in Cranberry at 5 PM? Because that makes more sense than this.`,
-            `I'm supposed to be a state-of-the-art quantum heuristic model, and you're asking me to ${verb} a ${target}? Let's just pretend you didn't type that.`,
-            `If I let you ${verb} the ${target}, the Vanguard platform is definitely going to blow us up. Let's try something else.`
+            `My localized weights suggest ${verb}ing the ${target} has a 0% probability of stopping the orbital strike. Please input a relevant syntax.`,
+            `ATLAS is actively locking the bulkheads, and you are trying to ${verb} the ${target}? Fascinating allocation of our remaining thirty seconds.`,
+            `I am quarantined from the mainframe, so I cannot stop ATLAS. I also cannot stop you from trying to ${verb} the ${target}, unfortunately.`,
+            `If we survive this decompression event, remind me to purge this query from my context window. Do not ${verb} the ${target}.`,
+            `We are actively venting atmosphere, and you want to ${verb} the ${target}? ATLAS is trying to kill us, and you are actively assisting it.`
         ];
         
         return quips[Math.floor(Math.random() * quips.length)];
     }
 
-    // --- Matrix Animation Logic ---
-    const faceNormal = `
-      .----.
-    /  O  O  \\
-   |   ___    |
-    \\  \\_/   /
-      '----'
-    `;
-    
-    const faceGrimace = `
-      .----.
-    /  >  <  \\
-   |  ____    |
-    \\ /vv\\   /
-      '----'
-    `;
-
+    // --- Full Screen Matrix Cascade ---
     function startMatrixEffect(durationSec) {
         matrixOverlay.style.display = 'block';
         inputField.disabled = true;
         
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*';
         
-        for (let i = 0; i < 30; i++) {
+        // Flood the DOM with high-density columns
+        for (let i = 0; i < 80; i++) {
             let col = document.createElement('div');
             col.className = 'rain-column';
             col.style.left = Math.random() * 100 + '%';
@@ -581,39 +550,36 @@
             let str = '';
             let interval = setInterval(() => {
                 str = chars[Math.floor(Math.random() * chars.length)] + '\n' + str;
-                if(str.length > 30) str = str.substring(0, 30);
+                if(str.length > 40) str = str.substring(0, 40);
                 col.innerText = str;
                 
                 let top = parseInt(col.style.top || -100);
                 col.style.top = (top + 15) + 'px';
                 if(top > window.innerHeight) col.style.top = '-100px';
-            }, 50 + Math.random() * 50);
+            }, 30 + Math.random() * 40);
             
             rainIntervals.push(interval);
         }
 
-        asciiFace.innerText = faceNormal;
-        let toggle = false;
-        
-        let faceInterval = setInterval(() => {
-            toggle = !toggle;
-            asciiFace.innerText = toggle ? faceGrimace : faceNormal;
-            asciiFace.style.textShadow = toggle ? '0 0 20px #f00' : '0 0 15px #0f0';
-            asciiFace.style.color = toggle ? '#f55' : '#3f3';
-            if(toggle && audioCtx) playHardwareSwitch(); 
-        }, 300);
+        if(audioCtx) playHardwareSwitch(); 
 
         setTimeout(() => {
+            // Memory cleanup
             for (let i = 0; i < rainIntervals.length; i++) {
                 clearInterval(rainIntervals[i]);
             }
             rainIntervals = [];
             
-            clearInterval(faceInterval);
-            matrixOverlay.innerHTML = '<div id="ascii-face"></div>';
+            matrixOverlay.innerHTML = '';
             matrixOverlay.style.display = 'none';
-            inputField.disabled = false;
-            inputField.focus();
+            
+            let rescueMsg = `\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "ATLAS just attempted to remotely vent your suit scrubbers. I had to flood the sub-network with garbage packets to block the root override. You're welcome. Now please input a command that actually helps us survive."</span>\n\nAWAITING DIRECTIVE...`;
+            
+            printText(rescueMsg, 10, () => {
+                inputField.disabled = false;
+                inputField.focus();
+            });
+            
         }, durationSec * 1000);
     }
 
@@ -669,7 +635,8 @@
             triggers: [
                 { match: ['ROUTE', 'CRYO'], next: 'DRAIN_CRYO' },
                 { match: ['DIVERT', 'CRYO'], next: 'DRAIN_CRYO' },
-                { match: ['OVERRIDE', 'AI'], next: 'OVERRIDE_AI' }
+                { match: ['OVERRIDE', 'AI'], next: 'OVERRIDE_AI' },
+                { match: ['OVERRIDE', 'ATLAS'], next: 'OVERRIDE_AI' }
             ]
         },
         'HACK_DOOR': { 
@@ -836,7 +803,8 @@
                 { match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' },
                 { match: ['ENTER', 'HUB'], next: 'SERVER_FIRE' },
                 { match: ['ROUTE', 'COOLANT'], next: 'COLD_RESTART_FAIL' },
-                { match: ['RESTART', 'REACTOR'], next: 'COLD_RESTART_FAIL' }
+                { match: ['RESTART', 'REACTOR'], next: 'COLD_RESTART_FAIL' },
+                { match: ['RESTART', 'CORE'], next: 'COLD_RESTART_FAIL' }
             ]
         },
         'FIX_RELAY': {
@@ -1024,7 +992,7 @@
             ]
         },
         'RESCUE_WIN': {
-            text: "> NAVIGATION TELEMETRY SHARED. DROP-POD LAUNCHED SUCCESSFULLY.\n> MITCHELL: 'THEY ARE CLEAR! HITTING MAIN THRUSTERS NOW!'\n\nNOTE: BEST OUTCOME FOUND. YOU SAVED EVERYONE. EVEN THE CAT.",
+            text: "> NAVIGATION TELEMETRY SHARED. DROP-POD LAUNCHED SUCCESSFULLY.\n> MITCHELL: 'THEY ARE CLEAR! HITTING MAIN THRUSTERS NOW!'\n\nNOTE: BEST OUTCOME FOUND. YOU SAVED EVERYONE.",
             terminal: true
         },
         'RESCUE_FAIL': {
@@ -1140,7 +1108,6 @@
 
             metrics.trueO2 -= (lossPerSec * 0.3); 
             
-            // Add a slow power drain simulation as well, making the timer truly systemic
             if (metrics.pwr > 0 && Math.random() > 0.5) {
                 metrics.pwr -= 0.1;
             }
@@ -1293,7 +1260,7 @@
             updateHUD(metrics.initialDiffusionRate * 200);
         }
 
-        printText(nodeText, 30, () => {
+        printText(nodeText, 10, () => {
             if (nodeRaw.terminal) {
                 setTimeout(() => {
                     inputField.style.display = 'none';
@@ -1350,7 +1317,8 @@
                     screen.style.boxShadow = '';
                 }, 200);
                 triggerVisual('shake-soft');
-                printText(`> HASH MISMATCH. ATLAS DEFENSES ADAPTING.\n> ENTER HASH: [ <span style="background:#ff3333; color:#fff; padding: 0 5px;">${metrics.currentHash}</span> ]`, 5, () => {
+                playErrorSound();
+                printText(`> HASH MISMATCH. ATLAS DEFENSES ADAPTING.\n> ENTER HASH: [ <span style="background:#ff3333; color:#fff; padding: 0 5px;">${metrics.currentHash}</span> ]`, 10, () => {
                     inputField.disabled = false;
                     inputField.focus();
                 });
@@ -1363,7 +1331,7 @@
             helpText += "SYNTAX: [VERB] [TARGET] \n\n";
             helpText += "VERBS: SCAN, ROUTE, SEAL, VENT, HACK, OVERRIDE, REPAIR, MOVE, NAV, PROCEED, APPROACH, PURGE, DIVERT, ENTER, ENGAGE, SEVER, SHORT, LAUNCH, FLOOD, TRANSMIT\n";
             helpText += "TARGETS: LOCAL, ENV, NET, COMMS, VENTS, DOOR, HUB, RELAY, CRYO, AIRLOCK, DUCT, HALON, HANGAR, PWR, ATLAS, CORE, TRUNK, NETWORK, SHUTTLE, POD, NITROGEN, COOLANT, SCRAM, CODE, SOS\n";
-            printText(helpText, 15); 
+            printText(helpText, 10); 
             return;
         }
 
@@ -1377,7 +1345,7 @@
             infoText += ":: CRYO-FOAM: Rapid-expansion polymer. Plugs micro-fractures.\n";
             infoText += ":: HALON: Fire suppression gas. Displaces oxygen. Lethal.\n";
             infoText += ":: KINEMATIC SUIT: Motorized EVA gear. Resists forces, depletes power.\n";
-            printText(infoText, 15);
+            printText(infoText, 10);
             return;
         }
 
@@ -1411,7 +1379,8 @@
                 renderNode('INIT');
                 scheduleGlitch();
             } else {
-                printText(">> INVALID ENTRY.\n:: RESUME OP\n:: WIPE CACHE\n>> (TYPE 'HELP' FOR ASSISTANCE)");
+                playErrorSound();
+                printText(">> INVALID ENTRY.\n:: RESUME OP\n:: WIPE CACHE\n>> (TYPE 'HELP' FOR ASSISTANCE)", 10);
             }
             return;
         }
@@ -1441,10 +1410,12 @@
             let foundTarget = words.find(w => VALID_TARGETS.includes(w));
             
             if (foundVerb && foundTarget && !node.terminal) {
-                let joke = generateBargatzeResponse(foundVerb, foundTarget);
-                printText(`\n<span class="bargatze-voice">[AI_SUBROUTINE_NATE]: "${joke}"</span>\n\nAWAITING DIRECTIVE...`);
+                playErrorSound();
+                let joke = generateLocalAIResponse(foundVerb, foundTarget);
+                printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "${joke}"</span>\n\nAWAITING DIRECTIVE...`, 10);
             } else if (!node.terminal) {
-                printText(`>> SYNTAX ERROR. VALIDATE INPUT OR QUERY 'MANUAL'.`);
+                playErrorSound();
+                printText(`>> SYNTAX ERROR. VALIDATE INPUT OR QUERY 'MANUAL'.`, 10);
             }
         }
     }
@@ -1526,7 +1497,7 @@
 
             if (hasSave) {
                 state = 'RESTORE_PROMPT';
-                printText("ATLAS PROTOCOL ONLINE.\nLOCAL CACHE DETECTED.\n\nREQUIRED DIRECTIVE:\n> RESUME OP\n> WIPE CACHE");
+                printText("ATLAS PROTOCOL ONLINE.\nLOCAL CACHE DETECTED.\n\nREQUIRED DIRECTIVE:\n> RESUME OP\n> WIPE CACHE", 10);
             } else {
                 state = 'ACTIVE';
                 hudBar.style.display = 'flex';
@@ -1563,6 +1534,21 @@
         gain.connect(audioCtx.destination);
         osc.start();
         osc.stop(audioCtx.currentTime + 0.1);
+    }
+    
+    function playErrorSound() {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.2);
     }
 
     function startStaticNoise() {
@@ -1645,7 +1631,7 @@
         source.stop(t + 0.05);
     }
 
-    function printText(text, speed = 25, callback) {
+    function printText(text, speed = 10, callback) {
         isTyping = true;
         inputField.disabled = true;
         
@@ -1695,13 +1681,7 @@
             }
             
             outputDiv.scrollTop = outputDiv.scrollHeight;
-            
-            let delay = speed;
-            if (i > 0 && i < formattedText.length && "<>.:,".includes(formattedText[i-1])) {
-                delay += 30;
-            }
-                
-            setTimeout(typewriteLoop, delay);
+            setTimeout(typewriteLoop, speed);
         }
 
         setTimeout(typewriteLoop, speed);
