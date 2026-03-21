@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Terminal Mk XXVI - Operation Vanguard</title>
+    <title>Terminal Mk XXVII - Operation Vanguard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
@@ -184,7 +184,7 @@
             animation: alertPulse 1.5s infinite !important;
         }
 
-        /* Hardware Brownout (No Transform/Skew to prevent axis-lock) */
+        /* Hardware Brownout */
         .glitch-brownout {
             opacity: 0.2 !important;
             background: #000 !important;
@@ -225,30 +225,15 @@
             pointer-events: none;
         }
 
-        /* Matrix Overlay System */
-        #matrix-overlay {
+        /* Continuous Canvas Matrix */
+        #matrix-canvas {
             display: none;
             position: absolute;
             top: 0; 
             left: 0; 
             width: 100%; 
             height: 100%;
-            background: rgba(0, 15, 0, 0.95);
             z-index: 200;
-            overflow: hidden;
-            color: #0f0;
-            text-shadow: 0 0 8px #0f0;
-            font-family: 'Courier New', monospace;
-            font-size: 1.2rem;
-        }
-
-        .rain-column {
-            position: absolute;
-            top: -100px;
-            width: 20px;
-            text-align: center;
-            white-space: pre-wrap;
-            line-height: 1.1;
         }
 
         #output {
@@ -354,7 +339,7 @@
     <div class="rivet r-br"></div>
     
     <div id="screen">
-        <div id="matrix-overlay"></div>
+        <canvas id="matrix-canvas"></canvas>
         <div id="hack-timer">15.0s</div>
         <div id="output"></div>
         <div id="input-line">
@@ -391,7 +376,7 @@
     const chassis = document.getElementById('chassis');
     const powerButton = document.getElementById('power-button');
     const timerDiv = document.getElementById('hack-timer');
-    const matrixOverlay = document.getElementById('matrix-overlay');
+    const matrixCanvas = document.getElementById('matrix-canvas');
 
     const hudO2 = document.getElementById('hud-o2');
     const hudPwr = document.getElementById('hud-pwr');
@@ -439,7 +424,7 @@
     let glitchTimerHandle = null;
     let hackTimerHandle = null;
     let gasLeakSimulationHandle = null;
-    let rainIntervals = [];
+    let matrixIntervalHandle = null;
     
     let currentHackFailNode = 'TERMINAL_HACK_FAIL';
     let hackTime = 0;
@@ -531,47 +516,52 @@
         return quips[Math.floor(Math.random() * quips.length)];
     }
 
-    // --- Full Screen Matrix Cascade ---
+    // --- HTML5 Canvas Continuous Matrix Engine ---
     function startMatrixEffect(durationSec) {
-        matrixOverlay.style.display = 'block';
+        matrixCanvas.style.display = 'block';
         inputField.disabled = true;
         
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*';
+        // Match the canvas bounds to the screen div element
+        const screenRect = screen.getBoundingClientRect();
+        matrixCanvas.width = screenRect.width;
+        matrixCanvas.height = screenRect.height;
         
-        // Flood the DOM with high-density columns
-        for (let i = 0; i < 80; i++) {
-            let col = document.createElement('div');
-            col.className = 'rain-column';
-            col.style.left = Math.random() * 100 + '%';
-            col.style.fontSize = (Math.random() * 10 + 10) + 'px';
-            col.style.opacity = Math.random() * 0.5 + 0.3;
-            matrixOverlay.appendChild(col);
-            
-            let str = '';
-            let interval = setInterval(() => {
-                str = chars[Math.floor(Math.random() * chars.length)] + '\n' + str;
-                if(str.length > 40) str = str.substring(0, 40);
-                col.innerText = str;
-                
-                let top = parseInt(col.style.top || -100);
-                col.style.top = (top + 15) + 'px';
-                if(top > window.innerHeight) col.style.top = '-100px';
-            }, 30 + Math.random() * 40);
-            
-            rainIntervals.push(interval);
+        const ctx = matrixCanvas.getContext('2d');
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*'.split('');
+        const fontSize = 16;
+        const columns = Math.floor(matrixCanvas.width / fontSize);
+        
+        const drops = [];
+        for(let x = 0; x < columns; x++) {
+            drops[x] = Math.random() * -100; 
         }
+        
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 15, 0, 0.15)'; 
+            ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+            
+            ctx.fillStyle = '#0f0';
+            ctx.font = fontSize + 'px "Courier New"';
+            
+            for(let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                
+                if(drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        
+        if (matrixIntervalHandle) clearInterval(matrixIntervalHandle);
+        matrixIntervalHandle = setInterval(drawMatrix, 35);
 
-        if(audioCtx) playHardwareSwitch(); 
+        if(audioCtx) playErrorSound(); 
 
         setTimeout(() => {
-            // Memory cleanup
-            for (let i = 0; i < rainIntervals.length; i++) {
-                clearInterval(rainIntervals[i]);
-            }
-            rainIntervals = [];
-            
-            matrixOverlay.innerHTML = '';
-            matrixOverlay.style.display = 'none';
+            clearInterval(matrixIntervalHandle);
+            matrixCanvas.style.display = 'none';
             
             let rescueMsg = `\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "ATLAS just attempted to remotely vent your suit scrubbers. I had to flood the sub-network with garbage packets to block the root override. You're welcome. Now please input a command that actually helps us survive."</span>\n\nAWAITING DIRECTIVE...`;
             
@@ -1435,11 +1425,9 @@
             if (gasLeakSimulationHandle) clearInterval(gasLeakSimulationHandle);
             if (glitchTimerHandle) clearTimeout(glitchTimerHandle);
             if (hackTimerHandle) clearInterval(hackTimerHandle);
+            if (matrixIntervalHandle) clearInterval(matrixIntervalHandle);
             
-            for (let i = 0; i < rainIntervals.length; i++) {
-                clearInterval(rainIntervals[i]);
-            }
-            rainIntervals = [];
+            matrixCanvas.style.display = 'none';
             
             if (audioCtx) {
                 audioCtx.close().catch(()=>{});
