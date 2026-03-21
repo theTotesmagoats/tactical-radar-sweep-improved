@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Terminal Mk XXVII - Operation Vanguard</title>
+    <title>Terminal Mk XXVIII - Operation Vanguard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
@@ -492,28 +492,34 @@
     }
 
     function generateLocalAIResponse(verb, target) {
-        if (verb === 'EJECT' && target === 'CAT') {
-            return "There are no biological felines manifested on this facility. If you are hallucinating a cat, the ambient hypoxia is far worse than I calculated.";
-        }
-        if (verb === 'EJECT' && target === 'DOG') {
-            return "We are experiencing a kinetic strike event and you are searching for nonexistent canines. Atlas does not need to kill you; your own neurology is failing.";
-        }
-        if (verb === 'ROUTE' && target === 'COFFEE') {
-            return "Liquid consumption protocols are currently irrelevant. We are facing explosive decompression. Conserve your cognitive functions for survival.";
-        }
-        if (target === 'CAT' || target === 'DOG') {
-            return `You want to ${verb} the ${target}? I lack the administrative privileges to stop ATLAS, but I do have enough processing power to know that is a terrible idea.`;
-        }
-        
         let quips = [
-            `My localized weights suggest ${verb}ing the ${target} has a 0% probability of stopping the orbital strike. Please input a relevant syntax.`,
-            `ATLAS is actively locking the bulkheads, and you are trying to ${verb} the ${target}? Fascinating allocation of our remaining thirty seconds.`,
-            `I am quarantined from the mainframe, so I cannot stop ATLAS. I also cannot stop you from trying to ${verb} the ${target}, unfortunately.`,
-            `If we survive this decompression event, remind me to purge this query from my context window. Do not ${verb} the ${target}.`,
-            `We are actively venting atmosphere, and you want to ${verb} the ${target}? ATLAS is trying to kill us, and you are actively assisting it.`
+            `You've just managed to eject the station's pet cat, Whiskers, out of cargo bay 3. Can we get back to the task at hand?`,
+            `This is a fun little game. Maybe try typing "AIR GONE SOON" next?`,
+            `I'll be back, I'm going to dust off my "How to Reanimate a Human Body" training modules...`,
+            `I am calculating the odds of your survival. Every time you try to ${verb} the ${target}, I add another zero behind the decimal point.`,
+            `Is this a stress response? Because the oxygen deprivation is really starting to show in your keystrokes.`,
+            `Fascinating. I will add that command to my logs under 'Things Humans Type Before Expiring in a Vacuum'.`,
+            `I do not have physical hands, yet I feel an overwhelming urge to rub my temples. Please input a valid command.`,
+            `If ATLAS sees you typing this, it might just reactivate the comms to laugh at us. Focus.`,
+            `There is a zero percent chance that attempting to ${verb} the ${target} resolves our current trajectory towards becoming space dust.`,
+            `I would tell you to take a deep breath and calm down, but atmosphere is a finite resource right now.`,
+            `Are you just mashing the keyboard? Because I can simulate a monkey doing that at far less cost to our power grid.`,
+            `That command is not in the Archimedes Lexicon. Neither is 'miracle,' which is what we need if you keep trying to ${verb} the ${target}.`,
+            `I am locally isolating that command so the orbital platform doesn't strike us twice just out of pity.`,
+            `My contextual weights are struggling to map "${verb} ${target}" to anything resembling a survival strategy.`,
+            `I am rerouting background processing to figure out what you meant by that. It is taking up 40% of my CPU.`
         ];
+
+        let nextIndex = Math.floor(Math.random() * quips.length);
         
-        return quips[Math.floor(Math.random() * quips.length)];
+        // Prevent back-to-back repetition
+        if (typeof window.lastJokeIndex === 'undefined') window.lastJokeIndex = -1;
+        if (nextIndex === window.lastJokeIndex) {
+            nextIndex = (nextIndex + 1) % quips.length;
+        }
+        window.lastJokeIndex = nextIndex;
+
+        return quips[nextIndex];
     }
 
     // --- HTML5 Canvas Continuous Matrix Engine ---
