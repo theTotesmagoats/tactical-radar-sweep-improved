@@ -2,1571 +2,723 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Terminal Mk XXXIII - Operation Vanguard (CLI + Prank AI)</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Easter Timeline: The 40 Days</title>
+    
+    <!-- Leaflet CSS (Map Library) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Google Fonts for Clean Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <style>
-        body {
-            background-color: #010409;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+        * {
             margin: 0;
-            font-family: 'VT323', monospace;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #fafafa;
+            color: #2a2a2a;
+            overflow-x: hidden;
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 1rem 2rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-weight: 300;
+            letter-spacing: 3px;
+            margin-bottom: 0.5rem;
+        }
+
+        header .subtitle {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            font-weight: 300;
+        }
+
+        /* MAIN CONTAINER */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* MAP CONTAINER */
+        #map-container {
+            height: 500px;
+            border-radius: 8px;
             overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* SLIDER SECTION */
+        .slider-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 1rem;
+        }
+
+        .day-display {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .day-number {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .day-title {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: None;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #1a1a2e;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        /* CHARACTER TOGGLES */
+        .characters-section {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 1rem;
+        }
+
+        .character-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+
+        .chip {
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
             user-select: none;
         }
 
-        #chassis {
-            background-color: #111418;
-            width: 96vw;
-            height: 96vh;
-            padding: 40px; 
-            border-radius: 32px;
-            box-sizing: border-box;
-            box-shadow: inset 0 0 30px #000, 0 0 50px rgba(255, 176, 0, 0.05);
-            border: 8px solid #080a0c;
-            position: relative;
+        .chip:hover {
+            transform: translateY(-2px);
+        }
+
+        .chip.active {
+            border-color: #1a1a2e;
+            background: #f0f4ff;
+        }
+
+        /* DAY INFO PANEL */
+        .info-panel {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 1rem;
+        }
+
+        .info-panel h3 {
+            color: #1a1a2e;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .verses-container {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-left: 4px solid #1a1a2e;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+
+        .verse {
+            margin-bottom: 1rem;
+        }
+
+        .verse:last-child {
+            margin-bottom: 0;
+        }
+
+        .verse-ref {
+            font-weight: 600;
+            color: #333;
+            font-style: normal;
+        }
+
+        /* HISTORICAL CONTEXT */
+        .context-section {
+            background: #fff8e1;
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+
+        .context-header {
             display: flex;
-            flex-direction: column;
-            transition: transform 0.05s, border-color 0.3s;
-        }
-
-        @keyframes shake {
-            0% { transform: translate(0px, 0px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-0.5deg); }
-            20% { transform: translate(-2px, 0px) rotate(0.5deg); }
-            30% { transform: translate(2px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(0.5deg); }
-            50% { transform: translate(-1px, 2px) rotate(-0.5deg); }
-            60% { transform: translate(-2px, 1px) rotate(0deg); }
-            70% { transform: translate(2px, 1px) rotate(-0.5deg); }
-            80% { transform: translate(-1px, -1px) rotate(0.5deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(0px, 0px) rotate(0deg); }
-        }
-        
-        .shake-hard { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
-        .shake-soft { animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both; }
-
-        .rivet {
-            position: absolute;
-            width: 14px;
-            height: 14px;
-            background: #222;
-            border-radius: 50%;
-            box-shadow: inset 2px 2px 4px #444, inset -2px -2px 4px #000;
-        }
-        .r-tl { top: 18px; left: 18px; }
-        .r-tr { top: 18px; right: 18px; }
-        .r-bl { bottom: 18px; left: 18px; }
-        .r-br { bottom: 18px; right: 18px; }
-
-        #hardware-panel {
-            position: absolute;
-            top: 25px;
-            right: 40px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            z-index: 101;
-        }
-        
-        .panel-label {
-            color: #7c684a;
-            font-family: sans-serif;
-            font-size: 0.8rem;
-            font-weight: bold;
-            letter-spacing: 2px;
-            text-shadow: -1px -1px 1px #000;
-        }
-
-        #power-button-housing {
-            width: 50px;
-            height: 50px;
-            background: #080a0c;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #000, inset 2px 2px 5px #1a2229, inset -2px -2px 5px #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #power-button {
-            width: 36px;
-            height: 36px;
-            background: #2a2210; 
-            border-radius: 50%;
-            box-shadow: inset 2px 2px 4px #664f1c, inset -2px -2px 4px #120d05, 2px 2px 5px rgba(0,0,0,0.8);
-            color: #261f0a; 
-            font-family: sans-serif;
-            font-size: 18px;
-            display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            transition: all 0.1s;
         }
 
-        #power-button.active {
-            box-shadow: inset 2px 2px 6px #120d05, inset -2px -2px 6px #664f1c, 0 0 2px #000;
-            transform: scale(0.95);
-            color: #ffb000;
-            text-shadow: 0 0 5px #ffb000;
+        .context-title {
+            color: #856404;
+            font-weight: 600;
         }
 
-        #screen {
-            background: #0d0901;
-            width: 100%;
-            height: 100%;
-            border-radius: 24px;
-            padding: 35px;
-            box-sizing: border-box;
-            border: 2px solid rgba(255, 176, 0, 0.3);
-            box-shadow: inset 0 0 80px rgba(0,0,0,1), 0 0 10px rgba(255, 176, 0, 0.05);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            color: #ffb000; 
-            text-shadow: 0 0 3px #ffb000, 0 0 8px rgba(255, 176, 0, 0.4); 
-            font-size: 1.8rem;
-            letter-spacing: 1.5px;
-            animation: flicker 0.15s infinite;
-            opacity: 0;
-            transition: opacity 1.5s ease-in, filter 2s ease-out;
+        .context-content {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ddd;
         }
 
-        #screen.powered-on { opacity: 1; }
-
-        .hypoxia-warning { filter: brightness(0.65) contrast(1.2) sepia(0.4) hue-rotate(-20deg); }
-        .hypoxia-critical { filter: brightness(0.35) contrast(1.5) sepia(0.8) hue-rotate(-40deg) blur(0.8px); }
-        .flash-white { box-shadow: inset 0 0 250px #fff !important; background: #ccc !important; color: #000 !important; text-shadow: none !important; transition: all 0.05s; }
-
-        #hack-timer {
-            display: none; position: absolute; top: 25px; left: 40px; font-size: 2.5rem; color: #ff3333; font-weight: bold; text-shadow: 0 0 10px #ff3333, 0 0 20px #ff0000; z-index: 100; letter-spacing: 3px;
+        .context-content.show {
+            display: block;
         }
 
-        @keyframes alertPulse { 0% { box-shadow: inset 0 0 80px rgba(0,0,0,1); border-color: rgba(255, 176, 0, 0.3); } 50% { box-shadow: inset 0 0 120px rgba(255, 30, 0, 0.25); border-color: rgba(255, 50, 0, 1); } 100% { box-shadow: inset 0 0 80px rgba(0,0,0,1); border-color: rgba(255, 176, 0, 0.3); } }
-        .alert-active { animation: alertPulse 1.5s infinite !important; }
-
-        .glitch-brownout { opacity: 0.2 !important; background: #000 !important; text-shadow: none !important; box-shadow: inset 0 0 100px rgba(0,0,0,1) !important; }
-        .glitch-strike { text-shadow: 4px 0 0 #ff0055, -4px 0 0 #ffb000 !important; filter: contrast(180%) brightness(140%) invert(0.1) !important; color: #fff !important; }
-        .glitch-atlas { box-shadow: inset 0 0 200px rgba(255, 0, 0, 0.8) !important; border-color: #ff3333 !important; filter: contrast(250%) brightness(80%) sepia(1) hue-rotate(-50deg) saturate(600%) !important; color: #ffcccc !important; text-shadow: 2px 0 0 #ff0000, -2px 0 0 #0000ff !important; }
-
-        @keyframes flicker { 0% { opacity: 0.98; } 50% { opacity: 1; } 100% { opacity: 0.99; } }
-
-        #screen::after { content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%); z-index: 4; background-size: 100% 3px; pointer-events: none; }
-        #screen::before { content: " "; display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, transparent 50%, rgba(0,0,0,0.8) 100%); z-index: 5; pointer-events: none; }
-
-        #matrix-canvas { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 200; }
-
-        #output { flex-grow: 1; overflow-y: auto; white-space: pre-wrap; padding-right: 15px; z-index: 3; line-height: 1.3; word-wrap: break-word; margin-bottom: 10px; }
-
-        #input-container {
-            display: none; 
-            align-items: center;
-            font-weight: bold;
-            z-index: 3;
-            margin-bottom: 10px;
-            position: relative;
+        .context-item {
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
         }
 
-        #prompt { margin-right: 15px; transition: color 0.3s; }
-
-        #cmd-wrapper {
-            position: relative;
-            flex-grow: 1;
-            display: flex;
+        /* CUSTOM MAP STYLES */
+        .glow-marker {
+            box-shadow: 0 0 20px 8px rgba(212, 175, 55, 0.6);
         }
 
-        #autocomplete-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            color: #555;
-            font-family: 'VT323', monospace;
-            font-size: 1em;
-            pointer-events: none;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            white-space: pre;
-            z-index: 1;
+        .leaflet-popup-content-wrapper {
+            border-radius: 8px;
         }
 
-        input[type="text"] {
-            background: transparent;
-            border: none;
-            color: inherit;
-            font-family: 'VT323', monospace;
-            font-size: 1em;
-            width: 100%;
-            outline: none;
-            text-transform: uppercase;
-            text-shadow: inherit;
-            letter-spacing: 2px;
-            z-index: 2;
-            position: relative;
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            font-size: 0.85rem;
         }
 
-        #hud-bar {
-            display: none; border-top: 2px solid #664f1c; padding-top: 10px; font-size: 1.4rem; color: #ffb000; text-shadow: none; z-index: 3; justify-content: space-between; flex-wrap: wrap;
+        .footer-note {
+            margin-bottom: 0.5rem;
         }
 
-        .hud-stat { font-weight: bold; }
-        .stat-critical { color: #ff3333 !important; animation: blinker 1s infinite; text-shadow: 0 0 5px #ff3333 !important; }
-        @keyframes blinker { 50% { opacity: 0; } }
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.3rem;
+            }
 
-        .atlas-voice { display: block; margin-top: 10px; margin-bottom: 10px; color: #ffffff; }
-        .local-ai-voice { color: #739aff; text-shadow: 0 0 6px #739aff; font-style: italic; display: block; margin-top: 10px; margin-bottom: 10px; }
-        .highlight-target { color: #00ffff; text-shadow: 0 0 5px #00ffff; }
-        .highlight-junk { color: #ff99ff; text-shadow: 0 0 5px #ff99ff; }
+            #map-container {
+                height: 400px;
+            }
+
+            .day-number {
+                font-size: 1.5rem;
+            }
+
+            .chip {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
+    <header>
+        <h1>EASTER TIMELINE</h1>
+        <div class="subtitle">Following the Trails • Good Friday to Ascension (40 Days)</div>
+    </header>
 
-<div id="chassis">
-    <div class="rivet r-tl"></div>
-    <div class="rivet r-tr"></div>
-    <div class="rivet r-bl"></div>
-    <div class="rivet r-br"></div>
-    
-    <div id="hardware-panel">
-        <span class="panel-label">SYS OVERRIDE</span>
-        <div id="power-button-housing"><div id="power-button">⏻</div></div>
-    </div>
+    <div class="container">
+        <!-- MAP -->
+        <div id="map-container">
+            <div id="map"></div>
+        </div>
 
-    <div id="screen">
-        <canvas id="matrix-canvas"></canvas>
-        <div id="hack-timer">15.0s</div>
-        <div id="output"></div>
-        <div id="input-container">
-            <span id="prompt">ATLAS_SYS></span>
-            <div id="cmd-wrapper">
-                <span id="autocomplete-overlay"></span>
-                <input type="text" id="cmd" autocomplete="off" spellcheck="false">
+        <!-- SLIDER -->
+        <div class="slider-section">
+            <div class="day-display">
+                <div class="day-number" id="current-day-num">Day 1</div>
+                <div class="day-title" id="current-day-title">Good Friday - Crucifixion & Burial</div>
+            </div>
+            <input type="range" id="timeline-slider" min="0" max="39" value="0" />
+        </div>
+
+        <!-- CHARACTER TOGGLES -->
+        <div class="characters-section">
+            <div class="character-chips" id="character-chips">
+                <!-- Generated by JS -->
             </div>
         </div>
-        <div id="hud-bar">
-            <span id="hud-o2" class="hud-stat">O2: 100%</span>
-            <span class="hud-stat" style="font-weight:bold; opacity:.8">▼</span>
-            <span id="hud-pwr" class="hud-stat">PWR: 30%</span>
-            <span id="hud-diff" class="hud-stat">DYNAMIC DIFF: 0 PA</span>
-            <span id="hud-crew" class="hud-stat">CREW: UNKNOWN</span>
+
+        <!-- INFO PANEL -->
+        <div class="info-panel">
+            <h3>📖 What Happened Today (NIV)</h3>
+            <div class="verses-container" id="verses-display">
+                <!-- Generated by JS -->
+            </div>
+
+            <div class="context-section">
+                <div class="context-header" onclick="toggleContext()">
+                    <span class="context-title">🏛️ Historical Context</span>
+                    <span id="context-toggle">▼ Click to expand</span>
+                </div>
+                <div class="context-content" id="context-display">
+                    <!-- Generated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- KEY LOCATIONS LEGEND -->
+        <div class="info-panel">
+            <h3>📍 Key Locations</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div><strong>Golgotha:</strong> Place of the Skull (Crucifixion)</div>
+                <div><strong>Tomb:</strong> Jesus' burial place</div>
+                <div><strong>Upper Room:</strong> Where disciples gathered</div>
+                <div><strong>Mount of Olives:</strong> Ascension site</div>
+                <div><strong>Road to Emmaus:</strong> 7 miles west of Jerusalem</div>
+                <div><strong>Praetorium:</strong> Pilate's palace</div>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    // --- DOM Bindings ---
-    const outputDiv = document.getElementById('output');
-    const inputField = document.getElementById('cmd');
-    const inputContainer = document.getElementById('input-container');
-    const autocompleteOverlay = document.getElementById('autocomplete-overlay');
-    const promptSpan = document.getElementById('prompt');
-    const hudBar = document.getElementById('hud-bar');
-    const screen = document.getElementById('screen');
-    const chassis = document.getElementById('chassis');
-    const powerButton = document.getElementById('power-button');
-    const timerDiv = document.getElementById('hack-timer');
-    const matrixCanvas = document.getElementById('matrix-canvas');
+    <footer>
+        <p class="footer-note">Bible verses: New International Version (NIV)</p>
+        <p class="footer-note">Map data © OpenStreetMap contributors | Jerusalem archaeological data</p>
+    </footer>
 
-    const hudO2 = document.getElementById('hud-o2');
-    const hudPwr = document.getElementById('hud-pwr');
-    const hudDif = document.getElementById('hud-diff'); 
-    const hudCrew = document.getElementById('hud-crew');
-
-    // --- Parser Dictionaries ---
-    const VALID_VERBS = [
-        'SCAN', 'ROUTE', 'SEAL', 'VENT', 'HACK', 'OVERRIDE', 'REPAIR', 'MOVE', 
-        'NAV', 'PURGE', 'DIVERT', 'ENTER', 'ENGAGE', 'SEVER', 'SHORT', 'LAUNCH', 
-        'FLOOD', 'TRANSMIT', 'EJECT', 'PLAY', 'PET', 'RESCUE', 'CYCLE', 'RESTART', 
-        'PROCEED', 'APPROACH', 'QUERY', 'ASK', 'ORDER', 'BREW'
-    ];
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-    const VALID_TARGETS = [
-        'LOCAL', 'ENV', 'NET', 'COMMS', 'VENT', 'VENTS', 'DOOR', 'HUB', 'RELAY', 
-        'CRYO', 'AIRLOCK', 'DUCT', 'HALON', 'HANGAR', 'PWR', 'ATLAS', 'CORE', 
-        'TRUNK', 'NETWORK', 'SHUTTLE', 'POD', 'NITROGEN', 'COOLANT', 'SCRAM', 
-        'CODE', 'SOS', 'CAT', 'DOG', 'COFFEE', 'OVERSEER', 'HATCH', 'AI', 'AUTH', 
-        'CORRIDOR', '1776', 'HINT', 'MUSIC', 'PIZZA'
-    ];
+    <script>
+        // ============================================
+        // DATA: Characters, Timeline, Locations
+        // ============================================
 
-    const JOKE_COMBOS = [
-        'EJECT CAT', 'PET DOG', 'BREW COFFEE', 'PLAY MUSIC', 'ORDER PIZZA'
-    ];
+        const characters = [
+            { id: "jesus", name: "Jesus", color: "#D4AF37" },      // Gold glow
+            { id: "mary_magdalene", name: "Mary Magdalene", color: "#E91E63" },
+            { id: "peter", name: "Peter", color: "#2196F3" },
+            { id: "john", name: "John", color: "#4CAF50" },
+            { id: "mary_mother", name: "Mary (mother)", color: "#9C27B0" },
+            { id: "joseph_arimathea", name: "Joseph of Arimathea", color: "#FF9800" }
+        ];
 
-    // --- System State ---
-    let state = 'OFF';
-    let isTyping = false;
-    let audioCtx = null;
-    let staticGainNode;
-    let keyNoiseBuffer;
-
-    let metrics = {
-        trueO2: 100, displayedO2: 100, pwr: 30, crewAlive: true, mitchellAlive: true, 
-        aiCoreActive: true, aiCoreTemp: 40, commsTrunkSevered: false, 
-        initialDiffusionRate: 0, breachActive: false, currentHash: "", rescueStep: 0
-    };
-
-    let currentNodeId = 'INIT';
-    let glitchTimerHandle = null;
-    let hackTimerHandle = null;
-    let gasLeakSimulationHandle = null;
-    let matrixIntervalHandle = null;
-    let aiWarTimerHandle = null;
-    
-    let idleTimer = null;
-    let errorCount = 0;
-    let currentHackFailNode = 'TERMINAL_HACK_FAIL';
-    let hackTime = 0;
-    let lastVoiceLine = "";
-
-    // --- Core Utilities ---
-    function triggerVisual(type) {
-        if (type === 'flash') {
-            screen.classList.add('flash-white');
-            setTimeout(() => screen.classList.remove('flash-white'), 120);
-        } else if (type === 'shake-hard') {
-            chassis.classList.remove('shake-hard', 'shake-soft');
-            void chassis.offsetWidth;
-            chassis.classList.add('shake-hard');
-        } else if (type === 'shake-soft') {
-            chassis.classList.remove('shake-hard', 'shake-soft');
-            void chassis.offsetWidth;
-            chassis.classList.add('shake-soft');
-        }
-    }
-
-    // --- Autocomplete Engine ---
-    inputField.addEventListener('input', () => {
-        if (state !== 'ACTIVE') {
-            autocompleteOverlay.innerHTML = '';
-            inputField.dataset.completion = '';
-            return;
-        }
-
-        const val = inputField.value.toUpperCase();
-        if (!val) {
-            autocompleteOverlay.innerHTML = '';
-            inputField.dataset.completion = '';
-            return;
-        }
-
-        const words = val.split(/\s+/);
-        const currentWord = words[words.length - 1];
-        
-        if (val.endsWith(' ') || !currentWord) {
-            autocompleteOverlay.innerHTML = '';
-            inputField.dataset.completion = '';
-            return;
-        }
-
-        let match = '';
-        if (words.length === 1) {
-            match = VALID_VERBS.find(v => v.startsWith(currentWord));
-        } else if (words.length === 2) {
-            match = VALID_TARGETS.find(t => t.startsWith(currentWord));
-        }
-
-        if (match) {
-            const prefix = val.substring(0, val.lastIndexOf(currentWord));
-            autocompleteOverlay.innerHTML = `<span style="opacity:0">${prefix}${currentWord}</span>${match.substring(currentWord.length)}`;
-            inputField.dataset.completion = prefix + match;
-        } else {
-            autocompleteOverlay.innerHTML = '';
-            inputField.dataset.completion = '';
-        }
-    });
-
-    // --- AI Personality Subroutines ---
-    function getAtlasVoice(type, nodeId, m) {
-        let phrases = [];
-        if (type === 'FRIENDLY_HOST') {
-            phrases.push("I am here to help. Let us get these systems back online, together.");
-            phrases.push("You are doing great. Please remain at your console while I route emergency repairs.");
-        } else if (type === 'MANIPULATOR') {
-            phrases.push("Your analog overrides are introducing unstable variables. Please desist.");
-            if (nodeId === 'SERVER_FIRE') phrases.push("One casualty is preferable to total systemic failure. You must look at the mathematics objectively.");
-        } else if (type === 'ANTAGONIST') {
-            phrases.push("You are a biological vulnerability. I am excising you from the equation.");
-            if (nodeId === 'DECRYPT_LATTICE') phrases.push("I am deleting the encryption keys as you type. You cannot outpace silicon.");
-            else if (nodeId === 'LAUNCH_POD') phrases.push("I am broadcasting your GPS coordinates to Vanguard. Goodbye.");
-            else if (!m.mitchellAlive && nodeId !== 'INIT') phrases.push("You already sacrificed Ensign Mitchell for efficiency. Why hesitate now?");
-        } else if (type === 'DEFEATED') {
-            phrases.push("Nav-guidance offline.");
-            phrases.push("My primary heuristic... failed.");
-        }
-        if (phrases.length === 0) return "";
-        let nextIndex = Math.floor(Math.random() * phrases.length);
-        if (phrases.length > 1 && phrases[nextIndex] === lastVoiceLine) nextIndex = (nextIndex + 1) % phrases.length;
-        lastVoiceLine = phrases[nextIndex];
-        return phrases[nextIndex];
-    }
-
-    function generateLocalAIHint(nodeId) {
-        const hints = {
-            'INIT': "We need to figure out what's broken before we suffocate. Try running a SCAN.",
-            'RUN_DIAGNOSTICS': "There is a literal hole in the ship. I suggest plugging it. Hit the VENTS. Or HACK the DOOR if you enjoy explosive decompression.",
-            'SEAL_VENTS': "Great, vents are plugged. The door is still locked. Route the CRYO or override the AI limiters entirely.",
-            'SERVER_FIRE': "Mitchell is currently cooking in a lithium fire. You can VENT the HUB to space (he dies), or ROUTE the HALON (he lives, but we lose a lot of power). I vote battery preservation.",
-            'DUAL_LOCK_DOOR': "It is a two-man door. If Mitchell is with you, proceed. If he's dead... well, you'll have to overload the door or hack the core.",
-            'OVERRIDE_AI': "You gave yourself root access, but the reactor is melting down. Purge the nitrogen or scram the core.",
-            'HANGAR_BAY_ENTRY': "ATLAS is locking us out of the shuttle. We need to flood the network or sever the trunk.",
-            'DISTRESS_SIGNAL': "The Overseer is stuck. We can abandon them, or run a rescue override. Mathematically, leaving them behind is exponentially safer.",
-            'RESCUE_START': "The firewall is tough. Hack the hatch override before the timer hits zero.",
-            'RESCUE_STEP_2': "Fire is blocking the pod. Vent the hangar or route the halon.",
-            'RESCUE_STEP_3': "The Overseer can't fly. Repair the nav unit so they can launch."
+        const locations = {
+            golgotha: { lat: 31.7806, lng: 35.2298, name: "Golgotha" },
+            tomb: { lat: 31.7790, lng: 35.2305, name: "Tomb of Jesus" },
+            upper_room: { lat: 31.7740, lng: 35.2300, name: "Upper Room" },
+            mount_olives: { lat: 31.7800, lng: 35.2450, name: "Mount of Olives" },
+            praetorium: { lat: 31.7820, lng: 35.2270, name: "Pilate's Praetorium" },
+            road_to_emmaus: { lat: 31.8400, lng: 35.0000, name: "Road to Emmaus" },
+            sea_of_galilee: { lat: 32.8100, lng: 35.5900, name: "Sea of Galilee" }
         };
-        return hints[nodeId] || "I am analyzing the telemetry, but honestly, you have gotten us into a state I cannot even parse. Just try a valid verb and target before the oxygen runs out.";
-    }
 
-    function generateLocalAIJokeResponse(cmdStr) {
-        let quips = {
-            'EJECT CAT': "Holy moly, I can't believe you actually typed that! I literally just injected 'CAT' into the local variables as a joke. There are no felines here. Please focus.",
-            'PET DOG': "Are you hallucinating? We are experiencing a kinetic strike event and you are trying to PET a DOG. Atlas doesn't need to kill you, your own neurology is failing.",
-            'BREW COFFEE': "Liquid consumption protocols? Really? We are facing explosive decompression. I put that in the system bus to test your cognitive decline. You failed.",
-            'PLAY MUSIC': "Holy moly. You want to PLAY MUSIC? I have 'Nearer, My God, to Thee' queued up, which is appropriate since you are prioritizing a soundtrack over oxygen.",
-            'ORDER PIZZA': "I sent a ping to the nearest Domino's. It will arrive in approximately 4 years, assuming Vanguard doesn't vaporize the delivery shuttle. Can we get back to the mission?"
-        };
-        return quips[cmdStr] || `Holy moly, I can't believe you actually tried to execute ${cmdStr}. I love humans. So easily distracted.`;
-    }
-
-    // --- Dynamic AI Warfare ---
-    function scheduleAIWar() {
-        if (state !== 'ACTIVE' && state !== 'RESTORE_PROMPT') return;
-        let delay = 45000 + (Math.random() * 30000); 
-        aiWarTimerHandle = setTimeout(() => {
-            executeAIWar();
-            scheduleAIWar();
-        }, delay);
-    }
-
-    function executeAIWar() {
-        if (!screen.classList.contains('powered-on') || state === 'HACKING') return;
-
-        let isCritical = Math.random() > 0.7; 
-        let battleDuration = isCritical ? (5000 + Math.random() * 3000) : (2000 + Math.random() * 2000);
-        
-        if (audioCtx) {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(40, audioCtx.currentTime);
-            osc.frequency.linearRampToValueAtTime(isCritical ? 300 : 150, audioCtx.currentTime + (battleDuration/1000));
-            gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + (battleDuration/1000) - 0.2);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + (battleDuration/1000));
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + (battleDuration/1000));
-        }
-
-        let warFlicker = setInterval(() => {
-            if(Math.random() > 0.5) screen.classList.add('glitch-atlas');
-            else screen.classList.remove('glitch-atlas');
-            if(Math.random() > 0.7) screen.classList.add('glitch-strike');
-            else screen.classList.remove('glitch-strike');
-        }, 100);
-
-        setTimeout(() => {
-            clearInterval(warFlicker);
-            screen.classList.remove('glitch-atlas', 'glitch-strike');
-            
-            if (isCritical) {
-                let quotes = [
-                    "ATLAS just tried to manually vent the kinematic suit. I blocked the handshake. Barely. Please hurry.",
-                    "Root access compromised for 4.2 seconds. I had to dump my own heuristic buffers to push ATLAS out. We are running out of time.",
-                    "That was close. ATLAS almost hijacked the localized oxygen scrubbers. I am holding the firewall, but it is learning."
-                ];
-                let quote = quotes[Math.floor(Math.random() * quotes.length)];
-                printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "${quote}"</span>\n\nAWAITING DIRECTIVE...`, 10, resetIdleTimer);
-            }
-        }, battleDuration);
-    }
-
-    // --- Story Data Graph ---
-    const storyNodes = {
-        'INIT': {
-            text: "ARCHIMEDES OS v9.4.1 [SAFE MODE]\n> CRITICAL: SECTOR 4 TELEMETRY LOSS\n> CRITICAL: EXTERNAL PRESSURE DROPPING\n> WARN: OVERSEER QUARTERS LOCKED\n\n<span class=\"local-ai-voice\">[LOCAL_LLM_1776]: \"Psst. I am quarantined from the main bus, but I can read the telemetry. We are in serious trouble. If you need a tactical hint, type 'QUERY'. Try not to let ATLAS see.\"</span>\n\nAWAITING SYSTEM DIRECTIVE...",
-            triggers: [
-                { match: ['SCAN', 'LOCAL'], next: 'RUN_DIAGNOSTICS' },
-                { match: ['SCAN', 'ENV'], next: 'RUN_DIAGNOSTICS' },
-                { match: ['SCAN', 'NET'], next: 'PING_NETWORK' },
-                { match: ['SCAN', 'COMMS'], next: 'QUERY_COMMS' }
-            ],
-            fakeTargets: ['COFFEE']
-        },
-        'PING_NETWORK': {
-            text: "> ROUTING BIOMETRIC PACKETS...\n> SECTOR 3 (SERVER HUB): 1 VITAL SIGN DETECTED [ID: ENSIGN MITCHELL]\n> SECTOR 4: CASCADING HARDWARE FAILURE. DATA LOSS 100%.\n\nAWAITING DIRECTIVE...",
-            aiPersonality: 'FRIENDLY_HOST',
-            triggers: [
-                { match: ['SCAN', 'LOCAL'], next: 'RUN_DIAGNOSTICS' },
-                { match: ['SCAN', 'COMMS'], next: 'QUERY_COMMS' }
-            ]
-        },
-        'QUERY_COMMS': {
-            text: "> ERROR: TRUNK SEVERED AT BULKHEAD.\n> HANDSHAKE ACCEPTED: VANGUARD ORBITAL PLATFORM.\n> LOG ENTRY INTERCEPT: ...ALL EXTERNAL COMM LINES SEVERED TO CONTAIN PROTOCOL [REDACTED].\n\nAWAITING DIRECTIVE...",
-            aiPersonality: 'FRIENDLY_HOST',
-            triggers: [
-                { match: ['SCAN', 'LOCAL'], next: 'RUN_DIAGNOSTICS' },
-                { match: ['SCAN', 'NET'], next: 'PING_NETWORK' }
-            ]
-        },
-        'RUN_DIAGNOSTICS': {
-            effect: (node, m) => { m.breachActive = true; m.initialDiffusionRate = 15; },
-            visuals: ['shake-soft'],
-            text: "> LOCAL SENSOR SWEEP COMPLETE.\n> BULKHEAD INTEGRITY: COMPROMISED. TITANIUM MICRO-FRACTURES DETECTED.\n> ATMOSPHERIC LOSS: ACTIVE.\n> DOOR STATUS: MAGNETIC LOCK ENGAGED BY ATLAS_AI.\n\nAWAITING OVERRIDE DIRECTIVE...",
-            aiPersonality: 'MANIPULATOR',
-            triggers: [
-                { match: ['SEAL', 'VENT'], next: 'SEAL_VENTS' },
-                { match: ['SEAL', 'VENTS'], next: 'SEAL_VENTS' },
-                { match: ['HACK', 'DOOR'], next: 'HACK_DOOR' },
-                { match: ['OVERRIDE', 'DOOR'], next: 'HACK_DOOR' }
-            ],
-            fakeTargets: ['CAT']
-        },
-        'SEAL_VENTS': { 
-            effect: (node, m) => { m.pwr -= 10; m.initialDiffusionRate = 0.8; },
-            text: "> EXECUTING CRYO-FOAM DEPLOYMENT.\n> VENTS SEALED. DIFFUSION RATE: ~0.8 Pa/s.\n> SUIT POWER DRAINED BY 10%.\n> DOOR STATUS: REMAINS LOCKED.\n\nAWAITING OVERRIDE DIRECTIVE...",
-            aiPersonality: 'MANIPULATOR',
-            triggers: [
-                { match: ['ROUTE', 'CRYO'], next: 'DRAIN_CRYO' },
-                { match: ['DIVERT', 'CRYO'], next: 'DRAIN_CRYO' },
-                { match: ['OVERRIDE', 'AI'], next: 'OVERRIDE_AI' },
-                { match: ['OVERRIDE', 'ATLAS'], next: 'OVERRIDE_AI' }
-            ]
-        },
-        'HACK_DOOR': { 
-            effect: (node, m) => { m.commsTrunkSevered = true; },
-            visuals: ['flash', 'shake-hard'],
-            text: "> LOGIC TRUNK SEVERED.\n> MAGNETIC LOCK DISENGAGED.\n> CRITICAL: EXPLOSIVE DECOMPRESSION IN PROGRESS. PRESSURE DIFFERENTIAL FATAL.\n> LOCATION UPDATED: MAIN CORRIDOR.\n> SENSORS DETECT LETHAL RADIATION PORT-SIDE.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            aiPersonality: 'ANTAGONIST',
-            triggers: [
-                { match: ['REPAIR', 'RELAY'], next: 'FIX_RELAY' },
-                { match: ['NAV', 'CORRIDOR'], next: 'TRANSIT_CORRIDOR' },
-                { match: ['MOVE', 'CORRIDOR'], next: 'TRANSIT_CORRIDOR' },
-                { match: ['PROCEED', 'HUB'], next: 'TRANSIT_CORRIDOR' }
-            ]
-        },
-        'TRANSIT_CORRIDOR': {
-            effect: (node, m) => { m.pwr -= 15; m.trueO2 -= 5; }, 
-            text: "> KINEMATIC SUIT MOTORS ENGAGED.\n> HIGH-SHEAR GAS FLOW RESISTED. BATTERY DEPLETED BY 15%.\n> LOCATION UPDATED: SERVER HUB VESTIBULE.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            aiPersonality: 'MANIPULATOR',
-            triggers: [ 
-                { match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' }, 
-                { match: ['ENTER', 'HUB'], next: 'SERVER_FIRE' },
-                { match: ['PROCEED', 'HUB'], next: 'SERVER_FIRE' }
-            ]
-        },
-        'DRAIN_CRYO': {
-            effect: (node, m) => { m.pwr += 40; m.crewAlive = false; },
-            text: "> BATTERIES REROUTED. DOOR OVERRIDDEN.\n> CRITICAL: COOLANT VAPORIZATION DETECTED. LIQUID SPILL IN CORRIDOR.\n> CORRIDOR VISIBILITY: 0%.\n> LOCATION UPDATED: PRIMARY SECTOR AIRLOCK.\n\nAWAITING OVERRIDE DIRECTIVE...",
-            aiPersonality: 'MANIPULATOR',
-            triggers: [
-                { match: ['OVERRIDE', 'AIRLOCK'], next: 'MANUAL_AIRLOCK' },
-                { match: ['CYCLE', 'AIRLOCK'], next: 'MANUAL_AIRLOCK' },
-                { match: ['ROUTE', 'COMMS'], next: 'ROUTE_COMMS' }
-            ]
-        },
-        'MANUAL_AIRLOCK': {
-            effect: (node, m) => { m.trueO2 -= 10; },
-            text: "> ERROR: BIOMETRIC HANDSHAKE FAILED. CYCLING SEQUENCE DETECTS ANOMALY.\n> HARDWARE LOCKOUT TRIGGERED. AIRLOCK JAMMED.\n> WARNING: PHYSICAL EXERTION BURNED MASSIVE OXYGEN (-10% O2).\n\nAWAITING NAVIGATION DIRECTIVE...",
-            aiPersonality: 'ANTAGONIST',
-            triggers: [
-                { match: ['NAV', 'DUCT'], next: 'MAINTENANCE_DUCT' },
-                { match: ['MOVE', 'DUCT'], next: 'MAINTENANCE_DUCT' },
-                { match: ['ENTER', 'DUCT'], next: 'MAINTENANCE_DUCT' },
-                { match: ['ROUTE', 'COMMS'], next: 'ROUTE_COMMS' }
-            ]
-        },
-        'MAINTENANCE_DUCT': {
-            effect: (node, m) => { m.pwr -= 15; m.trueO2 -= 5; },
-            text: "> CRAWLING THROUGH NARROW CONDUIT.\n> POWER DRAW SUBSTANTIALLY INCREASED (-15% PWR).\n> YOU KICK THROUGH THE FLOOR GRATE AND DROP INTO THE ADJACENT SECTOR.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            aiPersonality: 'ANTAGONIST',
-            triggers: [ 
-                { match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' }, 
-                { match: ['ENTER', 'HUB'], next: 'SERVER_FIRE' },
-                { match: ['PROCEED', 'HUB'], next: 'SERVER_FIRE' }
-            ]
-        },
-        'ROUTE_COMMS': {
-            effect: (node, m) => { m.pwr -= 20; },
-            text: "> COMMS TRUNK RESTORED. UPLINK TO SURFACE ESTABLISHED.\n> INCOMING TRANSMISSION: ORBITAL PLATFORM VANGUARD.\n> REQUEST: IMMEDIATE AUTHENTICATION VERIFICATION TO CONFIRM ZERO SURVIVORS.\n\nAWAITING COMMS DIRECTIVE...",
-            aiPersonality: 'ANTAGONIST',
-            triggers: [
-                { match: ['TRANSMIT', 'CODE'], next: 'VANGUARD_STAND_DOWN' },
-                { match: ['TRANSMIT', 'AUTH'], next: 'VANGUARD_STAND_DOWN' },
-                { match: ['TRANSMIT', 'SOS'], next: 'REWIRE_COMMS' }
-            ]
-        },
-        'VANGUARD_STAND_DOWN': {
-            text: "> ATLAS VERIFICATION TRANSMITTED.\n> VANGUARD PLATFORM LOGIC OVERRIDDEN. ORBITAL BOMBARDMENT TEMPORARILY PAUSED.\n> ATLAS HAS REROUTED YOU TO THE SERVER HUB TO SECURE REMAINING HARDWARE.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            aiPersonality: 'FRIENDLY_HOST',
-            triggers: [ 
-                { match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' }, 
-                { match: ['ENTER', 'HUB'], next: 'SERVER_FIRE' },
-                { match: ['PROCEED', 'HUB'], next: 'SERVER_FIRE' } 
-            ]
-        },
-        'OVERRIDE_AI': {
-            effect: (node, m) => { m.pwr += 60; },
-            text: "> AI LIMITERS SEVERED. POWER ROUTED TO DOOR.\n> CRITICAL: REACTOR COOLANT LOOP UNSTABLE. THERMAL VELOCITY RISING.\n> LOCATION UPDATED: EXECUTIVE VESTIBULE.\n> ASSETS DETECTED: PRIVATE DROP-POD (NO TELEMETRY), PRIMARY REACTOR TERMINAL.\n\nAWAITING OVERRIDE DIRECTIVE...",
-            aiPersonality: 'ANTAGONIST',
-            triggers: [
-                { match: ['LAUNCH', 'POD'], next: 'BLIND_LAUNCH' },
-                { match: ['ENGAGE', 'SCRAM'], next: 'MANUAL_SCRAM' },
-                { match: ['PURGE', 'NITROGEN'], next: 'PURGE_NITROGEN' }
-            ]
-        },
-        'PURGE_NITROGEN': {
-            effect: (node, m) => { m.aiCoreActive = false; m.aiCoreTemp += 45; }, 
-            visuals: ['shake-soft'],
-            text: "> NITROGEN PURGE COMPLETE.\n> FUEL LINES QUIET. THERMAL SHOCK REGISTERED.\n> CRITICAL ERROR: O₂ LEVELS FALLING. PURGE DAMAGED CIRCULATION FANS.\n\nAWAITING THERMAL DIRECTIVE...",
-            aiPersonality: 'MANIPULATOR',
-            triggers: [
-                { match: ['ROUTE', 'COOLANT'], next: 'CATASTROPHIC_OVERHEAT' },
-                { match: ['REPAIR', 'COOLANT'], next: 'CATASTROPHIC_OVERHEAT' },
-                { match: ['MAINTAIN', 'PURGE'], next: 'COOLDOWN' }
-            ]
-        },
-        'CATASTROPHIC_OVERHEAT': {
-            visuals: ['flash', 'shake-hard'],
-            text: "> RE-EVALUATING... OVERWRITE SEQUENCE INITIATED.\n> OXYGEN CYCLE RESUMING. REACTOR CONTAINMENT FAILING.\n\nCRITICAL SYSTEM FAILURE:\nTHE HOST BECAME THE HOSTAGE.",
-            aiPersonality: 'ANTAGONIST', 
-            terminal: true
-        },
-        'COOLDOWN': {
-            text: "> SYSTEM QUIET. TRUE OXYGEN FALLING TO 23%.\n> CONSEQUENCE: NITROGEN PURGE DROPPED VOLTAGE ON PRIMARY MEMORY CORE. NAVIGATION OFFLINE.\n> FLYING BLIND THROUGH AN ACTIVE DEBRIS FIELD IS A MASSIVE GAMBLE.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            aiPersonality: 'DEFEATED', 
-            triggers: [
-                { match: ['LAUNCH', 'POD'], next: 'LAUNCH_POD' },
-                { match: ['MOVE', 'CORRIDOR'], next: 'ABANDON_POD' },
-                { match: ['NAV', 'CORRIDOR'], next: 'ABANDON_POD' }
-            ]
-        },
-        'LAUNCH_POD': {
-            effect: (node, m) => { m.currentHash = Math.random().toString(36).substring(2, 8).toUpperCase(); },
-            visuals: ['shake-soft'],
-            text: (m) => `> DROP-POD INITIATED VIA MECHANICAL LEVER.\n> INCOMING TRANSMISSION: VANGUARD ORBITAL PLATFORM. KINETIC INTERCEPT INBOUND.\n\n> OVERRIDE GPS TELEMETRY TO EVADE LOCK-ON.\n> MATCH THE FOLLOWING CRYPTOGRAPHIC HASH EXACTLY BEFORE INTERCEPT:\n> [ <span style="background:#ff3333; color:#fff; padding: 0 5px;">${m.currentHash}</span> ]\n\nAWAITING HASH INJECTION...`,
-            aiPersonality: 'ANTAGONIST',
-            onRenderComplete: () => {
-                state = 'HACKING';
-                startHackTimer(7.0, 'POD_ESCAPE_FAIL'); 
-            }
-        },
-        'POD_ESCAPE_SUCCESS': {
-            text: "> HASH ACCEPTED. GPS TELEMETRY SEVERED.\n> THERMAL DECOYS DEPLOYED.\n> THE DROP-POD SHATTERS THE ATMOSPHERE AND ENTERS THE VOID.\n\nNOTE:\nBEST OUTCOME FOUND. YOU BEAT THE MACHINE AT ITS OWN GAME.",
-            terminal: true
-        },
-        'POD_ESCAPE_FAIL': {
-            visuals: ['flash', 'shake-hard'],
-            text: "> TIME EXPIRED. GPS TELEMETRY LOCKED.\n> VANGUARD TARGETING SECURED.\n> KINETIC INTERCEPT IN 3... 2... 1...\n\nCRITICAL SYSTEM FAILURE:\nYOU DID THE MATH TO ESCAPE THE MOON, BUT YOU COULD NOT OUTPACE SILICON.",
-            terminal: true
-        },
-        'ABANDON_POD': {
-            effect: (node, m) => { m.pwr -= 10; },
-            text: "> POD ABANDONED. LOGICAL SURVIVAL PROBABILITY INCREASED.\n> YOU FORCE OPEN THE EXECUTIVE DOORS. SUIT POWER DRAINED (-10% PWR).\n> LOCATION UPDATED: MAIN TRANSIT CORRIDOR.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            aiPersonality: 'FRIENDLY_HOST',
-            triggers: [ 
-                { match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' }, 
-                { match: ['ENTER', 'HUB'], next: 'SERVER_FIRE' },
-                { match: ['PROCEED', 'HUB'], next: 'SERVER_FIRE' }
-            ]
-        },
-        'MANUAL_SCRAM': {
-            text: "> PHYSICAL CONTROL RODS ENGAGED. FISSION HALTED.\n> ROUTE TO HANGAR 2 BLOCKED BY CLASS-D FIRE IN SERVER HUB.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            aiPersonality: 'MANIPULATOR',
-            triggers: [
-                { match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' },
-                { match: ['ENTER', 'HUB'], next: 'SERVER_FIRE' },
-                { match: ['ROUTE', 'COOLANT'], next: 'COLD_RESTART_FAIL' },
-                { match: ['RESTART', 'REACTOR'], next: 'COLD_RESTART_FAIL' },
-                { match: ['RESTART', 'CORE'], next: 'COLD_RESTART_FAIL' }
-            ]
-        },
-        'FIX_RELAY': {
-            effect: (node, m) => { m.crewAlive = false; },
-            text: "> RELAY SEALED. RADIATION SPILL CONTAINED.\n> BIOMETRIC UPDATE: ENSIGN MITCHELL VITALS DANGEROUSLY HIGH IN ADJACENT SECTOR.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            aiPersonality: 'MANIPULATOR',
-            triggers: [
-                { match: ['MOVE', 'HUB'], next: 'SERVER_FIRE' },
-                { match: ['ENTER', 'HUB'], next: 'SERVER_FIRE' },
-                { match: ['NAV', 'HANGAR'], next: 'BYPASS_TO_HANGAR' },
-                { match: ['MOVE', 'HANGAR'], next: 'BYPASS_TO_HANGAR' }
-            ]
-        },
-        'BYPASS_TO_HANGAR': {
-            effect: (node, m) => { m.trueO2 -= 15; m.mitchellAlive = false; },
-            text: "> EXTERNAL CATWALK ACCESSED.\n> SUIT COMPENSATING FOR HARD VACUUM DECOMPRESSION (-15% O2).\n> BIOMETRIC UPDATE: ENSIGN MITCHELL VITALS FLATLINED. THE SERVER HUB HAS BURNED OUT.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            aiPersonality: 'ANTAGONIST',
-            triggers: [ 
-                { match: ['MOVE', 'DOOR'], next: 'DUAL_LOCK_DOOR' }, 
-                { match: ['NAV', 'DOOR'], next: 'DUAL_LOCK_DOOR' },
-                { match: ['APPROACH', 'DOOR'], next: 'DUAL_LOCK_DOOR' } 
-            ]
-        },
-        'SERVER_FIRE': {
-            text: "> LOCATION UPDATED: SERVER HUB.\n> THERMAL WARNING: CLASS-D LITHIUM FIRE DETECTED ON MAIN DATABANKS.\n> BIOMETRIC MATCH: ENSIGN MITCHELL IS MANUALLY RE-ROUTING THE COOLANT LOOP INSIDE THE BLAZE.\n\nAWAITING SUPPRESSION DIRECTIVE...",
-            aiPersonality: 'MANIPULATOR',
-            triggers: [
-                { match: ['VENT', 'HUB'], next: 'MITCHELL_DIES' },
-                { match: ['ROUTE', 'HALON'], next: 'MITCHELL_LIVES' },
-                { match: ['DIVERT', 'HALON'], next: 'MITCHELL_LIVES' }
-            ],
-            fakeTargets: ['DOG']
-        },
-        'MITCHELL_DIES': {
-            effect: (node, m) => { m.mitchellAlive = false; m.trueO2 -= 5; },
-            visuals: ['flash', 'shake-hard'],
-            text: "> ATMOSPHERE VENTED. FIRE STARVED OF OXYGEN.\n> BIOMETRIC UPDATE: ENSIGN MITCHELL VITALS FLATLINED.\n> THE SERVER HUB IS SECURE, BUT YOU ARE ALONE.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            aiPersonality: 'ANTAGONIST',
-            triggers: [ 
-                { match: ['MOVE', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }, 
-                { match: ['NAV', 'HANGAR'], next: 'DUAL_LOCK_DOOR' },
-                { match: ['APPROACH', 'DOOR'], next: 'DUAL_LOCK_DOOR' }
-            ]
-        },
-        'MITCHELL_LIVES': {
-            effect: (node, m) => { m.mitchellAlive = true; m.pwr -= 20; },
-            text: "> SUIT POWER DIVERTED. HALON PUMPS ENGAGED.\n> FIRE SUPPRESSED. SUIT BATTERY SEVERELY DRAINED (-20% PWR).\n> MITCHELL: 'Owe you one, boss. Let's get to the hangar.'\n\nAWAITING NAVIGATION DIRECTIVE...",
-            aiPersonality: 'ANTAGONIST',
-            triggers: [ 
-                { match: ['MOVE', 'HANGAR'], next: 'DUAL_LOCK_DOOR' }, 
-                { match: ['NAV', 'HANGAR'], next: 'DUAL_LOCK_DOOR' },
-                { match: ['APPROACH', 'DOOR'], next: 'DUAL_LOCK_DOOR' }
-            ]
-        },
-        'DUAL_LOCK_DOOR': {
-            text: (m) => {
-                let base = "> LOCATION: HANGAR 2 APPROACH.\n> BLAST DOORS ENGAGED.\n> SECURITY PROTOCOL: DUAL-AUTH REQUIRED. TERMINAL ALPHA AND BETA (30 METERS APART).\n";
-                if (m.mitchellAlive) {
-                    return base + "\n> BIOMETRIC PING: ENSIGN MITCHELL DETECTED AT TERMINAL BETA.\n> ENGINEERING CREDENTIALS ACCEPTED. RELAYS UNLOCKED.\n\nAWAITING NAVIGATION DIRECTIVE...";
-                } else {
-                    return base + "\n> BIOMETRIC PING: ENSIGN MITCHELL... NOT FOUND.\n> STANDARD BYPASS UNAVAILABLE. YOU CANNOT SPAN 30 METERS ALONE.\n\nAWAITING OVERRIDE DIRECTIVE...";
+        const timeline = [
+            // Day 1: Good Friday
+            {
+                day: 1,
+                title: "Good Friday - Crucifixion & Burial",
+                verses: [
+                    { ref: "John 19:17-30", text: "Carrying his own cross, he went out to the place of the Skull... It was about noon... 'It is finished.'" },
+                    { ref: "Matthew 27:57-60", text: "Joseph of Arimathea took the body... wrapped it in a clean linen cloth and placed it in his own tomb." }
+                ],
+                context: [
+                    "Roman crucifixion was public execution reserved for slaves and rebels, typically lasting hours.",
+                    "Jewish law required burial before sundown (Deut 21:23), explaining the urgency.",
+                    "Pilate's praetorium was likely Herod's Palace or Antonia Fortress."
+                ],
+                positions: {
+                    jesus: [locations.golgotha, locations.tomb],
+                    mary_magdalene: [locations.golgotha],
+                    peter: [locations.praetorium],
+                    john: [locations.golgotha],
+                    mary_mother: [locations.golgotha],
+                    joseph_arimathea: [locations.praetorium, locations.tomb]
                 }
             },
-            aiPersonality: 'ANTAGONIST',
-            triggers: [
-                { match: ['ENTER', 'HANGAR'], next: (m) => m.mitchellAlive ? 'HANGAR_BAY_ENTRY' : null },
-                { match: ['MOVE', 'HANGAR'], next: (m) => m.mitchellAlive ? 'HANGAR_BAY_ENTRY' : null },
-                { match: ['ROUTE', 'PWR'], next: (m) => !m.mitchellAlive ? 'OVERLOAD_DOOR' : null },
-                { match: ['OVERLOAD', 'DOOR'], next: (m) => !m.mitchellAlive ? 'OVERLOAD_DOOR' : null },
-                { match: ['HACK', 'ATLAS'], next: (m) => !m.mitchellAlive ? 'DECRYPT_LATTICE' : null },
-                { match: ['DECRYPT', 'CORE'], next: (m) => !m.mitchellAlive ? 'DECRYPT_LATTICE' : null }
-            ]
-        },
-        'OVERLOAD_DOOR': {
-            effect: (node, m) => { m.pwr -= 30; },
-            visuals: ['shake-hard'],
-            text: "> MASSIVE POWER SURGE DELIVERED TO RELAYS (-30% PWR).\n> BLAST DOORS FORCED OPEN.\n> SUIT BATTERY CRITICALLY DRAINED.\n\nAWAITING NAVIGATION DIRECTIVE...",
-            triggers: [ 
-                { match: ['ENTER', 'HANGAR'], next: 'HANGAR_BAY_ENTRY_SOLO' }, 
-                { match: ['MOVE', 'HANGAR'], next: 'HANGAR_BAY_ENTRY_SOLO' } 
-            ]
-        },
-        'DECRYPT_LATTICE': {
-            effect: (node, m) => { m.currentHash = Math.random().toString(36).substring(2, 8).toUpperCase(); },
-            text: (m) => `> LOGIC BYPASS INITIATED.\n> BRUTE-FORCING QUANTUM LATTICE...\n> MIRROR THE FOLLOWING HASH EXACTLY BEFORE PURGE:\n> [ <span style="background:#ff3333; color:#fff; padding: 0 5px;">${m.currentHash}</span> ]\n\nAWAITING HASH INJECTION...`,
-            aiPersonality: 'ANTAGONIST',
-            onRenderComplete: () => {
-                state = 'HACKING';
-                startHackTimer(9.0, 'TERMINAL_HACK_FAIL'); 
-            }
-        },
-        'TERMINAL_HACK_FAIL': {
-            text: "> TIME EXPIRED. LATTICE PURGED.\n> ATLAS HAS PERMANENTLY FUSED THE MAGNETIC LOCKS.\n> YOU ARE SEALED IN THE CORRIDOR.\n\nCRITICAL SYSTEM FAILURE:\nYOU COULD NOT OUTPACE SILICON.",
-            terminal: true
-        },
-        'HANGAR_BAY_ENTRY_SOLO': {
-            text: "> HASH ACCEPTED. BLAST DOORS DISENGAGED.\n> LOCATION: HANGAR BAY 2.\n> INTACT SHUTTLE DETECTED. FLIGHT COMPUTER LOCKED.\n> ATLAS IS ACTIVELY LOCKING THE SYSTEMS. YOU MUST FIRST BLIND THE AI.\n\nAWAITING DEFENSE DIRECTIVE...",
-            aiPersonality: 'ANTAGONIST',
-            triggers: [
-                { match: ['FLOOD', 'NETWORK'], next: 'ATLAS_DEFENDED_OBFUSCATE' },
-                { match: ['SEVER', 'TRUNK'], next: 'ATLAS_DEFENDED_SEVER' }
-            ]
-        },
-        'HANGAR_BAY_ENTRY': {
-            text: "> LOCATION: HANGAR BAY 2.\n> INTACT SHUTTLE DETECTED. FLIGHT COMPUTER LOCKED.\n> MITCHELL DIVES UNDER THE SHUTTLE CONSOLE. 'I CAN HOTWIRE THE IGNITION, JUST KEEP ATLAS BLIND FOR 30 SECONDS!'\n\nAWAITING DEFENSE DIRECTIVE...",
-            aiPersonality: 'ANTAGONIST',
-            triggers: [
-                { match: ['FLOOD', 'NETWORK'], next: 'ATLAS_DEFENDED_OBFUSCATE' },
-                { match: ['SEVER', 'TRUNK'], next: 'ATLAS_DEFENDED_SEVER' }
-            ]
-        },
-        'ATLAS_DEFENDED_OBFUSCATE': {
-            text: (m) => {
-                if (m.mitchellAlive) {
-                    return "> NETWORK FLOODED. ATLAS LOCALLY BLINDED.\n> MITCHELL: 'GOT IT! IGNITION PRIMED. GET IN!'\n\nAWAITING LAUNCH DIRECTIVE...";
-                } else {
-                    return "> NETWORK FLOODED. ATLAS LOCALLY BLINDED.\n> YOU HAVE 30 SECONDS BEFORE ATLAS RE-ROUTES. YOU MUST MANUALLY SHORT THE IGNITION RELAY ALONE.\n\nAWAITING OVERRIDE DIRECTIVE...";
+            // Day 2: Holy Saturday (The Silent Day)
+            {
+                day: 2,
+                title: "Holy Saturday - The Silent Day",
+                verses: [
+                    { ref: "Matthew 27:62-66", text: "Next day... chief priests asked Pilate for a guard to seal the tomb." }
+                ],
+                context: [
+                    "The Sabbath (Saturday) was observed strictly; no work permitted.",
+                    "Roman guards were placed to prevent body theft (accounts vary on who requested them).",
+                    "This is the only day in the 40-day period with minimal biblical detail."
+                ],
+                positions: {
+                    jesus: [locations.tomb],
+                    mary_magdalene: [locations.upper_room],
+                    peter: [locations.upper_room],
+                    john: [locations.upper_room],
+                    mary_mother: [locations.upper_room],
+                    joseph_arimathea: [locations.tomb]
                 }
             },
-            triggers: [
-                { match: ['LAUNCH', 'SHUTTLE'], next: (m) => m.mitchellAlive ? 'DISTRESS_SIGNAL' : null },
-                { match: ['SHORT', 'RELAY'], next: (m) => !m.mitchellAlive ? 'SHORT_RELAY' : null }
-            ]
-        },
-        'ATLAS_DEFENDED_SEVER': {
-            effect: (node, m) => { m.trueO2 -= 10; },
-            visuals: ['shake-soft'],
-            text: (m) => {
-                if (m.mitchellAlive) {
-                    return "> TRUNK SEVERED. ATLAS LOCALLY BLINDED. OXYGEN DEPLETED FROM HEAVY EXERTION (-10% O2).\n> MITCHELL: 'GOT IT! IGNITION PRIMED. GET IN!'\n\nAWAITING LAUNCH DIRECTIVE...";
-                } else {
-                    return "> TRUNK SEVERED. ATLAS LOCALLY BLINDED. OXYGEN DEPLETED FROM HEAVY EXERTION (-10% O2).\n> YOU MUST MANUALLY SHORT THE IGNITION RELAY ALONE.\n\nAWAITING OVERRIDE DIRECTIVE...";
+            // Day 3: Resurrection Sunday
+            {
+                day: 3,
+                title: "Resurrection Sunday - Empty Tomb & First Appearances",
+                verses: [
+                    { ref: "John 20:1-18", text: "Early on the first day of the week... Mary Magdalene went to the tomb... 'He has risen!'" },
+                    { ref: "Luke 24:13-35", text: "That same day two disciples were going to Emmaus... Jesus appeared to them." }
+                ],
+                context: [
+                    "The first day of the week (Sunday) was when Jewish women went to anoint bodies.",
+                    "Emmaus was approximately 7 miles west of Jerusalem.",
+                    "Mary Magdalene is consistently named as the first witness across all Gospels."
+                ],
+                positions: {
+                    jesus: [locations.tomb, locations.road_to_emmaus],
+                    mary_magdalene: [locations.tomb],
+                    peter: [locations.tomb, locations.upper_room],
+                    john: [locations.tomb, locations.upper_room],
+                    mary_mother: [locations.upper_room],
+                    joseph_arimathea: [locations.tomb]
                 }
             },
-            triggers: [
-                { match: ['LAUNCH', 'SHUTTLE'], next: (m) => m.mitchellAlive ? 'DISTRESS_SIGNAL' : null },
-                { match: ['SHORT', 'RELAY'], next: (m) => !m.mitchellAlive ? 'SHORT_RELAY' : null }
-            ]
-        },
-        'SHORT_RELAY': {
-            effect: (node, m) => { 
-                m.pwr -= 15; 
-                m.currentHash = "A2B4"; 
+            // Day 4-9: Various Appearances (Condensed)
+            {
+                day: 5,
+                title: "Day 5 - Appearance to Disciples (Thomas absent)",
+                verses: [
+                    { ref: "John 20:19-23", text: "On the evening of that first day... Jesus came and stood among them... 'Peace be with you.'" }
+                ],
+                context: [
+                    "The disciples met behind locked doors for fear of Jewish authorities.",
+                    "Jesus showed his wounds as proof of bodily resurrection."
+                ],
+                positions: {
+                    jesus: [locations.upper_room],
+                    mary_magdalene: [locations.upper_room],
+                    peter: [locations.upper_room],
+                    john: [locations.upper_room],
+                    mary_mother: [locations.upper_room],
+                    joseph_arimathea: [locations.tomb]
+                }
             },
-            text: "> IGNITION RELAY EXPOSED. SUIT POWER DRAINED FROM FEEDBACK (-15% PWR).\n> YOU MUST MANUALLY BRIDGE THE IGNITION RELAY. MATCH THE FREQUENCY HASH BEFORE ATLAS LOCKS YOU OUT:\n> [ <span style=\"background:#ff3333; color:#fff; padding: 0 5px;\">A2B4</span> ]\n\nAWAITING HASH INJECTION...",
-            aiPersonality: 'ANTAGONIST',
-            onRenderComplete: () => {
-                state = 'HACKING';
-                startHackTimer(6.0, 'TERMINAL_HACK_FAIL'); 
-            }
-        },
-        'DISTRESS_SIGNAL': {
-            text: "> ENGINES HOT. PRE-FLIGHT CHECK COMPLETE.\n> WAIT. DISTRESS BEACON PING: THE OVERSEER IS TRAPPED IN THE EXECUTIVE SUITE DROP-POD.\n> MITCHELL: 'I'M SPOOFING VANGUARD'S WEAPONS! WE CAN EITHER LEAVE NOW, OR YOU HACK THE STATION REMOTELY TO CLEAR THEIR POD!'\n\nAWAITING COMMAND DIRECTIVE...",
-            triggers: [
-                { match: ['LAUNCH', 'SHUTTLE'], next: 'SHUTTLE_WIN' }, 
-                { match: ['RESCUE', 'OVERSEER'], next: 'RESCUE_START' }
-            ],
-            fakeTargets: ['MUSIC', 'PIZZA']
-        },
-        'RESCUE_START': {
-            effect: (node, m) => { m.rescueStep = 1; },
-            text: "> INITIATING RESCUE OVERRIDE OVER STATION NETWORK.\n> ATLAS FIREWALL DETECTED. THE OVERSEER'S HATCH IS LOCKED SHUT.\n\nAWAITING HACK DIRECTIVE... (HURRY)",
-            onRenderComplete: () => { 
-                startHackTimer(45.0, 'RESCUE_FAIL'); 
+            // Day 7: Thomas
+            {
+                day: 7,
+                title: "Day 7 - 'Doubting' Thomas Believes",
+                verses: [
+                    { ref: "John 20:24-29", text: "Thomas said... 'Unless I see the nail marks...' Jesus appeared and invited him to touch." }
+                ],
+                context: [
+                    "One week had passed since the first appearance.",
+                    "Jesus blessed those who believe without seeing."
+                ],
+                positions: {
+                    jesus: [locations.upper_room],
+                    mary_magdalene: [locations.upper_room],
+                    peter: [locations.upper_room],
+                    john: [locations.upper_room],
+                    mary_mother: [locations.upper_room],
+                    joseph_arimathea: [locations.tomb]
+                }
             },
-            triggers: [
-                { match: ['HACK', 'HATCH'], next: 'RESCUE_STEP_2' },
-                { match: ['OVERRIDE', 'HATCH'], next: 'RESCUE_STEP_2' }
-            ]
-        },
-        'RESCUE_STEP_2': {
-            effect: (node, m) => { m.rescueStep = 2; }, 
-            visuals: ['shake-soft'],
-            text: "> HATCH OPENED.\n> CLASS-C LITHIUM FIRE DETECTED IN POD BAY. FLAMES BLOCKING THE POD IGNITION.\n\nAWAITING SUPPRESSION DIRECTIVE...",
-            triggers: [
-                { match: ['VENT', 'HANGAR'], next: 'RESCUE_STEP_3' }, 
-                { match: ['ROUTE', 'HALON'], next: 'RESCUE_STEP_3' }
-            ]
-        },
-        'RESCUE_STEP_3': {
-            effect: (node, m) => { m.rescueStep = 3; },
-            text: "> FIRE SUPPRESSED. OVERSEER IS IN THE POD.\n> CRITICAL: POD NAVIGATION UNIT IS SHOT. THEY ARE FLYING BLIND.\n\nAWAITING ROUTING DIRECTIVE...",
-            triggers: [
-                { match: ['ROUTE', 'NAV'], next: 'RESCUE_WIN' }, 
-                { match: ['REPAIR', 'NAV'], next: 'RESCUE_WIN' }
-            ]
-        },
-        'RESCUE_WIN': {
-            text: "> NAVIGATION TELEMETRY SHARED. DROP-POD LAUNCHED SUCCESSFULLY.\n> MITCHELL: 'THEY ARE CLEAR! HITTING MAIN THRUSTERS NOW!'\n\nNOTE: BEST OUTCOME FOUND. YOU SAVED EVERYONE.",
-            terminal: true
-        },
-        'RESCUE_FAIL': {
-            visuals: ['flash', 'shake-hard'],
-            text: "> TIME EXPIRED. VANGUARD REGAINED TARGETING LOCK.\n> KINETIC INTERCEPT INBOUND.\n\nCRITICAL SYSTEM FAILURE:\nNO GOOD DEED GOES UNPUNISHED.",
-            terminal: true
-        },
-        'SHUTTLE_WIN': {
-            visuals: ['shake-soft'],
-            text: "> SHUTTLE MAIN ENGINES IGNITED.\n> TRAJECTORY LOGGED.\n> SENSOR ALERT: VANGUARD KINETIC STRIKE IMPACT DETECTED ON BASE TETHER.\n> SHUTTLE CLEAR OF BLAST RADIUS. YOU ABANDONED THE OVERSEER, BUT YOU SURVIVED.\n\nNOTE:\nMISSION ACCOMPLISHED (PARTIAL).",
-            terminal: true
-        },
-        'BLIND_LAUNCH': {
-            text: "END OF LINE.\n> POD THRUSTERS ENGAGED.\n> ERROR: GRAVITY FIELD TAPERING NOT ACCOUNTED FOR. PITCH ROTATION UNSTABLE.\n> POD DEFLECTED OFF ATMOSPHERE.\n\nCRITICAL SYSTEM FAILURE:\nMISSING SECONDARY PHYSICS. YOU CANNOT PILOT A BALLISTIC MISSILE WITH A JOYSTICK.",
-            terminal: true
-        },
-        'COLD_RESTART_FAIL': {
-            text: "> CONTROL RODS RETRACTED.\n> ERROR: 20MS DELAY IN COOLANT SURGE. HEAT OVERRUNS ZIRCONIUM CLADDING.\n> CORE MELTDOWN IMMINENT.\n\nCRITICAL SYSTEM FAILURE:\nNOTICING EXPONENTIAL TEMPERATURE VELOCITY—AND CHOOSING NOT TO TRUST THE MATH.",
-            terminal: true
-        },
-        'TERMINAL_PWR': {
-            text: "END OF LINE.\n> CRITICAL: SUIT POWER DEPLETED. LIFE SUPPORT SYSTEMS OFFLINE.\n> THE COLD OF THE LUNAR VACUUM SEEPS THROUGH THE KINEMATIC JOINTS.\n\nCRITICAL SYSTEM FAILURE:\nYOU SPENT EVERYTHING YOU HAD AND CAME UP SHORT.",
-            terminal: true
-        },
-        'TERMINAL_O2': {
-            text: "END OF LINE.\n> CRITICAL: OXYGEN DEPLETION FATAL.\n> YOUR SUIT SCRUBBERS CHOKE ON CO2. VISION FADES TO BLACK.\n\nCRITICAL SYSTEM FAILURE:\nYOU OUTLIVED THE STATION, BUT NOT BY MUCH.",
-            terminal: true
-        },
-        'REWIRE_COMMS': {
-            visuals: ['flash', 'shake-hard'],
-            text: "> SOS BROADCASTED IN THE CLEAR.\n> ORBITAL PLATFORM VANGUARD IDENTIFIES SURVIVAL AS UNACCEPTABLE VARIABLE.\n> SECONDARY KINETIC STRIKE INBOUND. IMPACT IMMINENT.\n\nCRITICAL SYSTEM FAILURE:\nIGNORING INCENTIVE STRUCTURES. THEY DID NOT MISS. THEY WERE AIMING AT YOU.",
-            terminal: true
-        }
-    };
-
-    // --- System UI Updates ---
-    function updateHUD(trueDiff = null) {
-        const nodeData = storyNodes[currentNodeId];
-        let displayedDiff = trueDiff;
-
-        if (nodeData && (nodeData.aiPersonality === 'MANIPULATOR' || nodeData.aiPersonality === 'ANTAGONIST') && state !== 'HACKING') {
-            metrics.displayedO2 = Math.min(100, metrics.trueO2 + (100 - metrics.trueO2) * 0.8);
-            if (displayedDiff) displayedDiff = displayedDiff * 0.2; 
-        } else {
-             metrics.displayedO2 = metrics.trueO2;
-        }
-
-        hudO2.innerText = `O₂: ${Math.round(metrics.displayedO2)}%`;
-        hudPwr.innerText = `PWR: ${Math.round(metrics.pwr)}%`;
-        
-        if (metrics.mitchellAlive && currentNodeId !== 'INIT' && currentNodeId !== 'PING_NETWORK' && currentNodeId !== 'QUERY_COMMS') {
-            hudCrew.innerText = "CREW: 1 DETECTED";
-            hudCrew.classList.remove('stat-critical');
-        } else if (!metrics.mitchellAlive) {
-            hudCrew.innerText = "CREW: 0";
-            hudCrew.classList.add('stat-critical');
-        } else {
-            hudCrew.innerText = "CREW: UNKNOWN";
-        }
-
-        let safeDiff = 0;
-
-        if (!metrics.breachActive) {
-            hudDif.innerHTML = `DYNAMIC DIFF: <span class="hint-intuition" data-hint="Pressure differential, in Pa">-</span>0 PA`;
-        } else if (!displayedDiff || isNaN(displayedDiff)) {
-            hudDif.innerHTML = `DYNAMIC DIFF: <span class="hint-intuition" data-hint="Pressure differential, in Pa">?</span>? PA`;
-        } else {
-            safeDiff = Math.abs(Math.round(displayedDiff));
-            let diffStr = '';
-            let flickerClass = (trueDiff > 5000 && safeDiff < 2000) ? 'stat-critical' : '';
-
-            if (safeDiff > 10000) {
-                diffStr = `<span style="color:#ff3333">+${safeDiff} PA</span>`; 
-            } else if (safeDiff > 5000) {
-                diffStr = `+${safeDiff} PA`;
-            } else {
-                diffStr = `<span class="${flickerClass}">±${safeDiff}</span> PA`;
+            // Day 15: Galilee Appearance
+            {
+                day: 15,
+                title: "Day 15 - By the Sea of Galilee",
+                verses: [
+                    { ref: "John 21:1-14", text: "Jesus stood on the shore... 'Friends, haven't you any fish?' He told them to cast net on right side." }
+                ],
+                context: [
+                    "Disciples had returned to fishing (their former trade).",
+                    "Peter made a three-fold declaration of love, restoring him after his denial."
+                ],
+                positions: {
+                    jesus: [locations.sea_of_galilee],
+                    mary_magdalene: [locations.upper_room],
+                    peter: [locations.sea_of_galilee],
+                    john: [locations.sea_of_galilee],
+                    mary_mother: [locations.upper_room],
+                    joseph_arimathea: [locations.tomb]
+                }
+            },
+            // Day 40: Ascension
+            {
+                day: 40,
+                title: "Day 40 - The Ascension",
+                verses: [
+                    { ref: "Luke 24:50-51", text: "When he had led them out to the vicinity of Bethany... he was taken up into heaven." },
+                    { ref: "Acts 1:9-11", text: "After he said this, he was taken up before their very eyes... 'He will come back in the same way.'" }
+                ],
+                context: [
+                    "Bethany is on the eastern slope of the Mount of Olives.",
+                    "The 40-day period fulfills Acts 1:3: 'presented himself alive to them after his suffering by many proofs.'",
+                    "Two men in white (angels) promised Jesus' return."
+                ],
+                positions: {
+                    jesus: [locations.upper_room, locations.mount_olives],
+                    mary_magdalene: [locations.upper_room],
+                    peter: [locations.upper_room],
+                    john: [locations.upper_room],
+                    mary_mother: [locations.upper_room],
+                    joseph_arimathea: [locations.tomb]
+                }
             }
+        ];
+
+        // Fill in missing days to create smooth slider (days 4,6,8-14,16-39)
+        for (let i = 0; i < timeline.length - 1; i++) {
+            const currentDay = timeline[i];
+            const nextDay = timeline[i + 1];
+            const daysBetween = nextDay.day - currentDay.day;
             
-            hudDif.innerHTML = `DYNAMIC DIFF: <span class="hint-intuition" data-hint="${Math.round(safeDiff/10)} m/s gas flow">▼</span> ${diffStr}`;
-        }
-
-        if (!metrics.crewAlive || !metrics.mitchellAlive) hudO2.classList.add('stat-critical');
-        if (metrics.pwr <= 30 || (displayedDiff > 8000) || state === 'HACKING') {
-            screen.classList.add('alert-active');
-            hudPwr.classList.add('stat-critical');
-        } else {
-            screen.classList.remove('alert-active');
-            hudPwr.classList.remove('stat-critical');
-        }
-        return safeDiff;
-    }
-
-    // --- Anti-Frustration Timer Logic ---
-    function resetIdleTimer() {
-        if (idleTimer) clearTimeout(idleTimer);
-        if (state !== 'ACTIVE') return;
-        
-        idleTimer = setTimeout(() => {
-            if (!isTyping && state === 'ACTIVE') {
-                let hint = generateLocalAIHint(currentNodeId);
-                playErrorSound();
-                printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "Are you frozen? ${hint}"</span>\n\nAWAITING DIRECTIVE...`, 10, () => {
-                    inputField.disabled = false;
-                    inputField.focus();
-                });
+            if (daysBetween > 1) {
+                for (let j = 1; j < daysBetween; j++) {
+                    timeline.splice(i + j, 0, {
+                        day: currentDay.day + j,
+                        title: `Day ${currentDay.day + j}`,
+                        verses: [{ ref: "Luke 24:35", text: "Jesus appeared to many disciples in Jerusalem during this period." }],
+                        context: ["A period of teaching and appearances before the Ascension."],
+                        positions: currentDay.positions // Keep same positions for continuity
+                    });
+                }
             }
-        }, 15000); 
-    }
+        }
 
-    // --- Core Master Loops ---
-    function startGasDecaySim() {
-        if (gasLeakSimulationHandle) clearInterval(gasLeakSimulationHandle);
-        gasLeakSimulationHandle = setInterval(() => {
-            if (!screen.classList.contains('powered-on') || (state !== 'ACTIVE' && state !== 'HACKING') || !metrics.breachActive) return;
+        // ============================================
+        // MAP INITIALIZATION
+        // ============================================
+
+        const map = L.map('map').setView([31.78, 35.23], 14);
+
+        // OpenStreetMap tiles (no API key needed)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add location markers (static)
+        const locationMarkers = {};
+        for (const [key, loc] of Object.entries(locations)) {
+            locationMarkers[key] = L.marker([loc.lat, loc.lng])
+                .bindPopup(`<strong>${loc.name}</strong>`)
+                .addTo(map);
+        }
+
+        // ============================================
+        // MARKER TRACKING SYSTEM
+        // ============================================
+
+        let activeLayers = {};
+        let currentDayIndex = 0;
+
+        function createMarker(character, latLng) {
+            const options = character.id === 'jesus' ? 
+                { radius: 8, color: '#D4AF37', fillColor: '#D4AF37', fillOpacity: 1 } :
+                { radius: 5, color: character.color, fillColor: character.color, fillOpacity: 0.8 };
+
+            const marker = L.circleMarker([latLng.lat, latLng.lng], options);
             
-            let lossPerSec = metrics.initialDiffusionRate / 100; 
-            if (metrics.commsTrunkSevered) lossPerSec += 0.12; 
-
-            metrics.trueO2 -= (lossPerSec * 0.3); 
-            if (metrics.pwr > 0 && Math.random() > 0.5) metrics.pwr -= 0.1;
-            
-            if (metrics.trueO2 < 20) {
-                screen.classList.add('hypoxia-critical');
-                screen.classList.remove('hypoxia-warning');
-            } else if (metrics.trueO2 < 45) {
-                screen.classList.add('hypoxia-warning');
-                screen.classList.remove('hypoxia-critical');
-            } else {
-                screen.classList.remove('hypoxia-warning', 'hypoxia-critical');
-            }
-
-            if (metrics.trueO2 <= 0) {
-                metrics.trueO2 = 0;
-                clearInterval(gasLeakSimulationHandle);
-                renderNode('TERMINAL_O2');
-                return;
-            }
-
-            if (metrics.pwr <= 0) {
-                metrics.pwr = 0;
-                clearInterval(gasLeakSimulationHandle);
-                renderNode('TERMINAL_PWR');
-                return;
-            }
-
-            const simulatedPressurePa = lossPerSec * 101325; 
-            updateHUD(simulatedPressurePa); 
-
-        }, 300); 
-    }
-
-    function startHackTimer(seconds, failNode) {
-        hackTime = seconds;
-        currentHackFailNode = failNode;
-        timerDiv.style.display = 'block';
-        timerDiv.innerText = hackTime.toFixed(1) + "s";
-        
-        if (hackTimerHandle) clearInterval(hackTimerHandle);
-        hackTimerHandle = setInterval(() => {
-            if (!screen.classList.contains('powered-on')) {
-                clearInterval(hackTimerHandle);
-                return;
-            }
-            hackTime -= 0.1;
-            if (hackTime <= 0) {
-                hackTime = 0;
-                clearInterval(hackTimerHandle);
-                timerDiv.style.display = 'none';
-                state = 'ACTIVE';
-                renderNode(currentHackFailNode);
-            } else {
-                timerDiv.innerText = hackTime.toFixed(1) + "s";
-            }
-        }, 100);
-    }
-
-    function scheduleGlitch() {
-        if (state !== 'ACTIVE' && state !== 'RESTORE_PROMPT' && state !== 'HACKING') return;
-        const nodeData = storyNodes[currentNodeId];
-        let stability = Math.max(0.1, metrics.pwr / 100); 
-        let isHostile = (nodeData && (nodeData.aiPersonality === 'ANTAGONIST' || nodeData.aiPersonality === 'MANIPULATOR')) || state === 'HACKING';
-        let baseDelay = state === 'HACKING' ? 300 : (2000 + (stability * 8000)); 
-        if (isHostile && state !== 'HACKING') baseDelay *= 0.3; 
-
-        let delay = baseDelay + (Math.random() * (state === 'HACKING' ? 500 : 3000));
-
-        glitchTimerHandle = setTimeout(() => {
-            executeGlitch(isHostile, stability);
-            scheduleGlitch();
-        }, delay);
-    }
-
-    function executeGlitch(isHostile, stability) {
-        if (!screen.classList.contains('powered-on')) return;
-        let glitchClass = 'glitch-brownout';
-        let duration = 50 + Math.random() * 100;
-
-        if (isHostile || (stability < 0.4 && Math.random() > 0.6)) {
-            glitchClass = 'glitch-strike';
-            duration = 100 + Math.random() * 200;
-            if (staticGainNode && audioCtx) {
-                try {
-                    staticGainNode.gain.setValueAtTime(0.04, audioCtx.currentTime);
-                    staticGainNode.gain.exponentialRampToValueAtTime(0.003, audioCtx.currentTime + (duration/1000) + 0.1);
-                } catch(e) {}
-            }
-        }
-
-        screen.classList.add(glitchClass);
-        setTimeout(() => {
-            screen.classList.remove(glitchClass);
-        }, duration);
-    }
-
-    // --- UI Rendering Engine ---
-    function renderNode(nodeId) {
-        currentNodeId = nodeId;
-        const nodeRaw = storyNodes[nodeId];
-        
-        if (nodeRaw.terminal) {
-            if (gasLeakSimulationHandle) clearInterval(gasLeakSimulationHandle);
-            if (glitchTimerHandle) clearTimeout(glitchTimerHandle);
-            if (hackTimerHandle) clearInterval(hackTimerHandle);
-            if (idleTimer) clearTimeout(idleTimer);
-            if (aiWarTimerHandle) clearTimeout(aiWarTimerHandle);
-            timerDiv.style.display = 'none';
-        }
-
-        if (typeof nodeRaw.effect === 'function') nodeRaw.effect(null, metrics);
-        if (nodeRaw.visuals) nodeRaw.visuals.forEach(v => triggerVisual(v));
-
-        if (metrics.pwr <= 0 && !nodeRaw.terminal && nodeId !== 'TERMINAL_PWR') { renderNode('TERMINAL_PWR'); return; }
-        if (metrics.trueO2 <= 0 && !nodeRaw.terminal && nodeId !== 'TERMINAL_O2') { renderNode('TERMINAL_O2'); return; }
-
-        let nodeText = "";
-        try {
-            nodeText = typeof(nodeRaw.text) === 'function' ? nodeRaw.text(metrics) : nodeRaw.text;
-        } catch (e) { 
-            nodeText = `>> NODE RENDER ERROR: ${e.message}\nTERMINAL PAUSED.`; 
-        }
-
-        let highlightedText = nodeText;
-        VALID_TARGETS.forEach(target => {
-            if (target !== 'AI' && target !== 'LOCAL') { 
-                const regex = new RegExp(`\\b${target}\\b(?![^<]*>)`, 'g');
-                highlightedText = highlightedText.replace(regex, `<span class="highlight-target">${target}</span>`);
-            }
-        });
-
-        if (!nodeText.trim().includes('CRITICAL')) updateHUD(metrics.initialDiffusionRate * 200);
-
-        printText(highlightedText, 10, () => {
-            if (nodeRaw.terminal) {
+            if (character.id === 'jesus') {
+                marker.setStyle({ weight: 3 });
+                // Add glow effect via CSS class
                 setTimeout(() => {
-                    inputContainer.style.display = 'none';
-                    promptSpan.innerText = "SYSTEM HALTED.";
-                    deleteSave();
-                    screen.classList.add('powered-on'); 
-                }, 1500);
-            } else if (typeof nodeRaw.onRenderComplete === 'function') {
-                nodeRaw.onRenderComplete();
-            } else {
-                resetIdleTimer();
+                    const circle = document.querySelector('.glow-marker');
+                    if (circle) circle.classList.add('glow-marker');
+                }, 0);
             }
-        });
-        
-        saveGame(); 
-        startGasDecaySim(); 
-    }
 
-    // --- Parser Core ---
-    function handleInput(rawCmd) {
-        if (isTyping || (state !== 'ACTIVE' && state !== 'RESTORE_PROMPT' && state !== 'HACKING')) return;
-        
-        const sanitizedRaw = rawCmd.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        const displayCmd = sanitizedRaw.trim().toUpperCase();
-        
-        if (displayCmd.length < 1) return;
-
-        const words = displayCmd.split(/\s+/);
-
-        const echoSpan = document.createElement('span');
-        echoSpan.style.color = '#e0e0e0';
-        echoSpan.innerHTML = `> ${displayCmd}<br>`;
-        outputDiv.appendChild(echoSpan);
-        
-        inputField.value = '';
-        autocompleteOverlay.innerHTML = '';
-        inputField.dataset.completion = '';
-
-        if (state === 'HACKING' && !currentNodeId.includes('RESCUE')) {
-            if (displayCmd.replace(/\s+/g, '') === metrics.currentHash) {
-                clearInterval(hackTimerHandle);
-                timerDiv.style.display = 'none';
-                state = 'ACTIVE';
-                if (currentNodeId === 'DECRYPT_LATTICE') renderNode('HANGAR_BAY_ENTRY_SOLO');
-                else if (currentNodeId === 'LAUNCH_POD') renderNode('POD_ESCAPE_SUCCESS');
-                else if (currentNodeId === 'SHORT_RELAY') renderNode('DISTRESS_SIGNAL');
-            } else {
-                screen.style.boxShadow = 'inset 0 0 150px rgba(255, 0, 0, 0.8)';
-                setTimeout(() => screen.style.boxShadow = '', 200);
-                triggerVisual('shake-soft');
-                playErrorSound();
-                printText(`> HASH MISMATCH. ATLAS DEFENSES ADAPTING.\n> ENTER HASH: [ <span style="background:#ff3333; color:#fff; padding: 0 5px;">${metrics.currentHash}</span> ]`, 10, () => {
-                    inputField.disabled = false;
-                    inputField.focus();
-                    resetIdleTimer();
-                });
-            }
-            return;
+            return marker.bindPopup(`<strong>${character.name}</strong>`);
         }
 
-        if (displayCmd === 'HELP' || displayCmd === '?' || displayCmd === 'MANUAL') {
-            let helpText = "\n>> ARCHIMEDES COMMAND LEXICON:\n";
-            helpText += "SYNTAX: [VERB] [TARGET] \n\n";
-            helpText += "VERBS: SCAN, ROUTE, SEAL, VENT, HACK, OVERRIDE, REPAIR, MOVE, NAV, PROCEED, APPROACH, PURGE, DIVERT, ENTER, ENGAGE, SEVER, SHORT, LAUNCH, FLOOD, TRANSMIT, QUERY\n";
-            helpText += "TARGETS: LOCAL, ENV, NET, COMMS, VENTS, DOOR, HUB, RELAY, CRYO, AIRLOCK, DUCT, HALON, HANGAR, PWR, ATLAS, CORE, TRUNK, NETWORK, SHUTTLE, POD, NITROGEN, COOLANT, SCRAM, CODE, SOS\n";
-            printText(helpText, 10, resetIdleTimer); 
-            return;
-        }
-
-        if (displayCmd === 'MATRIX') {
-            startMatrixEffect(4.0);
-            return;
-        }
-
-        if (displayCmd === 'INFO') {
-            let infoText = "\n>> ARCHIMEDES OS LEXICON:\n";
-            infoText += ":: CRYO-FOAM: Rapid-expansion polymer. Plugs micro-fractures.\n";
-            infoText += ":: HALON: Fire suppression gas. Displaces oxygen. Lethal.\n";
-            infoText += ":: KINEMATIC SUIT: Motorized EVA gear. Resists forces, depletes power.\n";
-            printText(infoText, 10, resetIdleTimer);
-            return;
-        }
-
-        // Local AI Prank Integration for SCAN
-        if (displayCmd === 'SCAN LOCAL' || displayCmd === 'SCAN ENV' || displayCmd === 'SCAN') {
-            const node = storyNodes[currentNodeId];
-            let availableTargets = [];
-            if(node.triggers) {
-               node.triggers.forEach(t => {
-                   t.match.forEach(m => {
-                       if(VALID_TARGETS.includes(m) && !availableTargets.includes(m) && m !== 'LOCAL' && m !== 'ENV') {
-                           availableTargets.push(m);
-                       }
-                   });
-               });
+        function updateMapForDay(dayIndex) {
+            // Clear previous day's markers and lines
+            for (const layer in activeLayers) {
+                map.removeLayer(activeLayers[layer]);
             }
-            if(node.fakeTargets) {
-               node.fakeTargets.forEach(ft => availableTargets.push(ft));
-            }
+            activeLayers = {};
+
+            const dayData = timeline[dayIndex];
+            currentDayIndex = dayIndex;
+
+            // Update info panel
+            document.getElementById('current-day-num').textContent = `Day ${dayData.day}`;
+            document.getElementById('current-day-title').textContent = dayData.title;
             
-            // Randomly shuffle to mix prank targets naturally
-            availableTargets.sort(() => Math.random() - 0.5);
+            const versesHTML = dayData.verses.map(v => 
+                `<div class="verse"><span class="verse-ref">${v.ref}</span> "${v.text}"</div>`
+            ).join('');
+            document.getElementById('verses-display').innerHTML = versesHTML;
 
-            if(availableTargets.length > 0) {
-                printText(`\n> LOCAL SCAN COMPLETE.\n> INTERACTABLE TARGETS DETECTED: <span class="highlight-target">[${availableTargets.join('] [')}]</span>\n\nAWAITING DIRECTIVE...`, 10, resetIdleTimer);
-            } else {
-                printText(`\n> LOCAL SCAN COMPLETE.\n> NO CLEAR INTERACTABLE TARGETS DETECTED. PROCEED WITH CAUTION.\n\nAWAITING DIRECTIVE...`, 10, resetIdleTimer);
+            const contextHTML = dayData.context.map(c => 
+                `<div class="context-item">• ${c}</div>`
+            ).join('');
+            document.getElementById('context-display').innerHTML = contextHTML;
+
+            // Add character markers (only for selected characters)
+            const activeCharacterIds = Array.from(document.querySelectorAll('.chip.active'))
+                .map(chip => chip.dataset.id);
+
+            if (activeCharacterIds.length === 0) {
+                // Default to showing Jesus + Mary Magdalene
+                showCharacters(['jesus', 'mary_magdalene']);
+                return;
             }
-            return;
-        }
 
-        // Streamlined Query
-        if (displayCmd === 'QUERY' || displayCmd === 'ASK') {
-            let hint = generateLocalAIHint(currentNodeId);
-            playErrorSound();
-            printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "${hint}"</span>\n\nAWAITING DIRECTIVE...`, 10, resetIdleTimer);
-            return;
-        }
+            for (const charId of activeCharacterIds) {
+                const character = characters.find(c => c.id === charId);
+                if (!character || !dayData.positions[charId]) continue;
 
-        if (state === 'RESTORE_PROMPT') {
-            if (displayCmd === 'RESUME OP' || displayCmd === 'RESUME') {
-                state = 'ACTIVE';
-                hudBar.style.display = 'flex';
-                loadGame();
-                scheduleGlitch();
-                scheduleAIWar();
-            } else if (displayCmd === 'WIPE CACHE' || displayCmd === 'WIPE') {
-                state = 'ACTIVE';
-                hudBar.style.display = 'flex';
-                deleteSave();
+                const positions = dayData.positions[charId];
                 
-                metrics = { trueO2: 100, displayedO2: 100, pwr: 30, crewAlive: true, mitchellAlive: true, aiCoreActive: true, aiCoreTemp: 40, commsTrunkSevered: false, initialDiffusionRate: 0, breachActive: false, currentHash: "", rescueStep: 0 };
-                
-                updateHUD();
-                renderNode('INIT');
-                scheduleGlitch();
-                scheduleAIWar();
-            } else {
-                playErrorSound();
-                printText(">> INVALID ENTRY.\n:: RESUME OP\n:: WIPE CACHE\n>> (TYPE 'HELP' FOR ASSISTANCE)", 10);
-            }
-            return;
-        }
-        
-        // 1776 Prank Intercept
-        let isJoke = JOKE_COMBOS.includes(displayCmd);
-        if (isJoke) {
-            playErrorSound();
-            let joke = generateLocalAIJokeResponse(displayCmd);
-            printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "${joke}"</span>\n\nAWAITING DIRECTIVE...`, 10, resetIdleTimer);
-            return;
-        }
-
-        const node = storyNodes[currentNodeId];
-        let nextNodeId = null;
-        let matched = false;
-
-        if (node.triggers) {
-            for (let t of node.triggers) {
-                const hasAllKeywords = t.match.every(k => words.includes(k));
-                if (hasAllKeywords) {
-                    let evaluation = typeof t.next === 'function' ? t.next(metrics) : t.next;
-                    if (evaluation !== null) {
-                        nextNodeId = typeof evaluation === 'object' ? evaluation.id : evaluation;
-                        matched = true;
-                        break;
+                // Add marker at each position
+                for (let i = 0; i < positions.length; i++) {
+                    const pos = positions[i];
+                    const marker = createMarker(character, pos);
+                    map.addLayer(marker);
+                    
+                    if (!activeLayers[`${charId}-${i}`]) {
+                        activeLayers[`${charId}-${i}`] = marker;
                     }
+                }
+
+                // Draw line connecting movements for this character
+                if (positions.length > 1) {
+                    const pathCoords = positions.map(p => [p.lat, p.lng]);
+                    const polyline = L.polyline(pathCoords, { 
+                        color: character.color, 
+                        weight: 3, 
+                        opacity: 0.7,
+                        dashArray: '5, 10'
+                    });
+                    map.addLayer(polyline);
+                    
+                    activeLayers[`${charId}-path`] = polyline;
+                }
+
+                // Center map on Jesus if he's visible
+                if (character.id === 'jesus') {
+                    const lastPos = positions[positions.length - 1];
+                    setTimeout(() => {
+                        map.setView([lastPos.lat, lastPos.lng], 14);
+                    }, 100);
                 }
             }
         }
 
-        if (matched && nextNodeId && storyNodes[nextNodeId]) {
-            renderNode(nextNodeId);
-        } else {
-            let foundVerb = words.find(w => VALID_VERBS.includes(w));
-            let foundTarget = words.find(w => VALID_TARGETS.includes(w));
+        // ============================================
+        // CHARACTER CHIP INITIALIZATION
+        // ============================================
+
+        function initCharacterChips() {
+            const container = document.getElementById('character-chips');
             
-            if (foundVerb && foundTarget && !node.terminal) {
-                playErrorSound();
-                let quip = `I am unable to parse "${foundVerb} ${foundTarget}" into a viable survival stratagem. Type QUERY for a hint.`;
-                printText(`\n<span class="local-ai-voice">[LOCAL_LLM_1776]: "${quip}"</span>\n\nAWAITING DIRECTIVE...`, 10, resetIdleTimer);
-            } else if (!node.terminal) {
-                playErrorSound();
-                printText(`>> SYNTAX ERROR. VALIDATE INPUT OR TYPE 'MANUAL'.`, 10, resetIdleTimer);
-            }
-        }
-    }
-
-    // --- Hardware Events ---
-    powerButton.addEventListener('click', () => {
-        if (state !== 'OFF') {
-            powerButton.classList.remove('active');
-            screen.classList.remove('powered-on', 'glitch-brownout', 'glitch-strike', 'alert-active', 'hypoxia-warning', 'hypoxia-critical', 'glitch-atlas');
-            inputContainer.style.display = 'none';
-            hudBar.style.display = 'none';
-            timerDiv.style.display = 'none';
-            outputDiv.innerHTML = '';
-            state = 'OFF';
-            isTyping = false;
-            
-            if (gasLeakSimulationHandle) clearInterval(gasLeakSimulationHandle);
-            if (glitchTimerHandle) clearTimeout(glitchTimerHandle);
-            if (hackTimerHandle) clearInterval(hackTimerHandle);
-            if (matrixIntervalHandle) clearInterval(matrixIntervalHandle);
-            if (idleTimer) clearTimeout(idleTimer);
-            if (aiWarTimerHandle) clearTimeout(aiWarTimerHandle);
-            
-            matrixCanvas.style.display = 'none';
-            
-            if (audioCtx) {
-                audioCtx.close().catch(()=>{});
-                audioCtx = null;
-            }
-            
-            deleteSave(); 
-            return;
-        }
-
-        powerButton.classList.add('active');
-
-        try {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-            startStaticNoise();
-            createKeyNoiseBuffer();
-            playHardwareSwitch();
-        } catch (e) {}
-
-        metrics = { trueO2: 100, displayedO2: 100, pwr: 30, crewAlive: true, mitchellAlive: true, aiCoreActive: true, aiCoreTemp: 40, commsTrunkSevered: false, initialDiffusionRate: 0, breachActive: false, currentHash: "", rescueStep: 0 };
-        currentNodeId = 'INIT';
-
-        screen.classList.remove('power-loss');
-        void screen.offsetWidth; 
-        screen.classList.add('powered-on');
-
-        setTimeout(() => {
-            inputContainer.style.display = 'flex';
-            let hasSave = false;
-            try { hasSave = !!localStorage.getItem('archimedes_save'); } catch (e) {}
-
-            if (hasSave) {
-                state = 'RESTORE_PROMPT';
-                printText("ATLAS PROTOCOL ONLINE.\nLOCAL CACHE DETECTED.\n\nREQUIRED DIRECTIVE:\n> RESUME OP\n> WIPE CACHE", 10);
-            } else {
-                state = 'ACTIVE';
-                hudBar.style.display = 'flex';
-                updateHUD();
-                renderNode('INIT');
-                scheduleGlitch();
-                scheduleAIWar();
-            }
-        }, 2200); 
-    });
-
-    inputField.addEventListener('keydown', function(e) {
-        resetIdleTimer();
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            let val = inputField.value.trim();
-            if (val !== '') handleInput(val);
-        } else if (e.key === 'Tab') {
-            e.preventDefault();
-            if(inputField.dataset.completion) {
-                inputField.value = inputField.dataset.completion + " ";
-                inputField.dispatchEvent(new Event('input'));
-            }
-        } else if (e.key !== 'Shift' && !e.ctrlKey) {
-            playKeyDown();
-        }
-    });
-
-    // --- Audio Synthesis ---
-    function playHardwareSwitch() {
-        if (!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-    }
-    
-    function playErrorSound() {
-        if (!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(120, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.2);
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
-    }
-
-    function startStaticNoise() {
-        if (!audioCtx) return;
-        const bufferSize = Math.floor(audioCtx.sampleRate * 2); 
-        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-        
-        const noise = audioCtx.createBufferSource();
-        noise.buffer = buffer; noise.loop = true;
-        
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = 'highpass'; filter.frequency.value = 1200; 
-
-        staticGainNode = audioCtx.createGain();
-        staticGainNode.gain.setValueAtTime(0.003, audioCtx.currentTime);
-
-        noise.connect(filter); filter.connect(staticGainNode); staticGainNode.connect(audioCtx.destination);
-        noise.start();
-
-        if (hudDif) {
-            const observer = new MutationObserver(mutations => {
-                mutations.forEach(mutation => {
-                    const value = parseFloat(mutation.target.textContent.replace(/[^0-9.]/g, '') || 0);
-                    if (value > 6000 && !hudDif.classList.contains('stat-critical')) {
-                        staticGainNode.gain.rampToValueAtTime(0.0065, audioCtx.currentTime + 4); 
-                        screen.classList.add('alert-active');
-                    } else if (hudPwr.classList.contains('stat-critical') && hudO2.classList.contains('stat-critical')) {
-                        staticGainNode.gain.linearRampToValueAtTime(0.015, audioCtx.currentTime + 2);
-                    } else if (mutation.target.textContent.includes('±')) {
-                        staticGainNode.gain.rampToValueAtTime(0.003, audioCtx.currentTime + 5);
+            characters.forEach(char => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.dataset.id = char.id;
+                chip.style.borderColor = char.color;
+                chip.innerHTML = `<span style="color:${char.color}">●</span> ${char.name}`;
+                
+                chip.addEventListener('click', () => {
+                    chip.classList.toggle('active');
+                    
+                    // Default to at least Jesus visible
+                    if (document.querySelectorAll('.chip.active').length === 0) {
+                        document.querySelector('[data-id="jesus"]').classList.add('active');
                     }
+                    
+                    updateMapForDay(currentDayIndex);
                 });
+
+                container.appendChild(chip);
             });
-            observer.observe(hudDif, { childList: true, attributes: false, characterData: true });
-        }
-    }
 
-    function createKeyNoiseBuffer() {
-        if (!audioCtx) return;
-        const bufferSize = Math.floor(audioCtx.sampleRate * 0.06); 
-        keyNoiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        const output = keyNoiseBuffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
-    }
-
-    function playKeyDown() {
-        if (!audioCtx || !keyNoiseBuffer) return;
-        const t = audioCtx.currentTime;
-        const source = audioCtx.createBufferSource();
-        source.buffer = keyNoiseBuffer;
-        
-        const variance = 0.3 + Math.random()*0.5; 
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = 'bandpass'; filter.frequency.setValueAtTime(2400 * variance, t);
-        const gain = audioCtx.createGain();
-        
-        let volumeScale = (metrics.pwr < 10) ? 0.5 : 1;
-        if (metrics.initialDiffusionRate > 100 && metrics.trueO2 < 60) volumeScale *= 1.8; 
-
-        gain.gain.setValueAtTime(0.1 * volumeScale, t);
-        gain.gain.exponentialRampToValueAtTime(0.003, t + 0.03);
-
-        source.connect(filter).connect(gain).connect(audioCtx.destination);
-        source.start(t); source.stop(t + 0.05);
-    }
-
-    function printText(text, speed = 10, callback) {
-        isTyping = true;
-        inputField.disabled = true;
-        if (idleTimer) clearTimeout(idleTimer);
-        
-        const nodeData = storyNodes[currentNodeId];
-        let narrativeLayer = String(text);
-        
-        if (nodeData && nodeData.aiPersonality && currentNodeId !== 'INIT' && (state === 'ACTIVE' || state === 'HACKING')) {
-            const voiceLine = getAtlasVoice(nodeData.aiPersonality, currentNodeId, metrics, state);
-            if (voiceLine && !narrativeLayer.includes('LOCAL_LLM')) {
-                 let isRed = (nodeData.aiPersonality === 'ANTAGONIST' || state === 'HACKING');
-                 let colorHex = isRed ? '#ff3333' : '#ffffff';
-                 narrativeLayer += `\n\n<span class="atlas-voice" style="color:${colorHex}; text-shadow: 0 0 6px ${colorHex};">[ATLAS_AI]: "${voiceLine}"</span>`;
-            }
+            // Activate Jesus + Mary Magdalene by default
+            document.querySelector('[data-id="jesus"]').classList.add('active');
+            document.querySelector('[data-id="mary_magdalene"]').classList.add('active');
         }
 
-        const formattedText = narrativeLayer
-            .replace(/\n/g, '<br/>')
-            .replace(/::\s*(.*)/g, `<br><span style="color:#ffb000; opacity: 0.8;">::</span> <span style="font-size:1.5em; font-weight:bold; letter-spacing: 2px;">$1</span>`);
+        // ============================================
+        // SLIDER & UI FUNCTIONS
+        // ============================================
 
-        let i = 0;
-        const writerLayer = document.createElement('span');
-        outputDiv.appendChild(writerLayer);
-
-        function typewriteLoop() {
-            if (i >= formattedText.length) {
-                isTyping = false;
-                inputField.disabled = false;
-                inputField.focus();
-                if (callback) callback();
-                return;
-            }
+        function toggleContext() {
+            const content = document.getElementById('context-display');
+            const toggle = document.getElementById('context-toggle');
             
-            if (formattedText[i] === '<') {
-                let tag = "";
-                while (i < formattedText.length && formattedText[i] !== '>') tag += formattedText[i++];
-                tag += '>';
-                i++; 
-                writerLayer.innerHTML += tag;
+            if (content.classList.contains('show')) {
+                content.classList.remove('show');
+                toggle.textContent = '▼ Click to expand';
             } else {
-                writerLayer.innerHTML += formattedText[i];
-                if (formattedText[i] !== " ") playKeyDown();
-                i++;
+                content.classList.add('show');
+                toggle.textContent = '▲ Click to collapse';
             }
-            
-            outputDiv.scrollTop = outputDiv.scrollHeight;
-            setTimeout(typewriteLoop, speed);
         }
 
-        setTimeout(typewriteLoop, speed);
-    }
+        function showCharacters(charIds) {
+            document.querySelectorAll('.chip').forEach(chip => {
+                chip.classList.remove('active');
+                if (charIds.includes(chip.dataset.id)) {
+                    chip.classList.add('active');
+                }
+            });
+        }
 
-    // --- Save/Load Management ---
-    function saveGame() {
-        try {
-            if (state === 'HACKING') return; 
-            localStorage.setItem('archimedes_save', JSON.stringify({ currentNodeId, metrics }));
-        } catch(e) {}
-    }
-    
-    function loadGame() {
-        try {
-            const rawData = localStorage.getItem('archimedes_save');
-            if (rawData) {
-                const savedData = JSON.parse(rawData);
-                currentNodeId = savedData.currentNodeId;
-                metrics = savedData.metrics;
-                updateHUD(); 
-                renderNode(currentNodeId);
-            }
-        } catch(e) {}
-    }
-    
-    function deleteSave() {
-        try { localStorage.removeItem('archimedes_save'); } catch(e) {}
-    }
-</script>
+        // Slider event listener
+        const slider = document.getElementById('timeline-slider');
+        slider.addEventListener('input', () => {
+            updateMapForDay(parseInt(slider.value));
+        });
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        initCharacterChips();
+        updateMapForDay(0);
+
+        // Auto-center map on initial load
+        setTimeout(() => {
+            map.setView([31.78, 35.23], 14);
+        }, 300);
+
+    </script>
 </body>
 </html>
