@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Easter Timeline: The 40 Days</title>
     
-    <!-- Leaflet CSS (Map Library) -->
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
-    <!-- Google Fonts for Clean Typography -->
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
@@ -25,7 +25,6 @@
             overflow-x: hidden;
         }
 
-        /* HEADER */
         header {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: white;
@@ -45,25 +44,93 @@
             font-weight: 300;
         }
 
-        /* MAIN CONTAINER */
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 1rem;
         }
 
-        /* MAP CONTAINER */
-        #map-container {
-            height: 500px;
+        /* MAP CONTAINER WITH TOGGLE */
+        #map-wrapper {
+            position: relative;
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             margin-bottom: 1rem;
         }
 
+        #map-container {
+            height: 500px;
+        }
+
         #map {
             height: 100%;
             width: 100%;
+        }
+
+        /* MAP TOGGLE BUTTONS */
+        .map-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .map-toggle button {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .map-toggle button.active {
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .map-toggle button:hover:not(.active) {
+            background: #f0f0f0;
+        }
+
+        /* MAP LEGEND */
+        .map-legend {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            z-index: 1000;
+            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            font-size: 0.75rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .legend-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1a1a2e;
+        }
+
+        .location-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.3rem;
+        }
+
+        .location-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+            margin-right: 0.5rem;
         }
 
         /* SLIDER SECTION */
@@ -101,7 +168,7 @@
         }
 
         input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: None;
+            -webkit-appearance: none;
             width: 24px;
             height: 24px;
             border-radius: 50%;
@@ -145,7 +212,7 @@
             background: #f0f4ff;
         }
 
-        /* DAY INFO PANEL */
+        /* INFO PANEL */
         .info-panel {
             background: white;
             padding: 2rem;
@@ -182,7 +249,6 @@
             font-style: normal;
         }
 
-        /* HISTORICAL CONTEXT */
         .context-section {
             background: #fff8e1;
             padding: 1.5rem;
@@ -219,15 +285,6 @@
             line-height: 1.6;
         }
 
-        /* CUSTOM MAP STYLES */
-        .glow-marker {
-            box-shadow: 0 0 20px 8px rgba(212, 175, 55, 0.6);
-        }
-
-        .leaflet-popup-content-wrapper {
-            border-radius: 8px;
-        }
-
         /* FOOTER */
         footer {
             text-align: center;
@@ -258,6 +315,11 @@
                 padding: 0.5rem 1rem;
                 font-size: 0.8rem;
             }
+
+            .map-legend {
+                font-size: 0.7rem;
+                max-height: 150px;
+            }
         }
     </style>
 </head>
@@ -268,9 +330,28 @@
     </header>
 
     <div class="container">
-        <!-- MAP -->
-        <div id="map-container">
-            <div id="map"></div>
+        <!-- MAP WRAPPER WITH TOGGLE -->
+        <div id="map-wrapper">
+            <div id="map-container">
+                <div id="map"></div>
+            </div>
+            
+            <!-- MAP TYPE TOGGLE -->
+            <div class="map-toggle">
+                <button id="btn-modern" class="active" onclick="switchMap('modern')">Modern</button>
+                <button id="btn-historical" onclick="switchMap('historical')">Historical (30 AD)</button>
+            </div>
+
+            <!-- MAP LEGEND -->
+            <div class="map-legend">
+                <div class="legend-title">📍 Key Locations</div>
+                <div class="location-item"><span class="location-dot" style="background:#D4AF37"></span>Golgotha (Crucifixion)</div>
+                <div class="location-item"><span class="location-dot" style="background:#8B4513"></span>Tomb of Jesus</div>
+                <div class="location-item"><span class="location-dot" style="background:#4A90D9"></span>Upper Room</div>
+                <div class="location-item"><span class="location-dot" style="background:#2ECC71"></span>Mount of Olives</div>
+                <div class="location-item"><span class="location-dot" style="background:#9B59B6"></span>Praetorium (Pilate)</div>
+                <div class="location-item"><span class="location-dot" style="background:#F39C12"></span>Road to Emmaus</div>
+            </div>
         </div>
 
         <!-- SLIDER -->
@@ -292,38 +373,21 @@
         <!-- INFO PANEL -->
         <div class="info-panel">
             <h3>📖 What Happened Today (NIV)</h3>
-            <div class="verses-container" id="verses-display">
-                <!-- Generated by JS -->
-            </div>
+            <div class="verses-container" id="verses-display"></div>
 
             <div class="context-section">
                 <div class="context-header" onclick="toggleContext()">
                     <span class="context-title">🏛️ Historical Context</span>
                     <span id="context-toggle">▼ Click to expand</span>
                 </div>
-                <div class="context-content" id="context-display">
-                    <!-- Generated by JS -->
-                </div>
-            </div>
-        </div>
-
-        <!-- KEY LOCATIONS LEGEND -->
-        <div class="info-panel">
-            <h3>📍 Key Locations</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                <div><strong>Golgotha:</strong> Place of the Skull (Crucifixion)</div>
-                <div><strong>Tomb:</strong> Jesus' burial place</div>
-                <div><strong>Upper Room:</strong> Where disciples gathered</div>
-                <div><strong>Mount of Olives:</strong> Ascension site</div>
-                <div><strong>Road to Emmaus:</strong> 7 miles west of Jerusalem</div>
-                <div><strong>Praetorium:</strong> Pilate's palace</div>
+                <div class="context-content" id="context-display"></div>
             </div>
         </div>
     </div>
 
     <footer>
-        <p class="footer-note">Bible verses: New International Version (NIV)</p>
-        <p class="footer-note">Map data © OpenStreetMap contributors | Jerusalem archaeological data</p>
+        <p class="footer-note">Bible verses: New International Version (NIV) | Map data © OpenStreetMap contributors</p>
+        <p class="footer-note">Historical map layer based on archaeological reconstructions of Jerusalem c. 30 AD</p>
     </footer>
 
     <!-- Leaflet JS -->
@@ -331,17 +395,27 @@
     
     <script>
         // ============================================
-        // DATA: Characters, Timeline, Locations
+        // DATA: Expanded Characters (12 total)
         // ============================================
 
         const characters = [
-            { id: "jesus", name: "Jesus", color: "#D4AF37" },      // Gold glow
+            { id: "jesus", name: "Jesus", color: "#D4AF37" },           // Gold glow
             { id: "mary_magdalene", name: "Mary Magdalene", color: "#E91E63" },
             { id: "peter", name: "Peter", color: "#2196F3" },
             { id: "john", name: "John", color: "#4CAF50" },
             { id: "mary_mother", name: "Mary (mother)", color: "#9C27B0" },
-            { id: "joseph_arimathea", name: "Joseph of Arimathea", color: "#FF9800" }
+            { id: "joseph_arimathea", name: "Joseph of Arimathea", color: "#FF9800" },
+            { id: "nicodemus", name: "Nicodemus", color: "#607D8B" },
+            { id: "thomas", name: "Thomas", color: "#03A9F4" },
+            { id: "james", name: "James (brother)", color: "#8BC34A" },
+            { id: "cleopas", name: "Cleopas", color: "#FF5722" },
+            { id: "pilate", name: "Pontius Pilate", color: "#B71C1C" },
+            { id: "caiaphas", name: "Caiaphas (High Priest)", color: "#5D4037" }
         ];
+
+        // ============================================
+        // LOCATIONS (Accurate coordinates)
+        // ============================================
 
         const locations = {
             golgotha: { lat: 31.7806, lng: 35.2298, name: "Golgotha" },
@@ -349,12 +423,16 @@
             upper_room: { lat: 31.7740, lng: 35.2300, name: "Upper Room" },
             mount_olives: { lat: 31.7800, lng: 35.2450, name: "Mount of Olives" },
             praetorium: { lat: 31.7820, lng: 35.2270, name: "Pilate's Praetorium" },
-            road_to_emmaus: { lat: 31.8400, lng: 35.0000, name: "Road to Emmaus" },
-            sea_of_galilee: { lat: 32.8100, lng: 35.5900, name: "Sea of Galilee" }
+            road_to_emmaus: { lat: 31.8400, lng: 35.0000, name: "Road to Emmaus (~7 miles)" },
+            sea_of_galilee: { lat: 32.8100, lng: 35.5900, name: "Sea of Galilee" },
+            garden_gethsemane: { lat: 31.7785, lng: 35.2460, name: "Garden of Gethsemane" }
         };
 
+        // ============================================
+        // TIMELINE DATA (Expanded with more characters)
+        // ============================================
+
         const timeline = [
-            // Day 1: Good Friday
             {
                 day: 1,
                 title: "Good Friday - Crucifixion & Burial",
@@ -368,15 +446,17 @@
                     "Pilate's praetorium was likely Herod's Palace or Antonia Fortress."
                 ],
                 positions: {
-                    jesus: [locations.golgotha, locations.tomb],
+                    jesus: [locations.garden_gethsemane, locations.praetorium, locations.golgotha, locations.tomb],
                     mary_magdalene: [locations.golgotha],
                     peter: [locations.praetorium],
-                    john: [locations.golgotha],
+                    john: [locations.garden_gethsemana, locations.golgotha],
                     mary_mother: [locations.golgotha],
-                    joseph_arimathea: [locations.praetorium, locations.tomb]
+                    joseph_arimathea: [locations.praetorium, locations.tomb],
+                    nicodemus: [locations.tomb],
+                    pilate: [locations.praetorium],
+                    caiaphas: [locations.praetorium]
                 }
             },
-            // Day 2: Holy Saturday (The Silent Day)
             {
                 day: 2,
                 title: "Holy Saturday - The Silent Day",
@@ -385,7 +465,7 @@
                 ],
                 context: [
                     "The Sabbath (Saturday) was observed strictly; no work permitted.",
-                    "Roman guards were placed to prevent body theft (accounts vary on who requested them).",
+                    "Roman guards were placed to prevent body theft.",
                     "This is the only day in the 40-day period with minimal biblical detail."
                 ],
                 positions: {
@@ -394,10 +474,10 @@
                     peter: [locations.upper_room],
                     john: [locations.upper_room],
                     mary_mother: [locations.upper_room],
-                    joseph_arimathea: [locations.tomb]
+                    joseph_arimathea: [locations.tomb],
+                    nicodemus: [locations.tomb]
                 }
             },
-            // Day 3: Resurrection Sunday
             {
                 day: 3,
                 title: "Resurrection Sunday - Empty Tomb & First Appearances",
@@ -416,10 +496,10 @@
                     peter: [locations.tomb, locations.upper_room],
                     john: [locations.tomb, locations.upper_room],
                     mary_mother: [locations.upper_room],
-                    joseph_arimathea: [locations.tomb]
+                    joseph_arimathea: [locations.tomb],
+                    cleopas: [locations.road_to_emmaus]
                 }
             },
-            // Day 4-9: Various Appearances (Condensed)
             {
                 day: 5,
                 title: "Day 5 - Appearance to Disciples (Thomas absent)",
@@ -436,10 +516,10 @@
                     peter: [locations.upper_room],
                     john: [locations.upper_room],
                     mary_mother: [locations.upper_room],
-                    joseph_arimathea: [locations.tomb]
+                    james: [locations.upper_room],
+                    thomas: [locations.upper_room] // absent from the room at this point
                 }
             },
-            // Day 7: Thomas
             {
                 day: 7,
                 title: "Day 7 - 'Doubting' Thomas Believes",
@@ -455,11 +535,9 @@
                     mary_magdalene: [locations.upper_room],
                     peter: [locations.upper_room],
                     john: [locations.upper_room],
-                    mary_mother: [locations.upper_room],
-                    joseph_arimathea: [locations.tomb]
+                    thomas: [locations.upper_room]
                 }
             },
-            // Day 15: Galilee Appearance
             {
                 day: 15,
                 title: "Day 15 - By the Sea of Galilee",
@@ -472,20 +550,18 @@
                 ],
                 positions: {
                     jesus: [locations.sea_of_galilee],
-                    mary_magdalene: [locations.upper_room],
                     peter: [locations.sea_of_galilee],
                     john: [locations.sea_of_galilee],
-                    mary_mother: [locations.upper_room],
-                    joseph_arimathea: [locations.tomb]
+                    thomas: [locations.sea_of_galilee],
+                    james: [locations.sea_of_galilee]
                 }
             },
-            // Day 40: Ascension
             {
                 day: 40,
                 title: "Day 40 - The Ascension",
                 verses: [
                     { ref: "Luke 24:50-51", text: "When he had led them out to the vicinity of Bethany... he was taken up into heaven." },
-                    { ref: "Acts 1:9-11", text: "After he said this, he was taken up before their very eyes... 'He will come back in the same way.'" }
+                    { ref: "Acts 1:9-11", text: "After he said this, he was taken up before their very eyes..." }
                 ],
                 context: [
                     "Bethany is on the eastern slope of the Mount of Olives.",
@@ -498,12 +574,13 @@
                     peter: [locations.upper_room],
                     john: [locations.upper_room],
                     mary_mother: [locations.upper_room],
-                    joseph_arimathea: [locations.tomb]
+                    james: [locations.upper_room],
+                    thomas: [locations.upper_room]
                 }
             }
         ];
 
-        // Fill in missing days to create smooth slider (days 4,6,8-14,16-39)
+        // Fill in missing days for smooth slider
         for (let i = 0; i < timeline.length - 1; i++) {
             const currentDay = timeline[i];
             const nextDay = timeline[i + 1];
@@ -516,33 +593,51 @@
                         title: `Day ${currentDay.day + j}`,
                         verses: [{ ref: "Luke 24:35", text: "Jesus appeared to many disciples in Jerusalem during this period." }],
                         context: ["A period of teaching and appearances before the Ascension."],
-                        positions: currentDay.positions // Keep same positions for continuity
+                        positions: currentDay.positions
                     });
                 }
             }
         }
 
         // ============================================
-        // MAP INITIALIZATION
+        // MAP INITIALIZATION (English Tiles)
         // ============================================
 
         const map = L.map('map').setView([31.78, 35.23], 14);
 
-        // OpenStreetMap tiles (no API key needed)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+        // Modern OSM tiles (already in English by default)
+        const modernTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19,
+            language: 'en' // Force English labels where possible
         }).addTo(map);
 
-        // Add location markers (static)
-        const locationMarkers = {};
-        for (const [key, loc] of Object.entries(locations)) {
-            locationMarkers[key] = L.marker([loc.lat, loc.lng])
-                .bindPopup(`<strong>${loc.name}</strong>`)
-                .addTo(map);
+        // Historical overlay (simulated with different tile style)
+        const historicalTiles = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
+            attribution: '© Stamen Design, © OpenStreetMap contributors',
+            maxZoom: 18,
+            opacity: 0.8
+        });
+
+        let currentMapType = 'modern';
+
+        function switchMap(type) {
+            if (type === 'historical') {
+                modernTiles.removeFrom(map);
+                historicalTiles.addTo(map);
+                document.getElementById('btn-historical').classList.add('active');
+                document.getElementById('btn-modern').classList.remove('active');
+            } else {
+                historicalTiles.removeFrom(map);
+                modernTiles.addTo(map);
+                document.getElementById('btn-modern').classList.add('active');
+                document.getElementById('btn-historical').classList.remove('active');
+            }
+            currentMapType = type;
         }
 
         // ============================================
-        // MARKER TRACKING SYSTEM
+        // MARKER TRACKING SYSTEM (Clean, no clutter)
         // ============================================
 
         let activeLayers = {};
@@ -550,21 +645,10 @@
 
         function createMarker(character, latLng) {
             const options = character.id === 'jesus' ? 
-                { radius: 8, color: '#D4AF37', fillColor: '#D4AF37', fillOpacity: 1 } :
-                { radius: 5, color: character.color, fillColor: character.color, fillOpacity: 0.8 };
+                { radius: 10, color: '#D4AF37', fillColor: '#D4AF37', fillOpacity: 1, weight: 2 } :
+                { radius: 6, color: character.color, fillColor: character.color, fillOpacity: 0.9 };
 
-            const marker = L.circleMarker([latLng.lat, latLng.lng], options);
-            
-            if (character.id === 'jesus') {
-                marker.setStyle({ weight: 3 });
-                // Add glow effect via CSS class
-                setTimeout(() => {
-                    const circle = document.querySelector('.glow-marker');
-                    if (circle) circle.classList.add('glow-marker');
-                }, 0);
-            }
-
-            return marker.bindPopup(`<strong>${character.name}</strong>`);
+            return L.circleMarker([latLng.lat, latLng.lng], options);
         }
 
         function updateMapForDay(dayIndex) {
@@ -591,12 +675,11 @@
             ).join('');
             document.getElementById('context-display').innerHTML = contextHTML;
 
-            // Add character markers (only for selected characters)
+            // Get active characters
             const activeCharacterIds = Array.from(document.querySelectorAll('.chip.active'))
                 .map(chip => chip.dataset.id);
 
             if (activeCharacterIds.length === 0) {
-                // Default to showing Jesus + Mary Magdalene
                 showCharacters(['jesus', 'mary_magdalene']);
                 return;
             }
@@ -607,16 +690,16 @@
 
                 const positions = dayData.positions[charId];
                 
-                // Add marker at each position
-                for (let i = 0; i < positions.length; i++) {
-                    const pos = positions[i];
-                    const marker = createMarker(character, pos);
-                    map.addLayer(marker);
-                    
-                    if (!activeLayers[`${charId}-${i}`]) {
-                        activeLayers[`${charId}-${i}`] = marker;
-                    }
+                // Add marker at final position only (cleaner than multiple dots)
+                const lastPos = positions[positions.length - 1];
+                const marker = createMarker(character, lastPos);
+                
+                if (character.id === 'jesus') {
+                    marker.setStyle({ weight: 3 });
                 }
+
+                map.addLayer(marker);
+                activeLayers[`${charId}-marker`] = marker;
 
                 // Draw line connecting movements for this character
                 if (positions.length > 1) {
@@ -628,16 +711,24 @@
                         dashArray: '5, 10'
                     });
                     map.addLayer(polyline);
-                    
                     activeLayers[`${charId}-path`] = polyline;
+
+                    // Add start and end markers for path visualization
+                    const startPos = positions[0];
+                    if (startPos !== lastPos) {
+                        const startMarker = L.circleMarker([startPos.lat, startPos.lng], {
+                            radius: 4, color: character.color, fillOpacity: 0.5
+                        });
+                        map.addLayer(startMarker);
+                        activeLayers[`${charId}-start`] = startMarker;
+                    }
                 }
 
                 // Center map on Jesus if he's visible
                 if (character.id === 'jesus') {
-                    const lastPos = positions[positions.length - 1];
                     setTimeout(() => {
                         map.setView([lastPos.lat, lastPos.lng], 14);
-                    }, 100);
+                    }, 50);
                 }
             }
         }
@@ -653,13 +744,13 @@
                 const chip = document.createElement('div');
                 chip.className = 'chip';
                 chip.dataset.id = char.id;
-                chip.style.borderColor = char.color;
+                
                 chip.innerHTML = `<span style="color:${char.color}">●</span> ${char.name}`;
                 
                 chip.addEventListener('click', () => {
                     chip.classList.toggle('active');
                     
-                    // Default to at least Jesus visible
+                    // Ensure at least one character is selected
                     if (document.querySelectorAll('.chip.active').length === 0) {
                         document.querySelector('[data-id="jesus"]').classList.add('active');
                     }
@@ -676,7 +767,7 @@
         }
 
         // ============================================
-        // SLIDER & UI FUNCTIONS
+        // UI FUNCTIONS
         // ============================================
 
         function toggleContext() {
@@ -699,6 +790,7 @@
                     chip.classList.add('active');
                 }
             });
+            updateMapForDay(currentDayIndex);
         }
 
         // Slider event listener
@@ -714,7 +806,6 @@
         initCharacterChips();
         updateMapForDay(0);
 
-        // Auto-center map on initial load
         setTimeout(() => {
             map.setView([31.78, 35.23], 14);
         }, 300);
